@@ -77,6 +77,7 @@ coverage = true
       '@types/react-dom': '^19.1.0',
       '@types/node': '^22.10.6',
       typescript: '^5.7.2',
+      tailwindcss: '^4.1.5',
     },
   };
 
@@ -106,6 +107,7 @@ coverage = true
       '@types/react-dom': '^19.1.0',
       '@types/node': '^22.10.6',
       typescript: '^5.7.2',
+      tailwindcss: '^4.1.5',
     },
   };
 
@@ -122,6 +124,7 @@ coverage = true
     scripts: {
       dev: 'bun run --hot src/index.ts',
       start: 'bun run src/index.ts',
+      typecheck: 'tsc --noEmit',
     },
     dependencies: {
       hono: 'catalog:',
@@ -170,6 +173,407 @@ export interface ApiResponse<T = unknown> {
 `;
 
   await writeFile(join(projectPath, 'packages/types/src/index.ts'), typesContent);
+
+  // packages/utils/package.json
+  const utilsPackageJson = {
+    name: `@${context.packageName}/utils`,
+    version: '0.0.0',
+    private: true,
+    main: './src/index.ts',
+    types: './src/index.ts',
+  };
+
+  await writeFile(
+    join(projectPath, 'packages/utils/package.json'),
+    JSON.stringify(utilsPackageJson, null, 2)
+  );
+
+  // packages/utils/src/index.ts
+  const utilsContent = `// Shared utilities for ${context.projectName}
+
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+}
+
+export function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+  return emailRegex.test(email);
+}
+
+export function generateId(): string {
+  return Math.random().toString(36).substring(2, 15);
+}
+`;
+
+  await writeFile(join(projectPath, 'packages/utils/src/index.ts'), utilsContent);
+
+  // ========================================
+  // apps/web - Next.js App (Customer-facing)
+  // ========================================
+  await ensureDirectory(join(projectPath, 'apps/web/src/app'));
+
+  // apps/web/src/app/layout.tsx
+  const webLayoutContent = `import type { Metadata } from 'next';
+import './globals.css';
+
+export const metadata: Metadata = {
+  title: '${context.projectName}',
+  description: 'Enterprise SaaS built with bunkit 🍞',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+`;
+
+  await writeFile(join(projectPath, 'apps/web/src/app/layout.tsx'), webLayoutContent);
+
+  // apps/web/src/app/page.tsx
+  const webPageContent = `export default function Home() {
+  return (
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="text-center space-y-6 p-8">
+        <h1 className="text-6xl font-bold text-gray-900">
+          Welcome to ${context.projectName} 🍞
+        </h1>
+        <p className="text-xl text-gray-600 max-w-2xl">
+          Enterprise-grade SaaS monorepo built with Next.js 16, React 19, Hono, and Bun
+        </p>
+        <div className="flex gap-4 justify-center mt-8">
+          <a
+            href="/dashboard"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            Get Started
+          </a>
+          <a
+            href="/docs"
+            className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition"
+          >
+            Documentation
+          </a>
+        </div>
+      </div>
+    </main>
+  );
+}
+`;
+
+  await writeFile(join(projectPath, 'apps/web/src/app/page.tsx'), webPageContent);
+
+  // apps/web/src/app/globals.css
+  const webGlobalsCssContent = `@import "tailwindcss";
+
+@theme {
+  --color-primary: oklch(0.6 0.2 250);
+  --color-secondary: oklch(0.5 0.15 280);
+}
+`;
+
+  await writeFile(join(projectPath, 'apps/web/src/app/globals.css'), webGlobalsCssContent);
+
+  // apps/web/next.config.ts
+  const webNextConfigContent = `import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+`;
+
+  await writeFile(join(projectPath, 'apps/web/next.config.ts'), webNextConfigContent);
+
+  // apps/web/tailwind.config.ts
+  const webTailwindConfigContent = `import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+
+export default config;
+`;
+
+  await writeFile(join(projectPath, 'apps/web/tailwind.config.ts'), webTailwindConfigContent);
+
+  // apps/web/tsconfig.json
+  const webTsconfigContent = {
+    compilerOptions: {
+      target: 'ES2017',
+      lib: ['dom', 'dom.iterable', 'esnext'],
+      allowJs: true,
+      skipLibCheck: true,
+      strict: true,
+      noEmit: true,
+      esModuleInterop: true,
+      module: 'esnext',
+      moduleResolution: 'bundler',
+      resolveJsonModule: true,
+      isolatedModules: true,
+      jsx: 'preserve',
+      incremental: true,
+      plugins: [
+        {
+          name: 'next',
+        },
+      ],
+      paths: {
+        '@/*': ['./src/*'],
+      },
+    },
+    include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+    exclude: ['node_modules'],
+  };
+
+  await writeFile(
+    join(projectPath, 'apps/web/tsconfig.json'),
+    JSON.stringify(webTsconfigContent, null, 2)
+  );
+
+  // ========================================
+  // apps/platform - Next.js App (Dashboard/Admin)
+  // ========================================
+  await ensureDirectory(join(projectPath, 'apps/platform/src/app'));
+
+  // apps/platform/src/app/layout.tsx
+  const platformLayoutContent = `import type { Metadata } from 'next';
+import './globals.css';
+
+export const metadata: Metadata = {
+  title: '${context.projectName} - Admin Dashboard',
+  description: 'Admin dashboard for ${context.projectName}',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+`;
+
+  await writeFile(join(projectPath, 'apps/platform/src/app/layout.tsx'), platformLayoutContent);
+
+  // apps/platform/src/app/page.tsx
+  const platformPageContent = `export default function Dashboard() {
+  return (
+    <main className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto py-12 px-4">
+        <header className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Manage your ${context.projectName} platform
+          </p>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-2">Users</h2>
+            <p className="text-3xl font-bold text-blue-600">1,234</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-2">Revenue</h2>
+            <p className="text-3xl font-bold text-green-600">$12,345</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-2">Active</h2>
+            <p className="text-3xl font-bold text-purple-600">567</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+`;
+
+  await writeFile(join(projectPath, 'apps/platform/src/app/page.tsx'), platformPageContent);
+
+  // apps/platform/src/app/globals.css
+  const platformGlobalsCssContent = `@import "tailwindcss";
+
+@theme {
+  --color-primary: oklch(0.6 0.2 250);
+  --color-secondary: oklch(0.5 0.15 280);
+}
+`;
+
+  await writeFile(join(projectPath, 'apps/platform/src/app/globals.css'), platformGlobalsCssContent);
+
+  // apps/platform/next.config.ts
+  const platformNextConfigContent = `import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+`;
+
+  await writeFile(join(projectPath, 'apps/platform/next.config.ts'), platformNextConfigContent);
+
+  // apps/platform/tailwind.config.ts
+  const platformTailwindConfigContent = `import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+
+export default config;
+`;
+
+  await writeFile(join(projectPath, 'apps/platform/tailwind.config.ts'), platformTailwindConfigContent);
+
+  // apps/platform/tsconfig.json
+  const platformTsconfigContent = {
+    compilerOptions: {
+      target: 'ES2017',
+      lib: ['dom', 'dom.iterable', 'esnext'],
+      allowJs: true,
+      skipLibCheck: true,
+      strict: true,
+      noEmit: true,
+      esModuleInterop: true,
+      module: 'esnext',
+      moduleResolution: 'bundler',
+      resolveJsonModule: true,
+      isolatedModules: true,
+      jsx: 'preserve',
+      incremental: true,
+      plugins: [
+        {
+          name: 'next',
+        },
+      ],
+      paths: {
+        '@/*': ['./src/*'],
+      },
+    },
+    include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+    exclude: ['node_modules'],
+  };
+
+  await writeFile(
+    join(projectPath, 'apps/platform/tsconfig.json'),
+    JSON.stringify(platformTsconfigContent, null, 2)
+  );
+
+  // ========================================
+  // apps/api - Hono Server
+  // ========================================
+  await ensureDirectory(join(projectPath, 'apps/api/src'));
+
+  // apps/api/src/index.ts
+  const apiIndexContent = `import { Hono } from 'hono';
+import { serve } from 'bun';
+import { logger } from 'hono/logger';
+import { cors } from 'hono/cors';
+
+const app = new Hono();
+
+// Middleware
+app.use('*', logger());
+app.use('*', cors());
+
+// Routes
+app.get('/', (context) => {
+  return context.json({
+    message: 'Welcome to ${context.projectName} API 🍞',
+    version: '1.0.0',
+  });
+});
+
+app.get('/health', (context) => {
+  return context.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/api/users', (context) => {
+  return context.json({
+    users: [
+      { id: 1, email: 'john@example.com', name: 'John Doe' },
+      { id: 2, email: 'jane@example.com', name: 'Jane Smith' },
+    ],
+  });
+});
+
+// 404 handler
+app.notFound((context) => {
+  return context.json({ error: 'Not found' }, 404);
+});
+
+// Error handler
+app.onError((error, context) => {
+  console.error(\`Error: \${error}\`);
+  return context.json({ error: 'Internal server error' }, 500);
+});
+
+// Start server
+serve({
+  fetch: app.fetch,
+  port: 3001,
+  development: {
+    hmr: true,
+    console: true,
+  },
+});
+
+console.log('🚀 ${context.projectName} API running on http://localhost:3001');
+`;
+
+  await writeFile(join(projectPath, 'apps/api/src/index.ts'), apiIndexContent);
+
+  // apps/api/tsconfig.json
+  const apiTsconfigContent = {
+    compilerOptions: {
+      lib: ['ESNext'],
+      target: 'ESNext',
+      module: 'ESNext',
+      moduleDetection: 'force',
+      allowJs: true,
+      moduleResolution: 'bundler',
+      allowImportingTsExtensions: true,
+      verbatimModuleSyntax: true,
+      noEmit: true,
+      strict: true,
+      skipLibCheck: true,
+      noFallthroughCasesInSwitch: true,
+      types: ['@types/bun'],
+    },
+  };
+
+  await writeFile(
+    join(projectPath, 'apps/api/tsconfig.json'),
+    JSON.stringify(apiTsconfigContent, null, 2)
+  );
 
   // Root README
   const readmeContent = `# ${context.projectName}
