@@ -4,8 +4,10 @@
 
 **bunkit** is a modern, opinionated CLI for scaffolding Bun-powered projects with enterprise-grade patterns built-in.
 
-[![Version](https://img.shields.io/npm/v/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![npm version](https://img.shields.io/npm/v/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
+[![npm downloads](https://img.shields.io/npm/dm/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
+[![npm bundle size](https://img.shields.io/bundlephobia/min/bunkit-cli)](https://bundlephobia.com/package/bunkit-cli)
+[![License](https://img.shields.io/npm/l/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
 [![Bun](https://img.shields.io/badge/bun-1.3+-orange.svg)](https://bun.sh)
 [![Status](https://img.shields.io/badge/status-beta-blue.svg)](./CHANGELOG.md)
 [![CI/CD](https://github.com/Arakiss/bunkit/actions/workflows/release.yml/badge.svg)](https://github.com/Arakiss/bunkit/actions/workflows/release.yml)
