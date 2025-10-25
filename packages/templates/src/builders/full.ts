@@ -8,9 +8,10 @@ export async function buildFullPreset(
   projectPath: string,
   context: TemplateContext
 ): Promise<void> {
-  // Create monorepo structure
-  await ensureDirectory(join(projectPath, 'apps/web'));
-  await ensureDirectory(join(projectPath, 'apps/api'));
+  // Create monorepo structure (enterprise SaaS trifecta)
+  await ensureDirectory(join(projectPath, 'apps/web'));      // Customer-facing app
+  await ensureDirectory(join(projectPath, 'apps/platform')); // Dashboard/Admin panel
+  await ensureDirectory(join(projectPath, 'apps/api'));      // Backend API
   await ensureDirectory(join(projectPath, 'packages/types'));
   await ensureDirectory(join(projectPath, 'packages/utils'));
 
@@ -35,7 +36,7 @@ export async function buildFullPreset(
     catalog: {
       react: '^19.1.0',
       'react-dom': '^19.1.0',
-      next: '^15.5.6',
+      next: '^16.0.0',
       hono: '^4.7.12',
     },
   };
@@ -61,7 +62,7 @@ coverage = true
     version: '0.0.0',
     private: true,
     scripts: {
-      dev: 'next dev --turbopack',
+      dev: 'next dev',
       build: 'next build',
       start: 'next start',
     },
@@ -82,6 +83,35 @@ coverage = true
   await writeFile(
     join(projectPath, 'apps/web/package.json'),
     JSON.stringify(webPackageJson, null, 2)
+  );
+
+  // apps/platform/package.json (Dashboard/Admin)
+  const platformPackageJson = {
+    name: `@${context.packageName}/platform`,
+    version: '0.0.0',
+    private: true,
+    scripts: {
+      dev: 'next dev --port 3001',
+      build: 'next build',
+      start: 'next start --port 3001',
+    },
+    dependencies: {
+      react: 'catalog:',
+      'react-dom': 'catalog:',
+      next: 'catalog:',
+      [`@${context.packageName}/types`]: 'workspace:*',
+    },
+    devDependencies: {
+      '@types/react': '^19.1.0',
+      '@types/react-dom': '^19.1.0',
+      '@types/node': '^22.10.6',
+      typescript: '^5.7.2',
+    },
+  };
+
+  await writeFile(
+    join(projectPath, 'apps/platform/package.json'),
+    JSON.stringify(platformPackageJson, null, 2)
   );
 
   // apps/api/package.json
@@ -144,19 +174,38 @@ export interface ApiResponse<T = unknown> {
   // Root README
   const readmeContent = `# ${context.projectName}
 
-Full-stack monorepo created with [bunkit](https://github.com/Arakiss/bunkit) 🍞
+Enterprise-grade SaaS monorepo created with [bunkit](https://github.com/Arakiss/bunkit) 🍞
 
 ## Structure
 
 \`\`\`
 ${context.projectName}/
 ├── apps/
-│   ├── web/        # Next.js frontend
-│   └── api/        # Hono backend
+│   ├── web/        # Customer-facing app (landing, marketing)
+│   ├── platform/   # Dashboard/Admin panel (port 3001)
+│   └── api/        # Backend API (Hono)
 └── packages/
-    ├── types/      # Shared types
+    ├── types/      # Shared TypeScript types
     └── utils/      # Shared utilities
 \`\`\`
+
+## The Enterprise SaaS Trifecta
+
+This monorepo follows the proven enterprise pattern:
+
+1. **web** (\`localhost:3000\`) - Public-facing customer app
+   - Landing pages, marketing content, blog
+   - Optimized for SEO and conversion
+
+2. **platform** (\`localhost:3001\`) - Internal dashboard
+   - Admin panel, user management
+   - Analytics, settings, configuration
+   - Authenticated access only
+
+3. **api** (\`localhost:3001/api\`) - Backend services
+   - REST API with Hono
+   - Database operations, business logic
+   - Shared across web and platform
 
 ## Getting Started
 
@@ -169,8 +218,16 @@ bun dev
 
 - \`bun dev\` - Start all apps in development mode
 - \`bun build\` - Build all apps for production
-- \`bun lint\` - Lint all code
-- \`bun format\` - Format all code
+- \`bun lint\` - Lint all code with Biome
+- \`bun format\` - Format all code with Biome
+
+## Individual Apps
+
+\`\`\`bash
+cd apps/web && bun dev         # Start customer-facing app
+cd apps/platform && bun dev    # Start admin dashboard
+cd apps/api && bun dev         # Start backend API
+\`\`\`
 
 ---
 
