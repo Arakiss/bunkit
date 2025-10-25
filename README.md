@@ -8,6 +8,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/bun-1.3+-orange.svg)](https://bun.sh)
 [![Status](https://img.shields.io/badge/status-alpha-yellow.svg)](./CHANGELOG.md)
+[![CI/CD](https://github.com/Arakiss/bunkit/actions/workflows/release.yml/badge.svg)](https://github.com/Arakiss/bunkit/actions/workflows/release.yml)
 
 > **⚠️ Alpha Release**: This is v0.1.0-alpha.1 - suitable for testing and early adoption. See [CHANGELOG](./packages/cli/CHANGELOG.md) for details.
 
