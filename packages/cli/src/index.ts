@@ -21,10 +21,15 @@ program
 program
   .command('init')
   .description('Create a new project interactively')
-  .action(async () => {
+  .option('--name <name>', 'Project name')
+  .option('--preset <preset>', 'Preset type (minimal, web, api, full)')
+  .option('--no-git', 'Skip git initialization')
+  .option('--no-install', 'Skip dependency installation')
+  .option('--non-interactive', 'Run without prompts (requires all options)')
+  .action(async (options) => {
     showBanner(VERSION);
     try {
-      await initCommand();
+      await initCommand(options);
       outro(pc.green('✨ Done! Your project is ready to bake! 🍞'));
     } catch (error) {
       log.error((error as Error).message);

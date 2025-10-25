@@ -16,70 +16,208 @@ import {
   buildFullPreset,
 } from '@bunkit/templates';
 
-export async function initCommand() {
-  const projectName = await p.text({
-    message: '📦 What is your project named?',
-    placeholder: 'my-awesome-project',
-    validate: (value) => {
-      const result = validateProjectName(value);
-      if (!result.valid) return result.error;
-    },
-  });
+/**
+ * Options for non-interactive init command
+ * Priority: env vars > CLI flags > prompts
+ */
+export interface InitOptions {
+  name?: string;
+  preset?: PresetType;
+  git?: boolean;
+  install?: boolean;
+  nonInteractive?: boolean;
+}
 
-  if (p.isCancel(projectName)) {
-    p.cancel('Operation cancelled.');
-    process.exit(0);
+/**
+ * Get value with priority: env var > option > default
+ */
+function getOptionValue<T>(
+  envVar: string,
+  option: T | undefined,
+  defaultValue?: T
+): T | undefined {
+  const envValue = process.env[envVar];
+
+  // Handle boolean env vars
+  if (envValue !== undefined) {
+    if (envValue === 'true') return true as T;
+    if (envValue === 'false') return false as T;
+    return envValue as T;
   }
 
-  const preset = await p.select({
-    message: '🎨 Which preset would you like?',
-    options: [
-      {
-        value: 'minimal',
-        label: '⚡ Minimal',
-        hint: 'Single repo, clean start',
-      },
-      {
-        value: 'web',
-        label: '🌐 Web',
-        hint: 'Next.js 16 + React 19',
-      },
-      {
-        value: 'api',
-        label: '🚀 API',
-        hint: 'Hono + Bun.serve()',
-      },
-      {
-        value: 'full',
-        label: '📦 Full-stack',
-        hint: 'Monorepo with everything',
-      },
-    ],
-  });
+  return option ?? defaultValue;
+}
 
-  if (p.isCancel(preset)) {
-    p.cancel('Operation cancelled.');
-    process.exit(0);
+/**
+ * Initialize a new project (supports interactive and non-interactive modes)
+ *
+ * Environment variables (highest priority):
+ * - BUNKIT_PROJECT_NAME: Project name
+ * - BUNKIT_PRESET: Preset type (minimal, web, api, full)
+ * - BUNKIT_GIT: Initialize git (true/false)
+ * - BUNKIT_INSTALL: Install dependencies (true/false)
+ * - BUNKIT_NON_INTERACTIVE: Skip all prompts (true/false)
+ *
+ * CLI flags (medium priority):
+ * - --name: Project name
+ * - --preset: Preset type
+ * - --git / --no-git: Initialize git
+ * - --install / --no-install: Install dependencies
+ * - --non-interactive: Skip all prompts
+ *
+ * Interactive prompts (lowest priority):
+ * - Used when env vars and flags are not provided
+ */
+export async function initCommand(options: InitOptions = {}) {
+  // Check if running in non-interactive mode
+  const isNonInteractive =
+    process.env.BUNKIT_NON_INTERACTIVE === 'true' ||
+    options.nonInteractive === true;
+
+  // Get project name (env > flag > prompt)
+  let projectName = getOptionValue<string>(
+    'BUNKIT_PROJECT_NAME',
+    options.name
+  );
+
+  if (!projectName) {
+    if (isNonInteractive) {
+      throw new Error(
+        'Project name is required in non-interactive mode. ' +
+        'Provide it via BUNKIT_PROJECT_NAME env var or --name flag.'
+      );
+    }
+
+    projectName = await p.text({
+      message: '📦 What is your project named?',
+      placeholder: 'my-awesome-project',
+      validate: (value) => {
+        const result = validateProjectName(value);
+        if (!result.valid) return result.error;
+      },
+    }) as string;
+
+    if (p.isCancel(projectName)) {
+      p.cancel('Operation cancelled.');
+      process.exit(0);
+    }
+  } else {
+    // Validate project name when provided via env/flag
+    const result = validateProjectName(projectName);
+    if (!result.valid) {
+      throw new Error(`Invalid project name: ${result.error}`);
+    }
   }
 
-  const shouldInstall = await p.confirm({
-    message: '📥 Install dependencies?',
-    initialValue: true,
-  });
+  // Get preset (env > flag > prompt)
+  let preset = getOptionValue<PresetType>(
+    'BUNKIT_PRESET',
+    options.preset
+  );
 
-  if (p.isCancel(shouldInstall)) {
-    p.cancel('Operation cancelled.');
-    process.exit(0);
+  if (!preset) {
+    if (isNonInteractive) {
+      throw new Error(
+        'Preset is required in non-interactive mode. ' +
+        'Provide it via BUNKIT_PRESET env var or --preset flag. ' +
+        'Valid values: minimal, web, api, full'
+      );
+    }
+
+    preset = await p.select({
+      message: '🎨 Which preset would you like?',
+      options: [
+        {
+          value: 'minimal',
+          label: '⚡ Minimal',
+          hint: 'Single repo, clean start',
+        },
+        {
+          value: 'web',
+          label: '🌐 Web',
+          hint: 'Next.js 16 + React 19',
+        },
+        {
+          value: 'api',
+          label: '🚀 API',
+          hint: 'Hono + Bun.serve()',
+        },
+        {
+          value: 'full',
+          label: '📦 Full-stack',
+          hint: 'Monorepo with everything',
+        },
+      ],
+    }) as PresetType;
+
+    if (p.isCancel(preset)) {
+      p.cancel('Operation cancelled.');
+      process.exit(0);
+    }
+  } else {
+    // Validate preset when provided via env/flag
+    const validPresets = ['minimal', 'web', 'api', 'full'];
+    if (!validPresets.includes(preset)) {
+      throw new Error(
+        `Invalid preset: ${preset}. Valid values: ${validPresets.join(', ')}`
+      );
+    }
   }
 
-  const shouldInitGit = await p.confirm({
-    message: '🔧 Initialize git repository?',
-    initialValue: true,
-  });
+  // Get install preference (env > flag > prompt)
+  let shouldInstall = getOptionValue<boolean>(
+    'BUNKIT_INSTALL',
+    options.install,
+    true // Default to true
+  );
 
-  if (p.isCancel(shouldInitGit)) {
-    p.cancel('Operation cancelled.');
-    process.exit(0);
+  if (shouldInstall === undefined) {
+    if (isNonInteractive) {
+      shouldInstall = true; // Default to true in non-interactive mode
+    } else {
+      shouldInstall = await p.confirm({
+        message: '📥 Install dependencies?',
+        initialValue: true,
+      }) as boolean;
+
+      if (p.isCancel(shouldInstall)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    }
+  }
+
+  // Get git preference (env > flag > prompt)
+  let shouldInitGit = getOptionValue<boolean>(
+    'BUNKIT_GIT',
+    options.git,
+    true // Default to true
+  );
+
+  if (shouldInitGit === undefined) {
+    if (isNonInteractive) {
+      shouldInitGit = true; // Default to true in non-interactive mode
+    } else {
+      shouldInitGit = await p.confirm({
+        message: '🔧 Initialize git repository?',
+        initialValue: true,
+      }) as boolean;
+
+      if (p.isCancel(shouldInitGit)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    }
+  }
+
+  // Show configuration in non-interactive mode
+  if (isNonInteractive) {
+    console.log('\n📋 Configuration:');
+    console.log(`  Project: ${pc.cyan(projectName)}`);
+    console.log(`  Preset: ${pc.cyan(preset)}`);
+    console.log(`  Install dependencies: ${pc.cyan(shouldInstall ? 'yes' : 'no')}`);
+    console.log(`  Initialize git: ${pc.cyan(shouldInitGit ? 'yes' : 'no')}`);
+    console.log('');
   }
 
   const s = p.spinner();
@@ -165,7 +303,7 @@ export async function initCommand() {
 function getDependenciesForPreset(preset: string): string[] {
   switch (preset) {
     case 'web':
-      return ['react@19.1.0', 'react-dom@19.1.0', 'next@15.5.6', 'tailwindcss@4.1.7'];
+      return ['react@19.1.0', 'react-dom@19.1.0', 'next@16.0.0', 'tailwindcss@4.1.7'];
     case 'api':
       return ['hono@4.7.12'];
     case 'full':

@@ -68,6 +68,66 @@ You'll be guided through:
 - Package manager preference
 - Git initialization
 
+#### Non-Interactive Mode (AI-Friendly)
+
+Create projects without prompts using environment variables or CLI flags. Perfect for automation, CI/CD pipelines, and AI agents.
+
+**Using Environment Variables (Highest Priority):**
+
+```bash
+# Full control via env vars
+BUNKIT_PROJECT_NAME=my-app \
+BUNKIT_PRESET=web \
+BUNKIT_GIT=false \
+BUNKIT_INSTALL=false \
+BUNKIT_NON_INTERACTIVE=true \
+bunkit init
+```
+
+**Using CLI Flags (Medium Priority):**
+
+```bash
+# Same result with flags
+bunkit init --name my-app --preset web --no-git --no-install --non-interactive
+```
+
+**Available Environment Variables:**
+- `BUNKIT_PROJECT_NAME` - Project name
+- `BUNKIT_PRESET` - Preset type (minimal, web, api, full)
+- `BUNKIT_GIT` - Initialize git (true/false, default: true)
+- `BUNKIT_INSTALL` - Install dependencies (true/false, default: true)
+- `BUNKIT_NON_INTERACTIVE` - Skip all prompts (true/false, default: false)
+
+**Available CLI Flags:**
+- `--name <name>` - Project name
+- `--preset <preset>` - Preset type (minimal, web, api, full)
+- `--no-git` - Skip git initialization
+- `--no-install` - Skip dependency installation
+- `--non-interactive` - Run without prompts (requires all options)
+
+**Priority Order:**
+1. Environment variables (highest)
+2. CLI flags (medium)
+3. Interactive prompts (lowest)
+
+**Examples for AI Agents:**
+
+```bash
+# Claude Code can use this to create projects autonomously
+env BUNKIT_PROJECT_NAME=saas-app \
+    BUNKIT_PRESET=full \
+    BUNKIT_GIT=true \
+    BUNKIT_INSTALL=true \
+    BUNKIT_NON_INTERACTIVE=true \
+    bunkit init
+
+# Or with flags for simplicity
+bunkit init \
+  --name saas-app \
+  --preset full \
+  --non-interactive
+```
+
 ### `bunkit create`
 
 Quickly create a project without prompts.

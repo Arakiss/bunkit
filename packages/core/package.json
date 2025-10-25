@@ -16,9 +16,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "boxen": "catalog:",
+    "chalk": "catalog:",
     "execa": "catalog:",
     "fast-glob": "catalog:",
     "fs-extra": "catalog:",
+    "ora": "catalog:",
     "pathe": "catalog:",
     "picocolors": "catalog:",
     "zod": "catalog:"
