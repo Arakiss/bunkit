@@ -326,7 +326,7 @@ export default config;
       moduleResolution: 'bundler',
       resolveJsonModule: true,
       isolatedModules: true,
-      jsx: 'preserve',
+      jsx: 'react-jsx',
       incremental: true,
       plugins: [
         {
@@ -337,7 +337,7 @@ export default config;
         '@/*': ['./src/*'],
       },
     },
-    include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+    include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/dev/types/**/*.ts'],
     exclude: ['node_modules'],
   };
 
@@ -464,7 +464,7 @@ export default config;
       moduleResolution: 'bundler',
       resolveJsonModule: true,
       isolatedModules: true,
-      jsx: 'preserve',
+      jsx: 'react-jsx',
       incremental: true,
       plugins: [
         {
@@ -475,7 +475,7 @@ export default config;
         '@/*': ['./src/*'],
       },
     },
-    include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+    include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/dev/types/**/*.ts'],
     exclude: ['node_modules'],
   };
 
