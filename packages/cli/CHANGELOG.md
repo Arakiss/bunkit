@@ -1,5 +1,13 @@
 # @bunkit/cli
 
+## 0.4.1
+
+### Patch Changes
+
+- 4666117: Fix broken Next steps box by using boxen uniformly
+
+  Replace @clack/prompts p.note() with boxen in init and create commands for consistent cross-platform box rendering. All CLI boxes now use boxen library instead of mixed unicode from different libraries.
+
 ## 0.4.0
 
 ### Minor Changes
