@@ -262,9 +262,14 @@ export async function setupBiome(
 /**
  * Get code quality tool dependencies
  */
-export function getCodeQualityDependencies(codeQuality: string): string[] {
+export function getCodeQualityDependencies(codeQuality: string): Record<string, string> {
   if (codeQuality === 'ultracite') {
-    return ['ultracite', '@biomejs/biome'];
+    return {
+      'ultracite': 'catalog:',
+      '@biomejs/biome': 'catalog:',
+    };
   }
-  return ['@biomejs/biome'];
+  return {
+    '@biomejs/biome': 'catalog:',
+  };
 }

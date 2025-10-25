@@ -604,30 +604,37 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
 
     // Calculate additional dependencies based on configuration
     if (shouldInstall) {
-      const additionalDeps: string[] = [];
+      const additionalDeps: Record<string, string> = {};
 
       // Database dependencies
       if (database && database !== 'none') {
-        additionalDeps.push(...getDatabaseDependencies(database));
+        Object.assign(additionalDeps, getDatabaseDependencies(database));
       }
 
       // Code quality dependencies
       if (codeQuality) {
-        additionalDeps.push(...getCodeQualityDependencies(codeQuality));
+        Object.assign(additionalDeps, getCodeQualityDependencies(codeQuality));
       }
 
       // Testing framework dependencies
       if (testing === 'vitest') {
-        additionalDeps.push('vitest', '@vitest/ui');
+        additionalDeps['vitest'] = 'catalog:';
+        additionalDeps['@vitest/ui'] = 'catalog:';
       }
 
       // UI library dependencies
       if (uiLibrary === 'shadcn') {
-        additionalDeps.push('class-variance-authority', 'clsx', 'tailwind-merge');
+        additionalDeps['class-variance-authority'] = 'catalog:';
+        additionalDeps['clsx'] = 'catalog:';
+        additionalDeps['tailwind-merge'] = 'catalog:';
       }
 
       // Install base dependencies + additional ones
-      await installDependencies(projectPath, additionalDeps);
+      if (Object.keys(additionalDeps).length > 0) {
+        await installDependencies(projectPath, additionalDeps);
+      } else {
+        await installDependencies(projectPath);
+      }
     }
 
     const getDevCommand = () => {

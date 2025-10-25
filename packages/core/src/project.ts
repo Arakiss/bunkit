@@ -61,7 +61,7 @@ async function createPackageJson(
     dependencies: {},
     devDependencies: {
       '@types/bun': 'latest',
-      typescript: '^5.7.2',
+      typescript: '^5.9.3',
     },
     ...(gitUser.name && { author: gitUser.name }),
   };

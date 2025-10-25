@@ -235,17 +235,29 @@ DATABASE_URL=./local.db
 }
 
 /**
- * Get database-specific package dependencies
+ * Get database-specific package dependencies with catalog references
  */
-export function getDatabaseDependencies(databaseType: string): string[] {
+export function getDatabaseDependencies(databaseType: string): Record<string, string> {
   switch (databaseType) {
     case 'postgres-drizzle':
-      return ['drizzle-orm', 'drizzle-kit'];
+      return {
+        'drizzle-orm': 'catalog:',
+        'drizzle-kit': 'catalog:',
+        'postgres': 'catalog:',
+      };
     case 'supabase':
-      return ['@supabase/supabase-js', 'drizzle-orm', 'drizzle-kit', 'postgres'];
+      return {
+        '@supabase/supabase-js': 'catalog:',
+        'drizzle-orm': 'catalog:',
+        'drizzle-kit': 'catalog:',
+        'postgres': 'catalog:',
+      };
     case 'sqlite-drizzle':
-      return ['drizzle-orm', 'drizzle-kit'];
+      return {
+        'drizzle-orm': 'catalog:',
+        'drizzle-kit': 'catalog:',
+      };
     default:
-      return [];
+      return {};
   }
 }

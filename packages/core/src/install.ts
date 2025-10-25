@@ -1,4 +1,6 @@
 import { execa } from 'execa';
+import { join } from 'pathe';
+import fs from 'fs-extra';
 import { logger } from './logger';
 
 /**
@@ -6,14 +8,22 @@ import { logger } from './logger';
  */
 export async function installDependencies(
   cwd: string,
-  packages?: string[]
+  packages?: string[] | Record<string, string>
 ): Promise<void> {
   logger.step('Installing dependencies...');
 
   try {
-    if (packages && packages.length > 0) {
+    // If packages is a Record (catalog references), update package.json first
+    if (packages && typeof packages === 'object' && !Array.isArray(packages)) {
+      await addDependenciesToPackageJson(cwd, packages);
+      await execa('bun', ['install'], { cwd, stdio: 'inherit' });
+    }
+    // If packages is a string array, use bun add
+    else if (packages && Array.isArray(packages) && packages.length > 0) {
       await execa('bun', ['add', ...packages], { cwd, stdio: 'inherit' });
-    } else {
+    }
+    // No packages specified, just install
+    else {
       await execa('bun', ['install'], { cwd, stdio: 'inherit' });
     }
     logger.success('Dependencies installed');
@@ -21,6 +31,25 @@ export async function installDependencies(
     logger.error('Failed to install dependencies');
     throw error;
   }
+}
+
+/**
+ * Add dependencies to package.json with catalog references
+ */
+async function addDependenciesToPackageJson(
+  cwd: string,
+  dependencies: Record<string, string>
+): Promise<void> {
+  const packageJsonPath = join(cwd, 'package.json');
+  const packageJson = await fs.readJson(packageJsonPath);
+
+  // Merge dependencies
+  packageJson.dependencies = {
+    ...packageJson.dependencies,
+    ...dependencies,
+  };
+
+  await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
 }
 
 /**

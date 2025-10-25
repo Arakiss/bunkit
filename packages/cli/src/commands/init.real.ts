@@ -272,7 +272,7 @@ export async function initCommand(options: InitOptions = {}) {
     // Install dependencies
     if (shouldInstall) {
       const deps = getDependenciesForPreset(preset as string);
-      if (deps.length > 0) {
+      if (Object.keys(deps).length > 0) {
         await installDependencies(projectPath, deps);
       } else {
         await installDependencies(projectPath);
@@ -317,15 +317,23 @@ export async function initCommand(options: InitOptions = {}) {
   }
 }
 
-function getDependenciesForPreset(preset: string): string[] {
+function getDependenciesForPreset(preset: string): Record<string, string> {
   switch (preset) {
     case 'web':
-      return ['react@19.1.0', 'react-dom@19.1.0', 'next@16.0.0', 'tailwindcss@4.1.7'];
+      return {
+        'react': 'catalog:',
+        'react-dom': 'catalog:',
+        'next': 'catalog:',
+        'tailwindcss': 'catalog:',
+        '@tailwindcss/postcss': 'catalog:',
+      };
     case 'api':
-      return ['hono@4.7.12'];
+      return {
+        'hono': 'catalog:',
+      };
     case 'full':
-      return []; // Handled by workspace installs
+      return {}; // Handled by workspace installs
     default:
-      return [];
+      return {};
   }
 }

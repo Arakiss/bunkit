@@ -33,7 +33,7 @@ function getMinimalPreset(): PresetConfig {
     dependencies: {},
     devDependencies: {
       '@types/bun': 'latest',
-      typescript: '^5.7.2',
+      typescript: '^5.9.3',
     },
     scripts: {
       dev: 'bun run --hot src/index.ts',
@@ -56,7 +56,7 @@ function getWebPreset(): PresetConfig {
       '@types/react': '^19.1.0',
       '@types/react-dom': '^19.1.0',
       '@types/node': '^22.10.6',
-      typescript: '^5.7.2',
+      typescript: '^5.9.3',
     },
     scripts: {
       dev: 'next dev',
@@ -76,7 +76,7 @@ function getApiPreset(): PresetConfig {
     },
     devDependencies: {
       '@types/bun': 'latest',
-      typescript: '^5.7.2',
+      typescript: '^5.9.3',
     },
     scripts: {
       dev: 'bun run --hot src/index.ts',
@@ -93,7 +93,7 @@ function getFullPreset(): PresetConfig {
     dependencies: {},
     devDependencies: {
       '@types/bun': 'latest',
-      typescript: '^5.7.2',
+      typescript: '^5.9.3',
     },
     scripts: {
       dev: 'bun run --filter "*" dev',

@@ -42,15 +42,21 @@ export async function buildFullPreset(
       test: 'bun test',
     },
     devDependencies: {
-      '@biomejs/biome': '^2.3.0',
+      '@biomejs/biome': 'catalog:',
       '@types/bun': 'latest',
-      typescript: '^5.7.2',
+      typescript: 'catalog:',
     },
     catalog: {
       react: '^19.1.0',
       'react-dom': '^19.1.0',
       next: '^16.0.0',
       hono: '^4.7.12',
+      '@biomejs/biome': '^2.3.0',
+      typescript: '^5.9.3',
+      '@types/react': '^19.1.0',
+      '@types/react-dom': '^19.1.0',
+      '@types/node': '^22.10.6',
+      tailwindcss: '^4.1.7',
     },
   };
 
@@ -86,11 +92,11 @@ coverage = true
       [`@${context.packageName}/types`]: 'workspace:*',
     },
     devDependencies: {
-      '@types/react': '^19.1.0',
-      '@types/react-dom': '^19.1.0',
-      '@types/node': '^22.10.6',
-      typescript: '^5.7.2',
-      tailwindcss: '^4.1.5',
+      '@types/react': 'catalog:',
+      '@types/react-dom': 'catalog:',
+      '@types/node': 'catalog:',
+      typescript: 'catalog:',
+      tailwindcss: 'catalog:',
     },
   };
 
@@ -116,11 +122,11 @@ coverage = true
       [`@${context.packageName}/types`]: 'workspace:*',
     },
     devDependencies: {
-      '@types/react': '^19.1.0',
-      '@types/react-dom': '^19.1.0',
-      '@types/node': '^22.10.6',
-      typescript: '^5.7.2',
-      tailwindcss: '^4.1.5',
+      '@types/react': 'catalog:',
+      '@types/react-dom': 'catalog:',
+      '@types/node': 'catalog:',
+      typescript: 'catalog:',
+      tailwindcss: 'catalog:',
     },
   };
 
@@ -145,7 +151,7 @@ coverage = true
     },
     devDependencies: {
       '@types/bun': 'latest',
-      typescript: '^5.7.2',
+      typescript: 'catalog:',
     },
   };
 
@@ -690,17 +696,17 @@ Built with ❤️ using Bun monorepo features
       types: './src/index.ts',
       dependencies: context.database === 'supabase'
         ? {
-            '@supabase/supabase-js': '^2.48.1',
-            'drizzle-orm': '^0.38.0',
-            'postgres': '^3.4.5',
+            '@supabase/supabase-js': 'catalog:',
+            'drizzle-orm': 'catalog:',
+            'postgres': 'catalog:',
           }
         : {
-            'drizzle-orm': '^0.38.0',
+            'drizzle-orm': 'catalog:',
           },
       devDependencies: {
-        'drizzle-kit': '^0.30.1',
+        'drizzle-kit': 'catalog:',
         '@types/bun': 'latest',
-        'typescript': '^5.7.2',
+        'typescript': 'catalog:',
       },
     };
 
