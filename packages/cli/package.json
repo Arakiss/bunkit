@@ -1,6 +1,6 @@
 {
   "name": "bunkit-cli",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Beautiful CLI for creating production-ready Bun projects",
   "type": "module",
   "bin": {
