@@ -338,7 +338,7 @@ Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## 📄 License
 
-MIT © [Petru Cosmin Dumitru](https://github.com/Arakiss)
+MIT © [Arakiss](https://github.com/Arakiss)
 
 ## 🙏 Acknowledgments
 
