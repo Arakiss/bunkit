@@ -1,5 +1,12 @@
 # @bunkit/templates
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [de87a5a]
+  - @bunkit/core@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes
