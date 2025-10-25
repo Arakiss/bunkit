@@ -4,13 +4,13 @@
 
 **bunkit** is a modern, opinionated CLI for scaffolding Bun-powered projects with enterprise-grade patterns built-in.
 
-[![Version](https://img.shields.io/badge/version-0.1.0--alpha.1-blue.svg)](https://github.com/Arakiss/bunkit)
+[![Version](https://img.shields.io/npm/v/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/bun-1.3+-orange.svg)](https://bun.sh)
-[![Status](https://img.shields.io/badge/status-alpha-yellow.svg)](./CHANGELOG.md)
+[![Status](https://img.shields.io/badge/status-beta-blue.svg)](./CHANGELOG.md)
 [![CI/CD](https://github.com/Arakiss/bunkit/actions/workflows/release.yml/badge.svg)](https://github.com/Arakiss/bunkit/actions/workflows/release.yml)
 
-> **⚠️ Alpha Release**: This is v0.1.0-alpha.1 - suitable for testing and early adoption. See [CHANGELOG](./packages/cli/CHANGELOG.md) for details.
+> **🚀 Beta Release**: bunkit is in active development. Production-ready for early adopters. See [CHANGELOG](./packages/cli/CHANGELOG.md) for latest updates.
 
 ## ✨ Features
 
@@ -18,8 +18,12 @@
 - 🎨 **Beautiful Interactive CLI** - Built with @clack/prompts (same as Astro)
 - 📦 **Modern Stack** - Next.js 16, React 19, Hono, Tailwind CSS 4
 - ⚡ **Bun-Native** - Leverages Bun 1.3 features (catalogs, isolated installs, HMR)
-- 🔒 **Type-Safe by Default** - TypeScript strict mode everywhere
-- 🎯 **Zero Configuration** - Works out of the box, customize when needed
+- 🗄️ **Database Options** - PostgreSQL/Drizzle, Supabase, SQLite, or None
+- 🤖 **AI-Optimized** - Ultracite integration (Cursor, Windsurf, Claude Code, Zed)
+- 🐳 **Docker Ready** - Multi-stage Dockerfiles with Bun official images
+- 🔄 **CI/CD Built-in** - GitHub Actions workflows with lint/test/build/docker
+- 🔒 **Type-Safe by Default** - TypeScript strict mode everywhere (configurable)
+- 🎯 **Zero Configuration** - Works out of the box, fully customizable
 - 🏢 **Enterprise Patterns** - Monorepo architecture, shared packages, proper structure
 
 ## 🚀 Quick Start
@@ -249,9 +253,12 @@ my-saas/
 | Frontend | Next.js | 16.0+ |
 | React | React | 19.1+ |
 | Backend | Hono | 4.7+ |
+| Database | Drizzle ORM | 0.38+ |
+| Database | Supabase JS | 2.48+ |
 | Styling | Tailwind CSS | 4.1+ |
-| Language | TypeScript | 5.7+ |
-| Code Quality | Biome | 2.3+ |
+| Language | TypeScript | 5.9+ |
+| Code Quality | Biome / Ultracite | 2.3+ / 1.0+ |
+| Testing | Bun Test / Vitest | Built-in / 2.0+ |
 
 ## 💡 Philosophy
 
@@ -291,7 +298,23 @@ bunkit uses [Changesets](https://github.com/changesets/changesets) for semantic 
 
 ### Version History
 
-- **v0.1.0-alpha.1** (Current) - Initial alpha release with all 4 presets
+- **v0.5.1** (Current) - Bun dependency catalog implementation
+  - Centralized dependency management with catalog: references
+  - Updated all dependencies to latest versions
+  - TypeScript 5.9.3 across all presets
+
+- **v0.5.0** - Major customization update
+  - Database integration (PostgreSQL/Drizzle, Supabase, SQLite)
+  - Ultracite AI-optimized code quality (.cursorrules, .windsurfrules, CLAUDE.md)
+  - Docker support (multi-stage builds with Bun official images)
+  - GitHub Actions CI/CD (lint, typecheck, test, build, docker)
+  - TypeScript strictness levels (strict, moderate, loose)
+  - Testing framework options (bun-test, vitest)
+
+- **v0.1.0-alpha.1** - Initial alpha release
+  - All 4 presets (minimal, web, api, full)
+  - Beautiful interactive CLI
+  - Bun 1.3+ monorepo features
   - See [CHANGELOG](./packages/cli/CHANGELOG.md) for full details
 
 ### Semantic Versioning
@@ -347,24 +370,33 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for full setup guide.
 
 ### Roadmap
 
-**Alpha (Current - v0.1.0-alpha.1)**
+**Beta (Current - v0.5.x)**
 - ✅ Core CLI functionality
 - ✅ All 4 presets working
 - ✅ Beautiful interactive experience
 - ✅ Automated CI/CD with GitHub Actions
 - ✅ Semantic versioning with Changesets
+- ✅ Database integration (PostgreSQL, Supabase, SQLite)
+- ✅ AI-optimized code quality (Ultracite)
+- ✅ Docker support
+- ✅ GitHub Actions workflows
+- ✅ Dependency catalog management
+- 🚧 Enhanced `bunkit init` with 12 customization prompts
+- 🚧 Tests and test coverage
+- 🚧 Example projects
 
-**Beta (v0.2.0-beta.x)**
-- Feature system (`bunkit add`)
-- Tests and test coverage
-- Community feedback integration
-- Example projects
+**v0.6.0 - Feature System**
+- `bunkit add auth` - Authentication (Supabase, Clerk, NextAuth)
+- `bunkit add ui` - UI components (shadcn/ui)
+- `bunkit add payments` - Payments (Stripe)
+- `bunkit add email` - Email (Resend + React Email)
+- `bunkit add storage` - File storage (Supabase, S3)
 
 **Stable (v1.0.0)**
 - Production-ready
 - Full test coverage
 - Complete documentation
-- npm registry publication
+- Active community
 
 ## 🤝 Contributing
 
