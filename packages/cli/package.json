@@ -1,0 +1,71 @@
+{
+  "name": "@bunkit/cli",
+  "version": "0.1.0",
+  "description": "Beautiful CLI for creating production-ready Bun projects",
+  "type": "module",
+  "bin": {
+    "bunkit": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun --format esm && bun run build:types",
+    "build:types": "tsc --project tsconfig.build.json",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bunkit/core": "workspace:*",
+    "@bunkit/templates": "workspace:*",
+    "@bunkit/generators": "workspace:*",
+    "@clack/prompts": "catalog:",
+    "picocolors": "catalog:",
+    "commander": "catalog:",
+    "execa": "catalog:",
+    "consola": "catalog:",
+    "pathe": "catalog:",
+    "defu": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.7.2"
+  },
+  "keywords": [
+    "cli",
+    "bun",
+    "scaffold",
+    "generator",
+    "template",
+    "starter",
+    "boilerplate",
+    "monorepo",
+    "nextjs",
+    "hono",
+    "supabase",
+    "drizzle"
+  ],
+  "author": "Petru Cosmin Dumitru",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Arakiss/bunkit.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Arakiss/bunkit/issues"
+  },
+  "homepage": "https://github.com/Arakiss/bunkit#readme"
+}

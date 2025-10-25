@@ -1,0 +1,22 @@
+[install]
+# Faster installs
+frozenLockfile = false
+production = false
+optional = true
+
+# Isolated installs (prevent phantom dependencies)
+exact = true
+
+[install.cache]
+# Cache dependencies globally
+dir = "~/.bun/install/cache"
+
+[test]
+# Test configuration
+preload = []
+coverage = true
+coverageDir = "./coverage"
+
+[run]
+# Quiet bun run output
+silent = false
