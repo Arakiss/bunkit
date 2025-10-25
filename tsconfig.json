@@ -4,7 +4,7 @@
     "module": "ESNext",
     "lib": ["ESNext"],
     "moduleResolution": "bundler",
-    "types": ["bun-types"],
+    "types": ["@types/bun"],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
 

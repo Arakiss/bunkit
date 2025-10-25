@@ -303,10 +303,22 @@ We follow [SemVer 2.0.0](https://semver.org/):
 
 ### Release Process
 
-```bash
-# Add a changeset (describe your changes)
-bun run changeset
+**Automated (Recommended):**
 
+1. Add a changeset for your changes:
+   ```bash
+   bun run changeset
+   ```
+
+2. Push to main (via PR merge)
+
+3. GitHub Actions automatically creates "Release: Version Packages" PR
+
+4. Merge the release PR → Packages auto-publish to npm ✨
+
+**Manual:**
+
+```bash
 # Version packages (updates package.json + CHANGELOG)
 bun run version
 
@@ -314,17 +326,38 @@ bun run version
 bun run release
 ```
 
+### CI/CD
+
+bunkit uses **GitHub Actions + Changesets** for automated releases:
+
+- **Workflow**: `.github/workflows/release.yml`
+- **Triggers**: Push to `main` branch
+- **Process**:
+  1. Detects changesets
+  2. Creates release PR with version bumps
+  3. Publishes to npm on PR merge
+
+**Setup Requirements:**
+- `NPM_TOKEN` secret configured in GitHub
+- Token type: "Automation" (no 2FA)
+- Token permissions: "Read and write"
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for full setup guide.
+
 ### Roadmap
 
-**Alpha (Current)**
+**Alpha (Current - v0.1.0-alpha.1)**
 - ✅ Core CLI functionality
 - ✅ All 4 presets working
 - ✅ Beautiful interactive experience
+- ✅ Automated CI/CD with GitHub Actions
+- ✅ Semantic versioning with Changesets
 
 **Beta (v0.2.0-beta.x)**
 - Feature system (`bunkit add`)
-- Tests and CI/CD
+- Tests and test coverage
 - Community feedback integration
+- Example projects
 
 **Stable (v1.0.0)**
 - Production-ready
