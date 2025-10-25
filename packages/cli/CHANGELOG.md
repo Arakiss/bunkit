@@ -1,5 +1,15 @@
 # @bunkit/cli
 
+## 0.2.0
+
+### Minor Changes
+
+- 573d9b4: Add beautiful ASCII art banner to CLI
+
+  Added a stunning ASCII art logo with the bunkit name and bread mascot 🍞.
+  The banner now displays when running commands (init, create, add) and when
+  viewing help, making the CLI experience more delightful and brand-consistent.
+
 ## 0.1.3
 
 ### Patch Changes
