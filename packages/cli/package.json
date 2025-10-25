@@ -28,13 +28,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@clack/prompts": "^0.11.0",
-    "picocolors": "^1.1.1",
-    "commander": "^14.0.1",
-    "execa": "^9.6.0",
-    "consola": "^3.2.3",
-    "pathe": "^1.1.2",
-    "defu": "^6.1.4"
+    "@clack/prompts": "catalog:",
+    "boxen": "catalog:",
+    "chalk": "catalog:",
+    "commander": "catalog:",
+    "consola": "catalog:",
+    "defu": "catalog:",
+    "execa": "catalog:",
+    "pathe": "catalog:",
+    "picocolors": "catalog:"
   },
   "devDependencies": {
     "@bunkit/core": "workspace:*",

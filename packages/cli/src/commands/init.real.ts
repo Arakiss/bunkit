@@ -1,5 +1,7 @@
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
+import boxen from 'boxen';
+import chalk from 'chalk';
 import { join } from 'pathe';
 import {
   validateProjectName,
@@ -283,16 +285,22 @@ export async function initCommand(options: InitOptions = {}) {
       }
     };
 
-    p.note(
-      [
-        `${pc.cyan('cd')} ${projectName}`,
-        shouldInstall ? '' : `${pc.cyan('bun install')}`,
-        `${pc.cyan(getDevCommand())} ${pc.dim('# Start development')}`,
-      ]
-        .filter(Boolean)
-        .join('\n'),
-      `${getPresetEmoji()} Next steps`
-    );
+    // Show next steps with boxen for consistent cross-platform rendering
+    const nextSteps = [
+      `${chalk.cyan('cd')} ${projectName}`,
+      shouldInstall ? '' : `${chalk.cyan('bun install')}`,
+      `${chalk.cyan(getDevCommand())} ${chalk.dim('# Start development')}`,
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    console.log('\n' + boxen(nextSteps, {
+      padding: 1,
+      title: `${getPresetEmoji()} Next steps`,
+      titleAlignment: 'left',
+      borderColor: 'cyan',
+      borderStyle: 'round',
+    }));
   } catch (error) {
     s.stop('❌ Failed to create project');
     p.cancel(`${pc.red('Error:')} ${(error as Error).message}`);

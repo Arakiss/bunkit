@@ -1,4 +1,6 @@
 import * as p from '@clack/prompts';
+import boxen from 'boxen';
+import chalk from 'chalk';
 
 export async function createCommand(
   preset: string,
@@ -13,8 +15,17 @@ export async function createCommand(
 
   s.stop(`Project ${name} created!`);
 
-  p.note(
-    [`cd ${name}`, preset === 'web' ? 'bun dev' : 'bun run dev'].join('\n'),
-    'Next steps'
-  );
+  // Show next steps with boxen for consistent cross-platform rendering
+  const nextSteps = [
+    `${chalk.cyan('cd')} ${name}`,
+    chalk.cyan(preset === 'web' ? 'bun dev' : 'bun run dev'),
+  ].join('\n');
+
+  console.log('\n' + boxen(nextSteps, {
+    padding: 1,
+    title: '📋 Next steps',
+    titleAlignment: 'left',
+    borderColor: 'cyan',
+    borderStyle: 'round',
+  }));
 }
