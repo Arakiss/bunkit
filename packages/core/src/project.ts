@@ -184,5 +184,17 @@ export function createTemplateContext(config: ProjectConfig): TemplateContext {
     license: 'MIT',
     features: config.features || [],
     supportsTypeScript: true,
+
+    // Pass through all configuration options
+    database: config.database,
+    codeQuality: config.codeQuality,
+    tsStrictness: config.tsStrictness,
+    uiLibrary: config.uiLibrary,
+    cssFramework: config.cssFramework,
+    testing: config.testing,
+    docker: config.docker,
+    cicd: config.cicd,
+    envExample: config.envExample,
+    pathAliases: config.pathAliases,
   };
 }

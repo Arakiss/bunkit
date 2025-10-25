@@ -8,3 +8,18 @@ export { buildWebPreset } from './builders/web';
 export { buildApiPreset } from './builders/api';
 export { buildFullPreset } from './builders/full';
 export type { PresetConfig } from './types';
+
+// Generators
+export {
+  setupPostgresDrizzle,
+  setupSupabase,
+  setupSQLiteDrizzle,
+  getDatabaseDependencies,
+} from './generators/database';
+export {
+  setupUltracite,
+  setupBiome,
+  getCodeQualityDependencies,
+} from './generators/ultracite';
+export { setupDocker } from './generators/docker';
+export { setupGitHubActions } from './generators/cicd';

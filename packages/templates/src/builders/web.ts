@@ -1,5 +1,8 @@
 import { join } from 'pathe';
 import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
+import { setupUltracite, setupBiome } from '../generators/ultracite';
+import { setupDocker } from '../generators/docker';
+import { setupGitHubActions } from '../generators/cicd';
 
 /**
  * Build web (Next.js) preset files
@@ -96,14 +99,13 @@ export default config;
 
   await writeFile(join(projectPath, 'tailwind.config.ts'), tailwindConfigContent);
 
-  // tsconfig.json
-  const tsconfigContent = {
-    compilerOptions: {
+  // tsconfig.json - strictness based on user choice
+  const getTsCompilerOptions = () => {
+    const baseOptions = {
       target: 'ES2017',
       lib: ['dom', 'dom.iterable', 'esnext'],
       allowJs: true,
       skipLibCheck: true,
-      strict: true,
       noEmit: true,
       esModuleInterop: true,
       module: 'esnext',
@@ -113,10 +115,40 @@ export default config;
       jsx: 'react-jsx',
       incremental: true,
       plugins: [{ name: 'next' }],
-      paths: {
-        '@/*': ['./src/*'],
-      },
-    },
+      paths: context.pathAliases ? { '@/*': ['./src/*'] } : undefined,
+    };
+
+    // Strictness levels
+    if (context.tsStrictness === 'strict') {
+      return {
+        ...baseOptions,
+        strict: true,
+        noUnusedLocals: true,
+        noUnusedParameters: true,
+        noFallthroughCasesInSwitch: true,
+        noImplicitReturns: true,
+      };
+    }
+
+    if (context.tsStrictness === 'moderate') {
+      return {
+        ...baseOptions,
+        strict: true,
+        noUnusedLocals: false,
+        noUnusedParameters: false,
+      };
+    }
+
+    // Loose
+    return {
+      ...baseOptions,
+      strict: false,
+      noImplicitAny: false,
+    };
+  };
+
+  const tsconfigContent = {
+    compilerOptions: getTsCompilerOptions(),
     include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/dev/types/**/*.ts'],
     exclude: ['node_modules'],
   };
@@ -126,29 +158,20 @@ export default config;
     JSON.stringify(tsconfigContent, null, 2)
   );
 
-  // biome.json
-  const biomeContent = {
-    $schema: 'https://biomejs.dev/schemas/1.9.4/schema.json',
-    vcs: {
-      enabled: true,
-      clientKind: 'git',
-      useIgnoreFile: true,
-    },
-    formatter: {
-      enabled: true,
-      indentStyle: 'space',
-      indentWidth: 2,
-    },
-    linter: {
-      enabled: true,
-      rules: {
-        recommended: true,
-      },
-    },
-  };
+  // Setup code quality tools
+  if (context.codeQuality === 'ultracite') {
+    await setupUltracite(projectPath, context);
+  } else {
+    await setupBiome(projectPath, context);
+  }
 
-  await writeFile(
-    join(projectPath, 'biome.json'),
-    JSON.stringify(biomeContent, null, 2)
-  );
+  // Setup Docker if requested
+  if (context.docker) {
+    await setupDocker(projectPath, context);
+  }
+
+  // Setup CI/CD if requested
+  if (context.cicd) {
+    await setupGitHubActions(projectPath, context);
+  }
 }

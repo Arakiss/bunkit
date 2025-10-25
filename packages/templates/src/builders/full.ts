@@ -1,5 +1,13 @@
 import { join } from 'pathe';
 import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
+import {
+  setupPostgresDrizzle,
+  setupSupabase,
+  setupSQLiteDrizzle,
+} from '../generators/database';
+import { setupUltracite, setupBiome } from '../generators/ultracite';
+import { setupDocker } from '../generators/docker';
+import { setupGitHubActions } from '../generators/cicd';
 
 /**
  * Build full-stack monorepo preset files
@@ -14,6 +22,11 @@ export async function buildFullPreset(
   await ensureDirectory(join(projectPath, 'apps/api'));      // Backend API
   await ensureDirectory(join(projectPath, 'packages/types'));
   await ensureDirectory(join(projectPath, 'packages/utils'));
+
+  // Create database package if database is configured
+  if (context.database && context.database !== 'none') {
+    await ensureDirectory(join(projectPath, 'packages/db'));
+  }
 
   // Root package.json (monorepo)
   const rootPackageJson = {
@@ -312,14 +325,13 @@ export default config;
 
   await writeFile(join(projectPath, 'apps/web/tailwind.config.ts'), webTailwindConfigContent);
 
-  // apps/web/tsconfig.json
-  const webTsconfigContent = {
-    compilerOptions: {
+  // apps/web/tsconfig.json - configurable strictness
+  const getWebTsConfig = () => {
+    const baseOptions = {
       target: 'ES2017',
       lib: ['dom', 'dom.iterable', 'esnext'],
       allowJs: true,
       skipLibCheck: true,
-      strict: true,
       noEmit: true,
       esModuleInterop: true,
       module: 'esnext',
@@ -328,15 +340,39 @@ export default config;
       isolatedModules: true,
       jsx: 'react-jsx',
       incremental: true,
-      plugins: [
-        {
-          name: 'next',
-        },
-      ],
-      paths: {
-        '@/*': ['./src/*'],
-      },
-    },
+      plugins: [{ name: 'next' }],
+      paths: context.pathAliases ? { '@/*': ['./src/*'] } : undefined,
+    };
+
+    if (context.tsStrictness === 'strict') {
+      return {
+        ...baseOptions,
+        strict: true,
+        noUnusedLocals: true,
+        noUnusedParameters: true,
+        noFallthroughCasesInSwitch: true,
+        noImplicitReturns: true,
+      };
+    }
+
+    if (context.tsStrictness === 'moderate') {
+      return {
+        ...baseOptions,
+        strict: true,
+        noUnusedLocals: false,
+        noUnusedParameters: false,
+      };
+    }
+
+    return {
+      ...baseOptions,
+      strict: false,
+      noImplicitAny: false,
+    };
+  };
+
+  const webTsconfigContent = {
+    compilerOptions: getWebTsConfig(),
     include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/dev/types/**/*.ts'],
     exclude: ['node_modules'],
   };
@@ -450,31 +486,9 @@ export default config;
 
   await writeFile(join(projectPath, 'apps/platform/tailwind.config.ts'), platformTailwindConfigContent);
 
-  // apps/platform/tsconfig.json
+  // apps/platform/tsconfig.json - same strictness as web
   const platformTsconfigContent = {
-    compilerOptions: {
-      target: 'ES2017',
-      lib: ['dom', 'dom.iterable', 'esnext'],
-      allowJs: true,
-      skipLibCheck: true,
-      strict: true,
-      noEmit: true,
-      esModuleInterop: true,
-      module: 'esnext',
-      moduleResolution: 'bundler',
-      resolveJsonModule: true,
-      isolatedModules: true,
-      jsx: 'react-jsx',
-      incremental: true,
-      plugins: [
-        {
-          name: 'next',
-        },
-      ],
-      paths: {
-        '@/*': ['./src/*'],
-      },
-    },
+    compilerOptions: getWebTsConfig(), // Reuse same config as web
     include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/dev/types/**/*.ts'],
     exclude: ['node_modules'],
   };
@@ -658,4 +672,133 @@ Built with ❤️ using Bun monorepo features
     join(projectPath, 'tsconfig.json'),
     JSON.stringify(tsconfigContent, null, 2)
   );
+
+  // ========================================
+  // INTEGRATIONS - Database, Code Quality, Docker, CI/CD
+  // ========================================
+
+  // Setup database package if configured
+  if (context.database && context.database !== 'none') {
+    const dbPackagePath = join(projectPath, 'packages/db');
+
+    // packages/db/package.json
+    const dbPackageJson = {
+      name: `@${context.packageName}/db`,
+      version: '0.0.0',
+      private: true,
+      main: './src/index.ts',
+      types: './src/index.ts',
+      dependencies: context.database === 'supabase'
+        ? {
+            '@supabase/supabase-js': '^2.48.1',
+            'drizzle-orm': '^0.38.0',
+            'postgres': '^3.4.5',
+          }
+        : {
+            'drizzle-orm': '^0.38.0',
+          },
+      devDependencies: {
+        'drizzle-kit': '^0.30.1',
+        '@types/bun': 'latest',
+        'typescript': '^5.7.2',
+      },
+    };
+
+    await writeFile(
+      join(dbPackagePath, 'package.json'),
+      JSON.stringify(dbPackageJson, null, 2)
+    );
+
+    // Setup database files
+    if (context.database === 'postgres-drizzle') {
+      await setupPostgresDrizzle(dbPackagePath, context, true);
+    } else if (context.database === 'supabase') {
+      await setupSupabase(dbPackagePath, context, true);
+    } else if (context.database === 'sqlite-drizzle') {
+      await setupSQLiteDrizzle(dbPackagePath, context, true);
+    }
+
+    // Update apps/api to use database
+    const apiPackageJson = JSON.parse(
+      await Bun.file(join(projectPath, 'apps/api/package.json')).text()
+    );
+    apiPackageJson.dependencies[`@${context.packageName}/db`] = 'workspace:*';
+    await writeFile(
+      join(projectPath, 'apps/api/package.json'),
+      JSON.stringify(apiPackageJson, null, 2)
+    );
+  }
+
+  // Setup code quality tools (root level for monorepo)
+  if (context.codeQuality === 'ultracite') {
+    await setupUltracite(projectPath, context);
+  } else {
+    await setupBiome(projectPath, context);
+  }
+
+  // Setup Docker for monorepo
+  if (context.docker) {
+    await setupDocker(projectPath, context);
+
+    // Create docker-compose for monorepo with all services
+    const dockerCompose = `version: '3.8'
+
+services:
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: ../../Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      ${context.database === 'supabase' ? '- NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\n      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}' : ''}
+    restart: unless-stopped
+
+  platform:
+    build:
+      context: ./apps/platform
+      dockerfile: ../../Dockerfile
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      ${context.database === 'supabase' ? '- NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\n      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}' : ''}
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: ../../Dockerfile
+    ports:
+      - "3002:3001"
+    environment:
+      - NODE_ENV=production
+      ${context.database && context.database !== 'none' && context.database !== 'supabase' ? `- DATABASE_URL=\${DATABASE_URL}` : ''}
+    ${context.database && context.database !== 'none' && context.database !== 'supabase' ? 'depends_on:\n      - db' : ''}
+    restart: unless-stopped
+
+  ${context.database && context.database !== 'none' && context.database !== 'supabase' ? `db:
+    image: ${context.database === 'sqlite-drizzle' ? 'alpine:latest' : 'postgres:16-alpine'}
+    ${context.database !== 'sqlite-drizzle' ? `environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=${context.projectName}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"` : 'volumes:\n      - sqlite_data:/data'}
+    restart: unless-stopped
+` : ''}
+${context.database && context.database !== 'none' && context.database !== 'supabase' ? `volumes:
+  ${context.database === 'sqlite-drizzle' ? 'sqlite_data:' : 'postgres_data:'}` : ''}
+`;
+
+    await writeFile(join(projectPath, 'docker-compose.yml'), dockerCompose);
+  }
+
+  // Setup CI/CD for monorepo (with matrix builds for each app)
+  if (context.cicd) {
+    await setupGitHubActions(projectPath, context);
+  }
 }

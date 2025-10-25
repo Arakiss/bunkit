@@ -232,6 +232,15 @@ export async function initCommand(options: InitOptions = {}) {
       path: projectName as string,
       git: shouldInitGit as boolean,
       install: shouldInstall as boolean,
+
+      // Default values for new options (backward compatibility)
+      codeQuality: 'biome',
+      tsStrictness: 'strict',
+      testing: 'bun-test',
+      docker: false,
+      cicd: false,
+      envExample: true,
+      pathAliases: true,
     };
 
     // Create base project

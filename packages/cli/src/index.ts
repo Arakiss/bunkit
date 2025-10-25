@@ -3,7 +3,7 @@ import { Command } from 'commander';
 import { outro, log } from '@clack/prompts';
 import pc from 'picocolors';
 import { showBanner } from '@bunkit/core';
-import { initCommand } from './commands/init.real';
+import { enhancedInitCommand } from './commands/init.enhanced';
 import { createCommand } from './commands/create';
 import { addCommand } from './commands/add';
 
@@ -20,16 +20,24 @@ program
 
 program
   .command('init')
-  .description('Create a new project interactively')
+  .description('Create a new project with full customization')
   .option('--name <name>', 'Project name')
   .option('--preset <preset>', 'Preset type (minimal, web, api, full)')
+  .option('--database <database>', 'Database (postgres-drizzle, supabase, sqlite-drizzle, none)')
+  .option('--code-quality <quality>', 'Code quality (ultracite, biome)')
+  .option('--ts-strictness <strictness>', 'TypeScript strictness (strict, moderate, loose)')
+  .option('--ui-library <library>', 'UI library (shadcn, none)')
+  .option('--css-framework <framework>', 'CSS framework (tailwind, vanilla, css-modules)')
+  .option('--testing <framework>', 'Testing framework (bun-test, vitest, none)')
+  .option('--docker', 'Add Docker configuration')
+  .option('--cicd', 'Add GitHub Actions CI/CD')
   .option('--no-git', 'Skip git initialization')
   .option('--no-install', 'Skip dependency installation')
   .option('--non-interactive', 'Run without prompts (requires all options)')
   .action(async (options) => {
     showBanner(VERSION);
     try {
-      await initCommand(options);
+      await enhancedInitCommand(options);
       outro(pc.green('✨ Done! Your project is ready to bake! 🍞'));
     } catch (error) {
       log.error((error as Error).message);
