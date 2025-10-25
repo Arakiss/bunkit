@@ -27,13 +27,13 @@
 ### Using bunx (Recommended)
 
 ```bash
-bunx @bunkit/cli init
+bunx bunkit-cli init
 ```
 
 ### Global Installation
 
 ```bash
-bun add -g @bunkit/cli
+bun add -g bunkit-cli
 bunkit init
 ```
 

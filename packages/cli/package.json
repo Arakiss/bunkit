@@ -1,5 +1,5 @@
 {
-  "name": "@bunkit/cli",
+  "name": "bunkit-cli",
   "version": "0.1.1",
   "description": "Beautiful CLI for creating production-ready Bun projects",
   "type": "module",
@@ -28,9 +28,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@bunkit/core": "workspace:*",
-    "@bunkit/templates": "workspace:*",
-    "@bunkit/generators": "workspace:*",
     "@clack/prompts": "catalog:",
     "picocolors": "catalog:",
     "commander": "catalog:",
@@ -40,6 +37,9 @@
     "defu": "catalog:"
   },
   "devDependencies": {
+    "@bunkit/core": "workspace:*",
+    "@bunkit/templates": "workspace:*",
+    "@bunkit/generators": "workspace:*",
     "@types/bun": "latest",
     "typescript": "^5.7.2"
   },
