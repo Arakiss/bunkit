@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 import { Command } from 'commander';
-import { intro, outro } from '@clack/prompts';
+import { intro, outro, log } from '@clack/prompts';
 import pc from 'picocolors';
-import { initCommand } from './commands/init';
+import { initCommand } from './commands/init.real';
 import { createCommand } from './commands/create';
 import { addCommand } from './commands/add';
 
@@ -17,9 +17,15 @@ program
   .command('init')
   .description('Create a new project interactively')
   .action(async () => {
+    console.log('');
     intro(pc.bgCyan(pc.black(' bunkit ')));
-    await initCommand();
-    outro(pc.green('Done! Happy coding! 🍞'));
+    try {
+      await initCommand();
+      outro(pc.green('Done! Happy coding! 🍞'));
+    } catch (error) {
+      log.error((error as Error).message);
+      process.exit(1);
+    }
   });
 
 program
@@ -30,9 +36,15 @@ program
   .option('--no-install', 'Skip dependency installation')
   .description('Create a new project quickly')
   .action(async (preset, name, options) => {
+    console.log('');
     intro(pc.bgCyan(pc.black(' bunkit ')));
-    await createCommand(preset, name, options);
-    outro(pc.green('Done! Happy coding! 🍞'));
+    try {
+      await createCommand(preset, name, options);
+      outro(pc.green('Done! Happy coding! 🍞'));
+    } catch (error) {
+      log.error((error as Error).message);
+      process.exit(1);
+    }
   });
 
 program
@@ -41,9 +53,15 @@ program
   .option('--provider <provider>', 'Provider to use')
   .description('Add a feature to existing project')
   .action(async (feature, options) => {
+    console.log('');
     intro(pc.bgCyan(pc.black(' bunkit ')));
-    await addCommand(feature, options);
-    outro(pc.green('Done! Happy coding! 🍞'));
+    try {
+      await addCommand(feature, options);
+      outro(pc.green('Done! Happy coding! 🍞'));
+    } catch (error) {
+      log.error((error as Error).message);
+      process.exit(1);
+    }
   });
 
 program.parse();

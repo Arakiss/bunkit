@@ -2,78 +2,288 @@
 
 > Bake production-ready apps in seconds
 
-**bunkit** is a modern CLI for scaffolding Bun-powered projects with enterprise-grade patterns and zero configuration.
+**bunkit** is a modern, opinionated CLI for scaffolding Bun-powered projects with enterprise-grade patterns built-in.
+
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/Arakiss/bunkit)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![Bun](https://img.shields.io/badge/bun-1.3+-orange.svg)](https://bun.sh)
 
 ## ✨ Features
 
-- 🚀 **4 Presets** - minimal, web (Next.js 15), api (Hono), full (monorepo)
-- 🎨 **Beautiful CLI** - Built with @clack/prompts (same as Astro)
-- 📦 **Smart Defaults** - Supabase, Drizzle, shadcn/ui, Tailwind CSS 4
-- ⚡ **Bun-First** - Leverages Bun 1.3 features (catalogs, native drivers, HMR)
-- 🔒 **Type-Safe** - TypeScript strict mode everywhere
-- 🎯 **Zero Config** - Works out of the box
+- 🚀 **4 Production-Ready Presets** - From minimal CLIs to full-stack monorepos
+- 🎨 **Beautiful Interactive CLI** - Built with @clack/prompts (same as Astro)
+- 📦 **Modern Stack** - Next.js 15, React 19, Hono, Tailwind CSS 4
+- ⚡ **Bun-Native** - Leverages Bun 1.3 features (catalogs, isolated installs, HMR)
+- 🔒 **Type-Safe by Default** - TypeScript strict mode everywhere
+- 🎯 **Zero Configuration** - Works out of the box, customize when needed
+- 🏢 **Enterprise Patterns** - Monorepo architecture, shared packages, proper structure
 
 ## 🚀 Quick Start
 
-```bash
-# Using bunx (recommended)
-bunx @bunkit/cli init
+### Using bunx (Recommended)
 
-# Or install globally
+```bash
+bunx @bunkit/cli init
+```
+
+### Global Installation
+
+```bash
 bun add -g @bunkit/cli
 bunkit init
 ```
 
+### Requirements
+
+- [Bun](https://bun.sh) v1.1.0 or higher
+- Node.js v18.0.0 or higher (for Next.js apps)
+
 ## 📦 Presets
 
-### `minimal` - Single Repo Clean Start
-Perfect for CLIs, scripts, and proof-of-concepts.
+### `minimal` - Single Repo, Clean Start
+
+Perfect for CLIs, scripts, utilities, and proof-of-concepts.
+
+**What you get:**
+- Bun runtime with hot reload (`bun --hot`)
+- TypeScript configured
+- Clean folder structure
+- Basic `.gitignore`
 
 ```bash
 bunkit create minimal my-tool
+cd my-tool
+bun run dev
 ```
 
+**Use cases:** CLI tools, scripts, learning projects, microservices
+
+---
+
 ### `web` - Next.js 15 Frontend
-Complete Next.js app with React 19, Tailwind CSS 4, and shadcn/ui.
+
+Complete Next.js application with React 19, Tailwind CSS 4, and modern tooling.
+
+**What you get:**
+- Next.js 15 with App Router
+- React 19 (Server Components by default)
+- Tailwind CSS 4 (CSS-first configuration)
+- Biome (linting + formatting)
+- TypeScript strict mode
+- Optimal folder structure
 
 ```bash
 bunkit create web my-app
+cd my-app
+bun install  # If --no-install was used
+bun dev
 ```
 
+**Use cases:** Landing pages, marketing sites, SaaS frontends, web applications
+
+---
+
 ### `api` - Hono Backend
-Lightning-fast API with Hono and Bun.serve() HMR.
+
+Lightning-fast API built with Hono and Bun.serve() with native HMR.
+
+**What you get:**
+- Hono v4 web framework
+- Bun.serve() with HMR enabled
+- Example routes and middleware
+- CORS and logging configured
+- Error handling patterns
+- TypeScript with Bun types
 
 ```bash
 bunkit create api my-api
+cd my-api
+bun run dev
 ```
 
+**Use cases:** REST APIs, GraphQL servers, webhooks, backend services
+
+---
+
 ### `full` - Full-Stack Monorepo
-Enterprise monorepo with Next.js, Hono, and shared packages.
+
+Enterprise-grade monorepo with Next.js frontend, Hono backend, and shared packages.
+
+**What you get:**
+- Bun workspaces configured
+- Dependency catalogs (centralized versions)
+- Isolated installs (no phantom deps)
+- Apps:
+  - `web/` - Next.js frontend
+  - `api/` - Hono backend
+- Packages:
+  - `types/` - Shared TypeScript types
+  - `utils/` - Shared utilities
+- Biome for code quality
+- Proper TypeScript project references
 
 ```bash
 bunkit create full my-saas
+cd my-saas
+bun install
+bun dev  # Starts all apps
 ```
 
-## 🔌 Features (Add-ons)
+**Use cases:** SaaS products, full-stack applications, multi-app projects
 
-Add features to any preset:
+## 🎯 Commands
+
+### `bunkit init`
+
+Interactive project creation with beautiful prompts.
 
 ```bash
-bunkit add auth           # Supabase auth with PKCE
-bunkit add database       # Drizzle + PostgreSQL
-bunkit add ui             # shadcn/ui shared package
-bunkit add payments       # Stripe integration
-bunkit add email          # Resend + React Email
-bunkit add storage        # Supabase Storage
+bunkit init
 ```
 
-## 📚 Documentation
+You'll be asked:
+1. Project name
+2. Preset type (minimal/web/api/full)
+3. Install dependencies? (default: yes)
+4. Initialize git? (default: yes)
 
-Full documentation coming soon at [bunkit.dev](https://bunkit.dev)
+### `bunkit create <preset> <name>`
+
+Quick, non-interactive project creation.
+
+```bash
+bunkit create web my-app
+bunkit create api my-api --no-git
+bunkit create full my-saas --no-install
+```
+
+**Options:**
+- `--no-git` - Skip git initialization
+- `--no-install` - Skip dependency installation
+
+### `bunkit add <feature>`
+
+Add features to existing projects (coming soon).
+
+```bash
+bunkit add auth       # Supabase auth + PKCE
+bunkit add database   # Drizzle ORM + PostgreSQL
+bunkit add ui         # shadcn/ui components
+bunkit add payments   # Stripe integration
+bunkit add email      # Resend + React Email
+bunkit add storage    # File uploads
+```
+
+## 📁 Project Structure
+
+### Minimal Preset
+
+```
+my-tool/
+├── src/
+│   └── index.ts
+├── package.json
+├── tsconfig.json
+├── bunfig.toml
+└── README.md
+```
+
+### Web Preset
+
+```
+my-app/
+├── src/
+│   └── app/
+│       ├── globals.css
+│       ├── layout.tsx
+│       └── page.tsx
+├── public/
+├── package.json
+├── next.config.ts
+├── tailwind.config.ts
+├── tsconfig.json
+├── biome.json
+└── README.md
+```
+
+### API Preset
+
+```
+my-api/
+├── src/
+│   ├── index.ts
+│   ├── routes/
+│   │   └── users.ts
+│   └── middleware/
+├── package.json
+├── tsconfig.json
+├── bunfig.toml
+└── README.md
+```
+
+### Full Preset
+
+```
+my-saas/
+├── apps/
+│   ├── web/          # Next.js app
+│   └── api/          # Hono API
+├── packages/
+│   ├── types/        # Shared types
+│   └── utils/        # Shared utilities
+├── package.json      # Root with catalogs
+├── bunfig.toml
+├── tsconfig.json
+└── README.md
+```
+
+## 🛠️ Technology Stack
+
+| Category | Technology | Version |
+|----------|------------|---------|
+| Runtime | Bun | 1.3+ |
+| Frontend | Next.js | 15.5+ |
+| React | React | 19.1+ |
+| Backend | Hono | 4.7+ |
+| Styling | Tailwind CSS | 4.1+ |
+| Language | TypeScript | 5.7+ |
+| Code Quality | Biome | 2.3+ |
+
+## 💡 Philosophy
+
+**bunkit** is built on these principles:
+
+1. **Bun-First** - Leverage Bun's native capabilities (no external drivers when possible)
+2. **Modern Stack** - Latest stable versions of Next.js, React, TypeScript
+3. **Type Safety** - Strict TypeScript everywhere, no `any` types
+4. **Performance** - Fast builds, fast runtime, minimal dependencies
+5. **Developer Experience** - Beautiful CLI, hot reload, clear conventions
+6. **Production Ready** - Enterprise patterns from day one
+
+## 🔄 Comparison
+
+| Feature | bunkit | create-next-app | create-t3-app |
+|---------|--------|----------------|---------------|
+| Bun-native | ✅ | ❌ | ❌ |
+| Monorepo support | ✅ | ❌ | ❌ |
+| Multiple presets | ✅ (4) | ❌ (1) | ✅ (modular) |
+| API backend | ✅ Hono | ❌ | ✅ tRPC |
+| Interactive CLI | ✅ | ✅ | ✅ |
+| Dependency catalogs | ✅ | ❌ | ❌ |
+| Isolated installs | ✅ | ❌ | ❌ |
+
+## 📚 Examples
+
+Check out the `examples/` directory for sample projects:
+
+- `examples/minimal-cli/` - CLI tool example
+- `examples/web-landing/` - Marketing site
+- `examples/api-rest/` - REST API
+- `examples/full-saas/` - Full-stack SaaS
 
 ## 🤝 Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md)
+Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## 📄 License
 
@@ -81,9 +291,10 @@ MIT © [Petru Cosmin Dumitru](https://github.com/Arakiss)
 
 ## 🙏 Acknowledgments
 
-- Built with [@clack/prompts](https://www.clack.cc/) by the Astro team
-- Inspired by create-t3-app, create-next-app, and Bun's philosophy
+- [@clack/prompts](https://www.clack.cc/) - Beautiful CLI prompts by the Astro team
+- [create-t3-app](https://create.t3.gg/) - Inspiration for modular approach
+- [Bun](https://bun.sh) - The amazing all-in-one JavaScript runtime
 
 ---
 
-**Made with ❤️ for the indie hacker community**
+**Made with ❤️ for the indie hacker community** | [GitHub](https://github.com/Arakiss/bunkit) | [Issues](https://github.com/Arakiss/bunkit/issues)
