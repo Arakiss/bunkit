@@ -4,9 +4,12 @@
 
 **bunkit** is a modern, opinionated CLI for scaffolding Bun-powered projects with enterprise-grade patterns built-in.
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/Arakiss/bunkit)
+[![Version](https://img.shields.io/badge/version-0.1.0--alpha.1-blue.svg)](https://github.com/Arakiss/bunkit)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 [![Bun](https://img.shields.io/badge/bun-1.3+-orange.svg)](https://bun.sh)
+[![Status](https://img.shields.io/badge/status-alpha-yellow.svg)](./CHANGELOG.md)
+
+> **⚠️ Alpha Release**: This is v0.1.0-alpha.1 - suitable for testing and early adoption. See [CHANGELOG](./packages/cli/CHANGELOG.md) for details.
 
 ## ✨ Features
 
@@ -280,6 +283,54 @@ Check out the `examples/` directory for sample projects:
 - `examples/web-landing/` - Marketing site
 - `examples/api-rest/` - REST API
 - `examples/full-saas/` - Full-stack SaaS
+
+## 📝 Versioning & Releases
+
+bunkit uses [Changesets](https://github.com/changesets/changesets) for semantic versioning and changelog management.
+
+### Version History
+
+- **v0.1.0-alpha.1** (Current) - Initial alpha release with all 4 presets
+  - See [CHANGELOG](./packages/cli/CHANGELOG.md) for full details
+
+### Semantic Versioning
+
+We follow [SemVer 2.0.0](https://semver.org/):
+- **Major** (1.0.0) - Breaking changes
+- **Minor** (0.1.0) - New features, backwards compatible
+- **Patch** (0.0.1) - Bug fixes
+- **Prerelease** (0.1.0-alpha.1) - Testing and early adoption
+
+### Release Process
+
+```bash
+# Add a changeset (describe your changes)
+bun run changeset
+
+# Version packages (updates package.json + CHANGELOG)
+bun run version
+
+# Build and publish to npm
+bun run release
+```
+
+### Roadmap
+
+**Alpha (Current)**
+- ✅ Core CLI functionality
+- ✅ All 4 presets working
+- ✅ Beautiful interactive experience
+
+**Beta (v0.2.0-beta.x)**
+- Feature system (`bunkit add`)
+- Tests and CI/CD
+- Community feedback integration
+
+**Stable (v1.0.0)**
+- Production-ready
+- Full test coverage
+- Complete documentation
+- npm registry publication
 
 ## 🤝 Contributing
 
