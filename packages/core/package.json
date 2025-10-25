@@ -1,6 +1,7 @@
 {
   "name": "@bunkit/core",
   "version": "0.1.0",
+  "private": true,
   "description": "Core utilities for bunkit CLI",
   "type": "module",
   "main": "./src/index.ts",
