@@ -7,7 +7,7 @@ Thank you for your interest in contributing to bunkit! This guide will help you 
 ### Prerequisites
 
 - [Bun](https://bun.sh) v1.1.0 or higher
-- [Node.js](https://nodejs.org) v18.0.0 or higher (for Next.js apps)
+- [Node.js](https://nodejs.org) v20.9.0 or higher (required for Next.js 16)
 - Git
 
 ### Getting Started

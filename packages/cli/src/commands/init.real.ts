@@ -42,7 +42,7 @@ export async function initCommand() {
       {
         value: 'web',
         label: '🌐 Web',
-        hint: 'Next.js 15 + React 19',
+        hint: 'Next.js 16 + React 19',
       },
       {
         value: 'api',

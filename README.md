@@ -16,7 +16,7 @@
 
 - 🚀 **4 Production-Ready Presets** - From minimal CLIs to full-stack monorepos
 - 🎨 **Beautiful Interactive CLI** - Built with @clack/prompts (same as Astro)
-- 📦 **Modern Stack** - Next.js 15, React 19, Hono, Tailwind CSS 4
+- 📦 **Modern Stack** - Next.js 16, React 19, Hono, Tailwind CSS 4
 - ⚡ **Bun-Native** - Leverages Bun 1.3 features (catalogs, isolated installs, HMR)
 - 🔒 **Type-Safe by Default** - TypeScript strict mode everywhere
 - 🎯 **Zero Configuration** - Works out of the box, customize when needed
@@ -40,7 +40,7 @@ bunkit init
 ### Requirements
 
 - [Bun](https://bun.sh) v1.1.0 or higher
-- Node.js v18.0.0 or higher (for Next.js apps)
+- Node.js v20.9.0 or higher (required for Next.js 16)
 
 ## 📦 Presets
 
@@ -64,12 +64,12 @@ bun run dev
 
 ---
 
-### `web` - Next.js 15 Frontend
+### `web` - Next.js 16 Frontend
 
 Complete Next.js application with React 19, Tailwind CSS 4, and modern tooling.
 
 **What you get:**
-- Next.js 15 with App Router
+- Next.js 16 with App Router
 - React 19 (Server Components by default)
 - Tailwind CSS 4 (CSS-first configuration)
 - Biome (linting + formatting)
@@ -246,7 +246,7 @@ my-saas/
 | Category | Technology | Version |
 |----------|------------|---------|
 | Runtime | Bun | 1.3+ |
-| Frontend | Next.js | 15.5+ |
+| Frontend | Next.js | 16.0+ |
 | React | React | 19.1+ |
 | Backend | Hono | 4.7+ |
 | Styling | Tailwind CSS | 4.1+ |

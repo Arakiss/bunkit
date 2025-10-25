@@ -45,12 +45,12 @@ function getMinimalPreset(): PresetConfig {
 function getWebPreset(): PresetConfig {
   return {
     name: 'web',
-    description: 'Next.js 15 with React 19',
+    description: 'Next.js 16 with React 19',
     files: [],
     dependencies: {
       react: '^19.1.0',
       'react-dom': '^19.1.0',
-      next: '^15.5.6',
+      next: '^16.0.0',
     },
     devDependencies: {
       '@types/react': '^19.1.0',
@@ -59,7 +59,7 @@ function getWebPreset(): PresetConfig {
       typescript: '^5.7.2',
     },
     scripts: {
-      dev: 'next dev --turbopack',
+      dev: 'next dev',
       build: 'next build',
       start: 'next start',
     },

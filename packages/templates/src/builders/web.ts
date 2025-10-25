@@ -45,12 +45,19 @@ export default function RootLayout({
           Welcome to ${context.projectName} 🍞
         </h1>
         <p className="text-gray-600">
-          Built with Next.js 15, React 19, and bunkit
+          Built with Next.js 16, React 19, and bunkit
         </p>
       </div>
     </main>
   )
 }
+
+// Next.js 16 Note:
+// When you add dynamic routes with params, make your component async and await params:
+// export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+//   const { slug } = await params;
+//   return <div>{slug}</div>;
+// }
 `;
 
   await writeFile(join(projectPath, 'src/app/page.tsx'), pageContent);

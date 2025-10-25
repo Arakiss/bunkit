@@ -1,17 +1,39 @@
 import pc from 'picocolors';
 
-export const banner = `
-${pc.yellow('    ____              __   _ __     🍞')}
-${pc.yellow('   / __ )__  ______  / /__(_) /_')}
-${pc.yellow('  / __  / / / / __ \\/ //_/ / __/')}
-${pc.yellow(' / /_/ / /_/ / / / / ,< / / /_')}
-${pc.yellow('/_____/\\__,_/_/ /_/_/|_/_/\\__/')}
+const quotes = [
+  "Don't Panic - your app is being baked",
+  "From scratch to production in seconds",
+  "Freshly baked, ready to serve",
+  "The best code is the code you don't write",
+  "Keep calm and bake on",
+  "Made with ♥ for indie hackers",
+  "Ship fast, iterate faster",
+  "Less boilerplate, more building",
+  "Your next big idea starts here",
+  "Baking dreams into reality"
+];
 
-${pc.dim('━'.repeat(40))}
-${pc.cyan('  Bake production-ready apps in seconds')}
-${pc.dim('━'.repeat(40))}
+const getRandomQuote = () => {
+  return quotes[Math.floor(Math.random() * quotes.length)];
+};
+
+export const createBanner = (version: string = '0.3.0') => {
+  const quote = getRandomQuote();
+
+  return `
+${pc.dim('╔' + '═'.repeat(50) + '╗')}
+${pc.dim('║')}                                                  ${pc.dim('║')}
+${pc.dim('║')}   ${pc.yellow('┏┓ ┳ ┳┏┓┓┏o╋')}                                  ${pc.dim('║')}
+${pc.dim('║')}   ${pc.yellow('┣┫ ┃ ┃┃┃┣┫┃ ┃')}   ${pc.dim('Modern. Fast. Opinionated.')}    ${pc.dim('║')}
+${pc.dim('║')}   ${pc.yellow('┗┛•┗━┛┛┗┛┗┻ ┻')}                                  ${pc.dim('║')}
+${pc.dim('║')}                                                  ${pc.dim('║')}
+${pc.dim('║')}   ${pc.cyan(quote.padEnd(46))}   ${pc.dim('║')}
+${pc.dim('║')}                                                  ${pc.dim('║')}
+${pc.dim('║')}   ${pc.dim(`v${version}`)}${' '.repeat(43 - version.length)}🍞  ${pc.dim('║')}
+${pc.dim('╚' + '═'.repeat(50) + '╝')}
 `;
+};
 
-export const showBanner = () => {
-  console.log(banner);
+export const showBanner = (version?: string) => {
+  console.log(createBanner(version));
 };

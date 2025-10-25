@@ -7,18 +7,22 @@ import { initCommand } from './commands/init.real';
 import { createCommand } from './commands/create';
 import { addCommand } from './commands/add';
 
+// Read version from package.json
+const packageJson = await Bun.file(new URL('../package.json', import.meta.url)).json();
+const VERSION = packageJson.version;
+
 const program = new Command();
 
 program
   .name('bunkit')
   .description('Bake production-ready apps in seconds')
-  .version('0.1.0-alpha.1');
+  .version(VERSION);
 
 program
   .command('init')
   .description('Create a new project interactively')
   .action(async () => {
-    showBanner();
+    showBanner(VERSION);
     try {
       await initCommand();
       outro(pc.green('✨ Done! Your project is ready to bake! 🍞'));
@@ -37,7 +41,7 @@ program
   .option('--no-install', 'Skip dependency installation')
   .description('Create a new project quickly')
   .action(async (preset, name, options) => {
-    showBanner();
+    showBanner(VERSION);
     try {
       await createCommand(preset, name, options);
       outro(pc.green('✨ Done! Your project is ready to bake! 🍞'));
@@ -54,7 +58,7 @@ program
   .option('--provider <provider>', 'Provider to use')
   .description('Add a feature to existing project')
   .action(async (feature, options) => {
-    showBanner();
+    showBanner(VERSION);
     try {
       await addCommand(feature, options);
       outro(pc.green('✨ Feature added successfully! 🍞'));
@@ -67,7 +71,7 @@ program
 
 // Show banner when no command is provided
 if (process.argv.length === 2 || (process.argv.length === 3 && (process.argv[2] === '--help' || process.argv[2] === '-h'))) {
-  showBanner();
+  showBanner(VERSION);
 }
 
 program.parse();

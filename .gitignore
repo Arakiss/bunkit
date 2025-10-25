@@ -35,6 +35,8 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.claude/
+CLAUDE.md
 
 # Temporary
 .turbo/
