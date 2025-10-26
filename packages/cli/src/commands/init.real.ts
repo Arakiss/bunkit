@@ -321,18 +321,18 @@ function getDependenciesForPreset(preset: string): Record<string, string> {
   switch (preset) {
     case 'web':
       return {
-        'react': 'catalog:',
-        'react-dom': 'catalog:',
-        'next': 'catalog:',
-        'tailwindcss': 'catalog:',
-        '@tailwindcss/postcss': 'catalog:',
+        'react': '^19.1.0',
+        'react-dom': '^19.1.0',
+        'next': '^16.0.0',
+        'tailwindcss': '^4.1.7',
+        '@tailwindcss/postcss': '^4.1.7',
       };
     case 'api':
       return {
-        'hono': 'catalog:',
+        'hono': '^4.7.12',
       };
     case 'full':
-      return {}; // Handled by workspace installs
+      return {}; // Handled by workspace catalog
     default:
       return {};
   }

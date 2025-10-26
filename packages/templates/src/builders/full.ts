@@ -47,16 +47,46 @@ export async function buildFullPreset(
       typescript: 'catalog:',
     },
     catalog: {
+      // Frontend
       react: '^19.1.0',
       'react-dom': '^19.1.0',
       next: '^16.0.0',
+
+      // Backend
       hono: '^4.7.12',
+
+      // Database
+      'drizzle-orm': '^0.38.0',
+      'drizzle-kit': '^0.30.1',
+      'postgres': '^3.4.5',
+      '@supabase/supabase-js': '^2.48.1',
+
+      // Styling
+      tailwindcss: '^4.1.7',
+      autoprefixer: '^10.4.20',
+      postcss: '^8.5.1',
+      '@tailwindcss/postcss': '^4.1.7',
+
+      // UI
+      '@radix-ui/react-slot': '^1.2.3',
+      'class-variance-authority': '^0.7.1',
+      clsx: '^2.1.1',
+      'tailwind-merge': '^3.3.1',
+      'iconoir-react': '^7.11.0',
+
+      // Code Quality
       '@biomejs/biome': '^2.3.0',
-      typescript: '^5.9.3',
+      ultracite: '^6.0.1',
+
+      // Testing
+      vitest: '^2.0.0',
+      '@vitest/ui': '^2.0.0',
+
+      // Types
       '@types/react': '^19.1.0',
       '@types/react-dom': '^19.1.0',
       '@types/node': '^22.10.6',
-      tailwindcss: '^4.1.7',
+      typescript: '^5.9.3',
     },
   };
 

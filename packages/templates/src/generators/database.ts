@@ -235,27 +235,28 @@ DATABASE_URL=./local.db
 }
 
 /**
- * Get database-specific package dependencies with catalog references
+ * Get database-specific package dependencies
+ * Returns direct versions - use catalog: only for monorepos
  */
 export function getDatabaseDependencies(databaseType: string): Record<string, string> {
   switch (databaseType) {
     case 'postgres-drizzle':
       return {
-        'drizzle-orm': 'catalog:',
-        'drizzle-kit': 'catalog:',
-        'postgres': 'catalog:',
+        'drizzle-orm': '^0.38.0',
+        'drizzle-kit': '^0.30.1',
+        'postgres': '^3.4.5',
       };
     case 'supabase':
       return {
-        '@supabase/supabase-js': 'catalog:',
-        'drizzle-orm': 'catalog:',
-        'drizzle-kit': 'catalog:',
-        'postgres': 'catalog:',
+        '@supabase/supabase-js': '^2.48.1',
+        'drizzle-orm': '^0.38.0',
+        'drizzle-kit': '^0.30.1',
+        'postgres': '^3.4.5',
       };
     case 'sqlite-drizzle':
       return {
-        'drizzle-orm': 'catalog:',
-        'drizzle-kit': 'catalog:',
+        'drizzle-orm': '^0.38.0',
+        'drizzle-kit': '^0.30.1',
       };
     default:
       return {};

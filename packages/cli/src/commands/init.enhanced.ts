@@ -27,6 +27,18 @@ import {
 } from '@bunkit/templates';
 
 /**
+ * Dependency versions for single repos (not monorepos)
+ * Monorepos use catalog: references from root package.json
+ */
+const VERSIONS = {
+  vitest: '^2.0.0',
+  '@vitest/ui': '^2.0.0',
+  'class-variance-authority': '^0.7.1',
+  clsx: '^2.1.1',
+  'tailwind-merge': '^3.3.1',
+} as const;
+
+/**
  * Enhanced options for fully customizable init command
  */
 export interface EnhancedInitOptions {
@@ -603,7 +615,9 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     s.stop('✅ Project created!');
 
     // Calculate additional dependencies based on configuration
-    if (shouldInstall) {
+    // NOTE: For 'full' preset (monorepo), dependencies are handled by workspace catalog
+    // Only install additional deps for single-repo presets
+    if (shouldInstall && preset !== 'full') {
       const additionalDeps: Record<string, string> = {};
 
       // Database dependencies
@@ -618,15 +632,15 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
 
       // Testing framework dependencies
       if (testing === 'vitest') {
-        additionalDeps['vitest'] = 'catalog:';
-        additionalDeps['@vitest/ui'] = 'catalog:';
+        additionalDeps['vitest'] = VERSIONS.vitest;
+        additionalDeps['@vitest/ui'] = VERSIONS['@vitest/ui'];
       }
 
       // UI library dependencies
       if (uiLibrary === 'shadcn') {
-        additionalDeps['class-variance-authority'] = 'catalog:';
-        additionalDeps['clsx'] = 'catalog:';
-        additionalDeps['tailwind-merge'] = 'catalog:';
+        additionalDeps['class-variance-authority'] = VERSIONS['class-variance-authority'];
+        additionalDeps['clsx'] = VERSIONS.clsx;
+        additionalDeps['tailwind-merge'] = VERSIONS['tailwind-merge'];
       }
 
       // Install base dependencies + additional ones
@@ -635,6 +649,9 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       } else {
         await installDependencies(projectPath);
       }
+    } else if (shouldInstall && preset === 'full') {
+      // For monorepo, just run bun install to install from catalog
+      await installDependencies(projectPath);
     }
 
     const getDevCommand = () => {

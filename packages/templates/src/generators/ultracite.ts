@@ -265,11 +265,11 @@ export async function setupBiome(
 export function getCodeQualityDependencies(codeQuality: string): Record<string, string> {
   if (codeQuality === 'ultracite') {
     return {
-      'ultracite': 'catalog:',
-      '@biomejs/biome': 'catalog:',
+      'ultracite': '^6.0.1',
+      '@biomejs/biome': '^2.3.0',
     };
   }
   return {
-    '@biomejs/biome': 'catalog:',
+    '@biomejs/biome': '^2.3.0',
   };
 }
