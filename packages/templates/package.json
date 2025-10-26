@@ -1,6 +1,6 @@
 {
   "name": "@bunkit/templates",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "description": "Project templates for bunkit CLI",
   "type": "module",
