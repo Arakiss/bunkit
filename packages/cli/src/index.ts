@@ -67,9 +67,11 @@ program
 
 program
   .command('add')
-  .argument('<feature>', 'Feature to add (auth, database, ui, payments, email, storage)')
-  .option('--provider <provider>', 'Provider to use')
-  .description('Add a feature to existing project')
+  .argument('<feature>', 'Feature to add (workspace, package)')
+  .option('--name <name>', 'Name for the feature')
+  .option('--preset <preset>', 'Preset for workspace (nextjs, hono, library)')
+  .option('--type <type>', 'Type for package (library, utils, types, config)')
+  .description('Add workspace or package to monorepo')
   .action(async (feature, options) => {
     showBanner(VERSION);
     try {

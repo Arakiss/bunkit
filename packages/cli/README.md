@@ -32,10 +32,10 @@
 - **Lightning Fast** - Powered by Bun runtime for instant scaffolding
 - **Interactive CLI** - Beautiful prompts powered by @clack/prompts (same as Astro)
 - **Multiple Presets** - Choose from minimal, web, api, or full-stack templates
-- **Modular Features** - Add auth, database, payments, and more on demand
+- **Workspace Management** - Add workspaces and shared packages to monorepos
 - **Modern Stack** - Next.js 16, React 19, Hono, Drizzle ORM, TypeScript 5
-- **Monorepo Ready** - Bun workspaces with dependency catalogs
-- **Zero Config** - Smart defaults, fully customizable
+- **Monorepo Expertise** - Bun workspaces with dependency catalogs and isolated installs
+- **Architecture First** - Provides foundation and structure, not business logic
 
 ## Installation
 
@@ -149,23 +149,21 @@ bunkit create <preset> <name> [options]
 
 ### `bunkit add`
 
-Add features to an existing project.
+Extend your monorepo with new workspaces and shared packages.
 
 ```bash
 bunkit add <feature> [options]
 
 # Options:
-  --provider <provider>  Specify provider (e.g., supabase, stripe)
+  --name <name>      Name for the workspace or package
+  --preset <preset>  Preset for workspace (nextjs, hono, library)
+  --type <type>      Type for package (library, utils, types, config)
 ```
 
 **Available Features:**
 
-- `auth` - Authentication (Supabase Auth, NextAuth, etc.)
-- `database` - Database with Drizzle ORM (PostgreSQL, MySQL, SQLite)
-- `ui` - UI components with shadcn/ui + Tailwind CSS 4
-- `payments` - Payment integration (Stripe, Paddle)
-- `email` - Email service (Resend, Nodemailer)
-- `storage` - File storage (Supabase Storage, S3)
+- `workspace` - Add a new workspace to monorepo (nextjs, hono, or library)
+- `package` - Add a shared package to monorepo (library, utils, types, or config)
 
 ## Examples
 
@@ -194,18 +192,20 @@ cd my-backend
 bun --hot src/index.ts
 ```
 
-### Add Authentication to Existing Project
+### Add Workspace to Monorepo
 
 ```bash
-cd my-project
-bunkit add auth --provider supabase
+cd my-saas
+bunkit add workspace --name apps/admin --preset nextjs
+# Creates new Next.js workspace in apps/admin
 ```
 
-### Add UI Components
+### Add Shared Package to Monorepo
 
 ```bash
-bunkit add ui
-# Installs shadcn/ui with Tailwind CSS 4 and iconoir-react icons
+cd my-saas
+bunkit add package --name @myapp/email --type library
+# Creates shared package in packages/email
 ```
 
 ## What You Get
@@ -262,11 +262,12 @@ Modern stack with zero legacy baggage. Bun runtime means fast installs, fast tes
 
 ## Philosophy
 
-- **Quality First** - Enterprise-grade code from day one
-- **Type Safety** - Strict TypeScript everywhere
-- **Performance** - Native Bun APIs, minimal dependencies
-- **Developer Experience** - Fast iteration with HMR
-- **Modern Stack** - Latest stable versions only
+- **Architecture, Not Product** - Provides foundation and structure, not business logic
+- **Bun-First** - Leverages Bun 1.3+ features (catalogs, isolated installs, workspaces)
+- **Monorepo Expertise** - Makes Bun monorepos easy and maintainable
+- **Type Safety** - Strict TypeScript everywhere, proper project references
+- **Modern Stack** - Latest stable versions (Next.js 16, React 19, Hono, Tailwind 4)
+- **Developer Experience** - Beautiful CLI, hot reload, clear conventions
 
 ## Community & Support
 

@@ -7,3 +7,4 @@ export * from './logger';
 export * from './types';
 export * from './project';
 export * from './install';
+export * from './monorepo';

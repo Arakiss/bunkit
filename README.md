@@ -16,16 +16,16 @@
 
 ## ✨ Features
 
-- 🚀 **4 Production-Ready Presets** - From minimal CLIs to full-stack monorepos
+- 🏗️ **Monorepo Architecture** - Bun workspaces + catalogs + isolated installs done right
 - 🎨 **Beautiful Interactive CLI** - Built with @clack/prompts (same as Astro)
 - 📦 **Modern Stack** - Next.js 16, React 19, Hono, Tailwind CSS 4
-- ⚡ **Bun-Native** - Leverages Bun 1.3 features (catalogs, isolated installs, HMR)
-- 🗄️ **Database Options** - PostgreSQL/Drizzle, Supabase, SQLite, or None
+- ⚡ **Bun-Native** - Leverages Bun 1.3+ features (catalogs, isolated installs, HMR)
+- 🗄️ **Database Patterns** - PostgreSQL/Drizzle, Supabase, SQLite setup (structure, not models)
 - 🤖 **AI-Optimized** - Ultracite integration (Cursor, Windsurf, Claude Code, Zed)
 - 🐳 **Docker Ready** - Multi-stage Dockerfiles with Bun official images
 - 🔄 **CI/CD Built-in** - GitHub Actions workflows with lint/test/build/docker
 - 🔒 **Type-Safe by Default** - TypeScript strict mode everywhere (configurable)
-- 🎯 **Zero Configuration** - Works out of the box, fully customizable
+- 🎯 **Workspace Management** - Add workspaces and shared packages easily
 - 🏢 **Enterprise Patterns** - Monorepo architecture, shared packages, proper structure
 
 ## 🚀 Quick Start
@@ -173,15 +173,44 @@ bunkit create full my-saas --no-install
 
 ### `bunkit add <feature>`
 
-Add features to existing projects (coming soon).
+Extend your monorepo with new workspaces and shared packages.
 
+**Available now:**
 ```bash
-bunkit add auth       # Supabase auth + PKCE
-bunkit add database   # Drizzle ORM + PostgreSQL
-bunkit add ui         # shadcn/ui components
-bunkit add payments   # Stripe integration
-bunkit add email      # Resend + React Email
-bunkit add storage    # File uploads
+# Add a new workspace
+bunkit add workspace              # Interactive mode
+bunkit add workspace --name apps/admin --preset nextjs
+bunkit add workspace --name apps/docs --preset nextjs
+bunkit add workspace --name apps/api --preset hono
+
+# Add a shared package
+bunkit add package                # Interactive mode
+bunkit add package --name @myapp/email --type library
+bunkit add package --name utils --type utils
+bunkit add package --name types --type types
+```
+
+**Examples:**
+```bash
+# Create a full-stack monorepo
+bunkit init full my-saas
+cd my-saas
+
+# Add admin dashboard workspace
+bunkit add workspace --name apps/admin --preset nextjs
+
+# Add shared email package
+bunkit add package --name @myapp/email --type library
+
+# Add shared types package
+bunkit add package --name @myapp/types --type types
+
+# Use shared packages in workspaces
+# apps/admin/package.json:
+# "dependencies": {
+#   "@myapp/email": "workspace:*",
+#   "@myapp/types": "workspace:*"
+# }
 ```
 
 ## 📁 Project Structure
@@ -266,33 +295,27 @@ my-saas/
 
 **bunkit** is built on these principles:
 
-1. **Bun-First** - Leverage Bun's native capabilities (no external drivers when possible)
-2. **Modern Stack** - Latest stable versions of Next.js, React, TypeScript
-3. **Type Safety** - Strict TypeScript everywhere, no `any` types
-4. **Performance** - Fast builds, fast runtime, minimal dependencies
-5. **Developer Experience** - Beautiful CLI, hot reload, clear conventions
-6. **Production Ready** - Enterprise patterns from day one
+1. **Architecture, Not Product** - Provides foundation and structure, not business logic
+2. **Bun-First** - Leverages Bun 1.3+ features (catalogs, isolated installs, workspaces)
+3. **Monorepo Expertise** - Makes Bun monorepos easy and maintainable
+4. **Type Safety** - Strict TypeScript everywhere, proper project references
+5. **Modern Stack** - Latest stable versions (Next.js 16, React 19, Hono, Tailwind 4)
+6. **Developer Experience** - Beautiful CLI, hot reload, clear conventions
 
 ## 🔄 Comparison
 
-| Feature | bunkit | create-next-app | create-t3-app |
-|---------|--------|----------------|---------------|
-| Bun-native | ✅ | ❌ | ❌ |
-| Monorepo support | ✅ | ❌ | ❌ |
-| Multiple presets | ✅ (4) | ❌ (1) | ✅ (modular) |
-| API backend | ✅ Hono | ❌ | ✅ tRPC |
-| Interactive CLI | ✅ | ✅ | ✅ |
-| Dependency catalogs | ✅ | ❌ | ❌ |
-| Isolated installs | ✅ | ❌ | ❌ |
+| Feature | bunkit | create-next-app | create-t3-app | turborepo |
+|---------|--------|----------------|---------------|-----------|
+| Bun-native | ✅ | ❌ | ❌ | ⚠️ |
+| Workspace management | ✅ | ❌ | ❌ | ⚠️ (manual) |
+| Shared packages | ✅ | ❌ | ❌ | ⚠️ (manual) |
+| Dependency catalogs | ✅ | ❌ | ❌ | ❌ |
+| Isolated installs | ✅ | ❌ | ❌ | ❌ |
+| Multiple presets | ✅ (4) | ❌ (1) | ✅ | ❌ |
+| API backend | ✅ Hono | ❌ | ✅ tRPC | ❌ |
+| Interactive CLI | ✅ | ✅ | ✅ | ⚠️ |
 
-## 📚 Examples
-
-Check out the `examples/` directory for sample projects:
-
-- `examples/minimal-cli/` - CLI tool example
-- `examples/web-landing/` - Marketing site
-- `examples/api-rest/` - REST API
-- `examples/full-saas/` - Full-stack SaaS
+**bunkit's unique value:** Bun monorepo management made easy. Nobody else does this well.
 
 ## 📝 Versioning & Releases
 
@@ -374,28 +397,34 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for full setup guide.
 
 **Beta (Current - v0.5.x)**
 - ✅ Core CLI functionality
-- ✅ All 4 presets working
+- ✅ All 4 presets working (minimal, web, api, full)
 - ✅ Beautiful interactive experience
 - ✅ Automated CI/CD with GitHub Actions
 - ✅ Semantic versioning with Changesets
-- ✅ Database integration (PostgreSQL, Supabase, SQLite)
+- ✅ Database setup (PostgreSQL, Supabase, SQLite) - structure only
 - ✅ AI-optimized code quality (Ultracite)
-- ✅ Docker support
+- ✅ Docker support (multi-stage builds)
 - ✅ GitHub Actions workflows
 - ✅ Dependency catalog management
-- 🚧 Enhanced `bunkit init` with 12 customization prompts
-- 🚧 Tests and test coverage
-- 🚧 Example projects
+- ✅ Enhanced `bunkit init` with 12 customization prompts
+- ✅ `bunkit add workspace` - Add workspaces to monorepo
+- ✅ `bunkit add package` - Add shared packages
 
-**v0.6.0 - Feature System**
-- `bunkit add auth` - Authentication (Supabase, Clerk, NextAuth)
-- `bunkit add ui` - UI components (shadcn/ui)
-- `bunkit add payments` - Payments (Stripe)
-- `bunkit add email` - Email (Resend + React Email)
-- `bunkit add storage` - File storage (Supabase, S3)
+**v0.6.0 - Monorepo Tools**
+- `bunkit catalog add` - Manage catalog dependencies
+- `bunkit catalog sync` - Sync versions across workspaces
+- `bunkit generate migration` - Database migration generator
+- `bunkit add middleware` - API middleware patterns
+- Tests and test coverage
+
+**v0.7.0 - Type Safety**
+- `bunkit add trpc` - tRPC setup for type-safe APIs
+- `bunkit generate types` - Generate types from schema
+- Enhanced workspace TypeScript project references
+- Example projects
 
 **Stable (v1.0.0)**
-- Production-ready
+- Production-ready monorepo toolkit
 - Full test coverage
 - Complete documentation
 - Active community

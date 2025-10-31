@@ -1,13 +1,43 @@
 import * as p from '@clack/prompts';
+import { addWorkspaceCommand } from './add/workspace';
+import { addPackageCommand } from './add/package';
 
-export async function addCommand(feature: string, options: { provider?: string }) {
-  const s = p.spinner();
-  s.start(`Adding ${feature}...`);
+/**
+ * Feature types that can be added
+ */
+export type FeatureType = 'workspace' | 'package';
 
-  // Simulate feature addition
-  await new Promise((resolve) => setTimeout(resolve, 1500));
+/**
+ * Add command - routes to appropriate subcommand
+ */
+export async function addCommand(
+  feature: FeatureType,
+  options: { name?: string; preset?: string; type?: string; provider?: string }
+) {
+  try {
+    switch (feature) {
+      case 'workspace':
+        await addWorkspaceCommand({
+          name: options.name,
+          preset: options.preset as any,
+          cwd: process.cwd(),
+        });
+        break;
 
-  s.stop(`${feature} added!`);
+      case 'package':
+        await addPackageCommand({
+          name: options.name,
+          type: options.type as any,
+          cwd: process.cwd(),
+        });
+        break;
 
-  p.log.success(`Successfully added ${feature} to your project`);
+      default:
+        p.log.error(`Unknown feature: ${feature}`);
+        p.log.info(`Available features: workspace, package`);
+        process.exit(1);
+    }
+  } catch (error) {
+    throw error;
+  }
 }
