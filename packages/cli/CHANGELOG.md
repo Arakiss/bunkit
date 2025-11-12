@@ -1,5 +1,11 @@
 # @bunkit/cli
 
+## 0.6.1
+
+### Patch Changes
+
+- Fix create command implementation - was only simulating project creation instead of actually scaffolding files. Now properly creates projects using the same core functions as init command with sensible defaults.
+
 ## 0.6.0
 
 ### Minor Changes
