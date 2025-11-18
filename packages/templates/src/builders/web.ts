@@ -3,6 +3,7 @@ import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
+import { setupShadcnWeb } from '../generators/shadcn';
 
 /**
  * Build web (Next.js) preset files
@@ -173,5 +174,10 @@ export default config;
   // Setup CI/CD if requested
   if (context.cicd) {
     await setupGitHubActions(projectPath, context);
+  }
+
+  // Setup shadcn/ui if requested (only with Tailwind)
+  if (context.uiLibrary === 'shadcn' && context.cssFramework === 'tailwind') {
+    await setupShadcnWeb(projectPath, context);
   }
 }

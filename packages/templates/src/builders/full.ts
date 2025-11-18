@@ -8,6 +8,7 @@ import {
 import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
+import { setupShadcnMonorepo } from '../generators/shadcn';
 
 /**
  * Build full-stack monorepo preset files
@@ -73,6 +74,7 @@ export async function buildFullPreset(
       clsx: '^2.1.1',
       'tailwind-merge': '^3.3.1',
       'iconoir-react': '^7.11.0',
+      'lucide-react': '^0.468.0',
 
       // Code Quality
       '@biomejs/biome': '^2.3.0',
@@ -836,5 +838,10 @@ ${context.database && context.database !== 'none' && context.database !== 'supab
   // Setup CI/CD for monorepo (with matrix builds for each app)
   if (context.cicd) {
     await setupGitHubActions(projectPath, context);
+  }
+
+  // Setup shadcn/ui if requested (only with Tailwind)
+  if (context.uiLibrary === 'shadcn' && context.cssFramework === 'tailwind') {
+    await setupShadcnMonorepo(projectPath, context);
   }
 }

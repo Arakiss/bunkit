@@ -196,5 +196,10 @@ export function createTemplateContext(config: ProjectConfig): TemplateContext {
     cicd: config.cicd,
     envExample: config.envExample,
     pathAliases: config.pathAliases,
+    
+    // shadcn/ui specific options
+    shadcnStyle: config.shadcnStyle,
+    shadcnBaseColor: config.shadcnBaseColor,
+    shadcnRadius: config.shadcnRadius,
   };
 }

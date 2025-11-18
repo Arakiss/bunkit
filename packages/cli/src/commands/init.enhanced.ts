@@ -16,6 +16,8 @@ import {
   type UILibrary,
   type CSSFramework,
   type TestingFramework,
+  type ShadcnStyle,
+  type ShadcnBaseColor,
 } from '@bunkit/core';
 import {
   buildMinimalPreset,
@@ -25,6 +27,7 @@ import {
   getDatabaseDependencies,
   getCodeQualityDependencies,
 } from '@bunkit/templates';
+import { installDefaultShadcnComponents } from '@bunkit/templates';
 
 /**
  * Dependency versions for single repos (not monorepos)
@@ -55,6 +58,10 @@ export interface EnhancedInitOptions {
   git?: boolean;
   install?: boolean;
   nonInteractive?: boolean;
+  // shadcn/ui specific options
+  shadcnStyle?: ShadcnStyle;
+  shadcnBaseColor?: ShadcnBaseColor;
+  shadcnRadius?: string;
 }
 
 /**
@@ -367,6 +374,127 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   }
 
   // ====================
+  // 7a. SHADCN/UI STYLE (only if shadcn/ui selected)
+  // ====================
+  let shadcnStyle: ShadcnStyle | undefined = getOptionValue<ShadcnStyle>(
+    'BUNKIT_SHADCN_STYLE',
+    options.shadcnStyle
+  );
+
+  if (!shadcnStyle && uiLibrary === 'shadcn') {
+    if (!isNonInteractive) {
+      shadcnStyle = await p.select({
+        message: '🎨 shadcn/ui style?',
+        options: [
+          {
+            value: 'new-york',
+            label: 'New York (Recommended)',
+            hint: 'Modern, clean design with rounded corners and subtle shadows',
+          },
+          {
+            value: 'default',
+            label: 'Default',
+            hint: 'Classic design with sharper edges and more contrast',
+          },
+        ],
+      }) as ShadcnStyle;
+
+      if (p.isCancel(shadcnStyle)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    } else {
+      shadcnStyle = 'new-york';
+    }
+  }
+
+  // ====================
+  // 7b. SHADCN/UI BASE COLOR (only if shadcn/ui selected)
+  // ====================
+  let shadcnBaseColor: ShadcnBaseColor | undefined = getOptionValue<ShadcnBaseColor>(
+    'BUNKIT_SHADCN_BASE_COLOR',
+    options.shadcnBaseColor
+  );
+
+  if (!shadcnBaseColor && uiLibrary === 'shadcn') {
+    if (!isNonInteractive) {
+      shadcnBaseColor = await p.select({
+        message: '🎨 shadcn/ui base color?',
+        options: [
+          {
+            value: 'zinc',
+            label: 'Zinc (Recommended)',
+            hint: 'Neutral gray - versatile and modern',
+          },
+          {
+            value: 'neutral',
+            label: 'Neutral',
+            hint: 'Pure neutral - no color cast',
+          },
+          {
+            value: 'gray',
+            label: 'Gray',
+            hint: 'Warm gray - slightly warmer than zinc',
+          },
+          {
+            value: 'slate',
+            label: 'Slate',
+            hint: 'Cool gray - slightly bluer tone',
+          },
+          {
+            value: 'stone',
+            label: 'Stone',
+            hint: 'Warm beige-gray - earthy and natural',
+          },
+        ],
+      }) as ShadcnBaseColor;
+
+      if (p.isCancel(shadcnBaseColor)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    } else {
+      shadcnBaseColor = 'zinc';
+    }
+  }
+
+  // ====================
+  // 7c. SHADCN/UI RADIUS (only if shadcn/ui selected)
+  // ====================
+  let shadcnRadius: string | undefined = getOptionValue<string>(
+    'BUNKIT_SHADCN_RADIUS',
+    options.shadcnRadius
+  );
+
+  if (!shadcnRadius && uiLibrary === 'shadcn') {
+    if (!isNonInteractive) {
+      const radiusInput = await p.text({
+        message: '📐 Border radius?',
+        placeholder: '0.625rem',
+        initialValue: '0.625rem',
+        validate: (value) => {
+          if (!value.trim()) {
+            return 'Radius cannot be empty';
+          }
+          // Basic validation for CSS values
+          if (!/^\d+(\.\d+)?(rem|px|em|%)$/.test(value.trim())) {
+            return 'Please enter a valid CSS value (e.g., 0.5rem, 8px)';
+          }
+        },
+      });
+
+      if (p.isCancel(radiusInput)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+
+      shadcnRadius = radiusInput as string;
+    } else {
+      shadcnRadius = '0.625rem';
+    }
+  }
+
+  // ====================
   // 8. TESTING FRAMEWORK
   // ====================
   let testing = getOptionValue<TestingFramework>(
@@ -511,19 +639,25 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   // SHOW CONFIGURATION SUMMARY
   // ====================
   if (!isNonInteractive) {
+    const summaryLines = [
+      `${chalk.bold('Project:')} ${chalk.cyan(projectName)}`,
+      `${chalk.bold('Preset:')} ${chalk.cyan(preset)}`,
+      database ? `${chalk.bold('Database:')} ${chalk.cyan(database)}` : '',
+      `${chalk.bold('Code Quality:')} ${chalk.cyan(codeQuality)}`,
+      `${chalk.bold('TypeScript:')} ${chalk.cyan(tsStrictness)}`,
+      cssFramework ? `${chalk.bold('CSS:')} ${chalk.cyan(cssFramework)}` : '',
+      uiLibrary ? `${chalk.bold('UI Library:')} ${chalk.cyan(uiLibrary)}` : '',
+      // shadcn/ui specific options
+      uiLibrary === 'shadcn' && shadcnStyle ? `${chalk.bold('shadcn Style:')} ${chalk.cyan(shadcnStyle)}` : '',
+      uiLibrary === 'shadcn' && shadcnBaseColor ? `${chalk.bold('shadcn Base Color:')} ${chalk.cyan(shadcnBaseColor)}` : '',
+      uiLibrary === 'shadcn' && shadcnRadius ? `${chalk.bold('shadcn Radius:')} ${chalk.cyan(shadcnRadius)}` : '',
+      `${chalk.bold('Testing:')} ${chalk.cyan(testing)}`,
+      docker ? `${chalk.bold('Docker:')} ${chalk.green('✓')}` : '',
+      cicd ? `${chalk.bold('CI/CD:')} ${chalk.green('✓')}` : '',
+    ].filter(Boolean);
+
     console.log('\n' + boxen(
-      [
-        `${chalk.bold('Project:')} ${chalk.cyan(projectName)}`,
-        `${chalk.bold('Preset:')} ${chalk.cyan(preset)}`,
-        database ? `${chalk.bold('Database:')} ${chalk.cyan(database)}` : '',
-        `${chalk.bold('Code Quality:')} ${chalk.cyan(codeQuality)}`,
-        `${chalk.bold('TypeScript:')} ${chalk.cyan(tsStrictness)}`,
-        cssFramework ? `${chalk.bold('CSS:')} ${chalk.cyan(cssFramework)}` : '',
-        uiLibrary ? `${chalk.bold('UI Library:')} ${chalk.cyan(uiLibrary)}` : '',
-        `${chalk.bold('Testing:')} ${chalk.cyan(testing)}`,
-        docker ? `${chalk.bold('Docker:')} ${chalk.green('✓')}` : '',
-        cicd ? `${chalk.bold('CI/CD:')} ${chalk.green('✓')}` : '',
-      ].filter(Boolean).join('\n'),
+      summaryLines.join('\n'),
       {
         padding: 1,
         title: '📋 Configuration',
@@ -567,6 +701,10 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       cicd: cicd as boolean,
       envExample: true,
       pathAliases: true,
+      // shadcn/ui specific options
+      shadcnStyle,
+      shadcnBaseColor,
+      shadcnRadius,
     };
 
     await createProject(config);
@@ -652,6 +790,29 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     } else if (shouldInstall && preset === 'full') {
       // For monorepo, just run bun install to install from catalog
       await installDependencies(projectPath);
+    }
+
+    // Install default shadcn/ui components if shadcn/ui is configured
+    if (shouldInstall && uiLibrary === 'shadcn' && (preset === 'web' || preset === 'full')) {
+      s.message('🧩 Installing default shadcn/ui components...');
+      try {
+        if (preset === 'full') {
+          // For monorepos, install components in packages/ui
+          await installDefaultShadcnComponents(join(projectPath, 'packages/ui'), {
+            silent: true,
+          });
+        } else {
+          // For single-repo, install in project root
+          await installDefaultShadcnComponents(projectPath, {
+            silent: true,
+          });
+        }
+        s.message('✅ Default components (button, card) installed');
+      } catch (error) {
+        // Non-critical - user can install manually
+        s.message('⚠️  Could not install default components automatically');
+        s.message('   Install them manually: bunx shadcn@latest add button card');
+      }
     }
 
     const getDevCommand = () => {

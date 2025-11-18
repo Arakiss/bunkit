@@ -24,3 +24,11 @@ export {
 } from './generators/ultracite';
 export { setupDocker } from './generators/docker';
 export { setupGitHubActions } from './generators/cicd';
+export { setupShadcnWeb, setupShadcnMonorepo } from './generators/shadcn';
+export {
+  installShadcnComponents,
+  installDefaultShadcnComponents,
+  createShadcnExample,
+  DEFAULT_SHADCN_COMPONENTS,
+} from './generators/shadcn-components';
+export { createShadcnDocs } from './generators/shadcn-docs';

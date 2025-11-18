@@ -1,18 +1,26 @@
 import * as p from '@clack/prompts';
 import { addWorkspaceCommand } from './add/workspace';
 import { addPackageCommand } from './add/package';
+import { addComponentCommand } from './add/component';
 
 /**
  * Feature types that can be added
  */
-export type FeatureType = 'workspace' | 'package';
+export type FeatureType = 'workspace' | 'package' | 'component';
 
 /**
  * Add command - routes to appropriate subcommand
  */
 export async function addCommand(
   feature: FeatureType,
-  options: { name?: string; preset?: string; type?: string; provider?: string }
+  options: {
+    name?: string;
+    preset?: string;
+    type?: string;
+    provider?: string;
+    components?: string[];
+    all?: boolean;
+  }
 ) {
   try {
     switch (feature) {
@@ -32,9 +40,17 @@ export async function addCommand(
         });
         break;
 
+      case 'component':
+        await addComponentCommand({
+          components: options.components,
+          all: options.all,
+          cwd: process.cwd(),
+        });
+        break;
+
       default:
         p.log.error(`Unknown feature: ${feature}`);
-        p.log.info(`Available features: workspace, package`);
+        p.log.info(`Available features: workspace, package, component`);
         process.exit(1);
     }
   } catch (error) {

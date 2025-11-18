@@ -31,6 +31,16 @@ export type TypeScriptStrictness = 'strict' | 'moderate' | 'loose';
 export type UILibrary = 'shadcn' | 'none';
 
 /**
+ * shadcn/ui style options
+ */
+export type ShadcnStyle = 'new-york' | 'default';
+
+/**
+ * shadcn/ui base color options
+ */
+export type ShadcnBaseColor = 'neutral' | 'gray' | 'zinc' | 'stone' | 'slate';
+
+/**
  * CSS framework options
  */
 export type CSSFramework = 'tailwind' | 'vanilla' | 'css-modules';
@@ -63,6 +73,11 @@ export const ProjectConfigSchema = z.object({
   // UI & Styling
   uiLibrary: z.enum(['shadcn', 'none']).optional(),
   cssFramework: z.enum(['tailwind', 'vanilla', 'css-modules']).optional(),
+  
+  // shadcn/ui specific options
+  shadcnStyle: z.enum(['new-york', 'default']).optional(),
+  shadcnBaseColor: z.enum(['neutral', 'gray', 'zinc', 'stone', 'slate']).optional(),
+  shadcnRadius: z.string().optional(), // e.g., "0.5rem", "0.625rem"
 
   // Testing
   testing: z.enum(['bun-test', 'vitest', 'none']).default('bun-test'),
@@ -110,6 +125,11 @@ export interface TemplateContext {
   cicd?: boolean;
   envExample?: boolean;
   pathAliases?: boolean;
+  
+  // shadcn/ui specific options
+  shadcnStyle?: ShadcnStyle;
+  shadcnBaseColor?: ShadcnBaseColor;
+  shadcnRadius?: string;
 
   [key: string]: unknown;
 }
