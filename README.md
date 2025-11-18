@@ -373,7 +373,7 @@ bunkit uses [Changesets](https://github.com/changesets/changesets) for semantic 
 
 ### Version History
 
-- **v0.7.x** (Current) - Major release with Supabase integration and CLI improvements
+- **v0.8.0** (Current) - Major release with Supabase integration and CLI improvements
   - Complete Supabase integration with presets and granular feature selection
   - New database options: `supabase` (client-only) and `supabase-drizzle` (with Drizzle ORM)
   - Supabase presets: full-stack, auth-only, database-only, and custom
@@ -385,10 +385,20 @@ bunkit uses [Changesets](https://github.com/changesets/changesets) for semantic 
   - Professional nomenclature improvements across all commands
   - Command aliases (init|i, create|c, add|a)
 
-- **v0.5.1** - Bun dependency catalog implementation
-  - Centralized dependency management with catalog: references
-  - Updated all dependencies to latest versions
-  - TypeScript 5.9.3 across all presets
+- **v0.7.0** - Deep shadcn/ui integration
+  - Full theme system with 5 base colors (neutral, gray, zinc, stone, slate) and OKLCH color values
+  - Style options (new-york, default) configurable via CLI
+  - Customizable border radius
+  - Automatic installation of default components (button, card)
+  - New `bunkit add component` command for adding shadcn/ui components
+  - Example components and comprehensive documentation
+
+- **v0.6.0** - Workspace and package management
+  - `bunkit add workspace` command - Add Next.js, Hono, or library workspaces to monorepos
+  - `bunkit add package` command - Add shared packages (library, utils, types, config) to monorepos
+  - Monorepo detection and validation utilities
+  - Automatic catalog integration for new workspaces and packages
+  - TypeScript project references support
 
 - **v0.5.0** - Major customization update
   - Database integration (PostgreSQL/Drizzle, Supabase, SQLite)
@@ -397,6 +407,7 @@ bunkit uses [Changesets](https://github.com/changesets/changesets) for semantic 
   - GitHub Actions CI/CD (lint, typecheck, test, build, docker)
   - TypeScript strictness levels (strict, moderate, loose)
   - Testing framework options (bun-test, vitest)
+  - Bun dependency catalog implementation
 
 - **v0.1.0-alpha.1** - Initial alpha release
   - All 4 presets (minimal, web, api, full)
@@ -478,7 +489,7 @@ This will:
 
 ### Roadmap
 
-**Beta (Current - v0.7.x)**
+**Current (v0.8.0)**
 - ✅ Core CLI functionality
 - ✅ All 4 presets working (minimal, web, api, full)
 - ✅ Beautiful interactive experience
@@ -500,25 +511,24 @@ This will:
   - Auto-installation of default components
   - `bunkit add component` command
   - Example components and documentation
+- ✅ Dependency management scripts (`update-deps`, `check-deps`)
+- ✅ Enhanced CLI developer experience with improved visuals and messaging
 
-**v0.8.0 - Monorepo Tools**
+**v0.9.0 - Monorepo Tools & Database**
 - `bunkit catalog add` - Manage catalog dependencies
 - `bunkit catalog sync` - Sync versions across workspaces
 - `bunkit generate migration` - Database migration generator
 - `bunkit add middleware` - API middleware patterns
 - Tests and test coverage
 
-**v0.9.0 - Type Safety**
+**v1.0.0 - Type Safety & Advanced Features**
 - `bunkit add trpc` - tRPC setup for type-safe APIs
 - `bunkit generate types` - Generate types from schema
 - Enhanced workspace TypeScript project references
 - Example projects
-
-**Stable (v1.0.0)**
 - Production-ready monorepo toolkit
 - Full test coverage
 - Complete documentation
-- Active community
 
 ## 🤝 Contributing
 
