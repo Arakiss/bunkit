@@ -32,9 +32,11 @@ program
   .addHelpText('after', `
 Examples:
   $ bunkit init                    Create a new project interactively
-  $ bunkit create web my-app       Create a Next.js web application
+  $ bunkit create nextjs my-app   Create a Next.js web application
   $ bunkit add workspace           Add a new workspace to monorepo
   $ bunkit add component --all     Browse and add shadcn/ui components
+  $ bunkit catalog add zod ^3.24.1 Add package to dependency catalog
+  $ bunkit preset list             List all custom presets
 
 For more information, visit: https://github.com/Arakiss/bunkit
   `);
@@ -44,8 +46,11 @@ program
   .description('Create a new project with full customization options')
   .alias('i')
   .option('--name <name>', 'Project name (kebab-case recommended, e.g., my-awesome-app)')
-  .option('--preset <preset>', 'Project preset: minimal | web | api | full')
-  .option('--database <database>', 'Database option: postgres-drizzle | supabase | supabase-drizzle | sqlite-drizzle | none')
+  .option('--preset <preset>', 'Project preset: minimal | nextjs | hono-api | bun-api | bun-fullstack | nextjs-monorepo | bun-monorepo | enterprise-monorepo')
+  .option('--database <database>', 'Database option: postgres-drizzle | postgres-prisma | mysql-drizzle | mysql-prisma | supabase | supabase-drizzle | supabase-prisma | sqlite-drizzle | sqlite-prisma | none')
+  .option('--auth <auth>', 'Authentication system: better-auth | nextauth | supabase | none')
+  .option('--redis', 'Enable Redis cache/session store')
+  .option('--use-bun-secrets', 'Use Bun.secrets API instead of .env files')
   .option('--supabase-preset <preset>', 'Supabase configuration preset: full-stack | auth-only | database-only | custom')
   .option('--supabase-features <features>', 'Comma-separated Supabase features: auth,storage,realtime,edge-functions,database')
   .option('--code-quality <tool>', 'Code quality tool: ultracite | biome')
@@ -66,17 +71,21 @@ program
   .addHelpText('after', `
 Examples:
   $ bunkit init                                    Interactive project creation
-  $ bunkit init --name my-app --preset web        Quick web app creation
-  $ bunkit init --preset full --database supabase Full-stack with Supabase
+  $ bunkit init --name my-app --preset nextjs     Quick web app creation
+  $ bunkit init --preset nextjs-monorepo --database supabase Full-stack with Supabase
   
 Presets:
-  minimal         Single-file Bun project
-  web/nextjs      Next.js 16 + React 19 web application
-  api/hono-api    Hono 4 + Bun.serve() API server
-  bun-api         Bun.serve() native routing (zero dependencies)
-  bun-fullstack   Bun.serve() + HTML imports (no Next.js)
-  full            Monorepo with Next.js + Hono
-  monorepo-bun    Monorepo with Bun.serve() (no Next.js)
+  minimal             Single-file Bun project
+  nextjs              Next.js 16 + React 19 web application (single repo)
+  hono-api            Hono 4 + Bun.serve() API server (single repo)
+  bun-api             Bun.serve() native routing (zero dependencies, single repo)
+  bun-fullstack       Bun.serve() + HTML imports (no Next.js, single repo)
+  nextjs-monorepo     Monorepo with Next.js + Hono
+  bun-monorepo        Monorepo with Bun.serve() (no Next.js)
+  enterprise-monorepo Enterprise monorepo with multiple apps and services
+  
+Aliases (backwards compatible):
+  web → nextjs, api → hono-api, full → nextjs-monorepo, monorepo-bun → bun-monorepo
   `)
   .action(async (options) => {
     showBanner(VERSION);
@@ -93,17 +102,19 @@ Presets:
 program
   .command('create')
   .alias('c')
-  .argument('<preset>', 'Project preset: minimal | web | api | bun-api | bun-fullstack | full | monorepo-bun')
+  .argument('<preset>', 'Project preset: minimal | nextjs | hono-api | bun-api | bun-fullstack | nextjs-monorepo | bun-monorepo | enterprise-monorepo')
   .argument('<name>', 'Project name (kebab-case recommended)')
   .option('--no-git', 'Skip Git repository initialization')
   .option('--no-install', 'Skip dependency installation after project creation')
   .description('Quick project creation with sensible defaults (non-interactive)')
   .addHelpText('after', `
 Examples:
-  $ bunkit create web my-app          Create Next.js web application
-  $ bunkit create api my-api          Create Hono API server
-  $ bunkit create full my-saas        Create full-stack monorepo
-  $ bunkit create minimal my-tool      Create minimal Bun project
+  $ bunkit create nextjs my-app          Create Next.js web application
+  $ bunkit create hono-api my-api       Create Hono API server
+  $ bunkit create nextjs-monorepo my-saas Create full-stack monorepo
+  $ bunkit create minimal my-tool       Create minimal Bun project
+  
+Aliases: web → nextjs, api → hono-api, full → nextjs-monorepo
   
 Note: This command uses sensible defaults. Use 'bunkit init' for full customization.
   `)

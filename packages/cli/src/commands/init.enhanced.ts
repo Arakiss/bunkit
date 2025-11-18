@@ -30,6 +30,7 @@ import {
   buildBunFullstackPreset,
   buildFullPreset,
   buildMonorepoBunPreset,
+  buildEnterprisePreset,
   getDatabaseDependencies,
   getCodeQualityDependencies,
 } from '@bunkit/templates';
@@ -151,6 +152,18 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     options.preset
   );
 
+  // Helper function to normalize preset for comparisons
+  const normalizePresetForComparison = (p: PresetType): PresetType => {
+    const aliasMap: Record<string, PresetType> = {
+      'web': 'nextjs',
+      'api': 'hono-api',
+      'full': 'nextjs-monorepo',
+      'monorepo-nextjs': 'nextjs-monorepo',
+      'monorepo-bun': 'bun-monorepo',
+    };
+    return (aliasMap[p] || p) as PresetType;
+  };
+
   if (!preset) {
     if (isNonInteractive) {
       throw new Error(
@@ -168,34 +181,39 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
           hint: 'Single-file Bun project - perfect for CLIs and scripts',
         },
         {
-          value: 'web',
-          label: '🌐 Web Application (Next.js)',
-          hint: 'Next.js 16 + React 19 + Tailwind CSS 4 - production-ready web app',
+          value: 'nextjs',
+          label: '🌐 Next.js Application',
+          hint: 'Next.js 16 + React 19 + Tailwind CSS 4 - production-ready web app (single repo)',
         },
         {
-          value: 'api',
-          label: '🚀 API Server (Hono)',
-          hint: 'Hono 4 + Bun.serve() - full-featured API with middleware ecosystem',
+          value: 'hono-api',
+          label: '🚀 Hono API Server',
+          hint: 'Hono 4 + Bun.serve() - full-featured API with middleware ecosystem (single repo)',
         },
         {
           value: 'bun-api',
-          label: '⚡ API Server (Bun Native)',
-          hint: 'Bun.serve() native routing - ultra-fast API with zero dependencies',
+          label: '⚡ Bun Native API',
+          hint: 'Bun.serve() native routing - ultra-fast API with zero dependencies (single repo)',
         },
         {
           value: 'bun-fullstack',
-          label: '🔥 Full-Stack (Bun Native)',
-          hint: 'Bun.serve() + HTML imports - full-stack app without Next.js',
+          label: '🔥 Bun Full-Stack',
+          hint: 'Bun.serve() + HTML imports - full-stack app without Next.js (single repo)',
         },
         {
-          value: 'full',
-          label: '📦 Monorepo (Next.js + Hono)',
-          hint: 'Web + API + shared packages - enterprise SaaS architecture',
+          value: 'nextjs-monorepo',
+          label: '📦 Next.js Monorepo',
+          hint: 'Next.js + Hono + shared packages - enterprise SaaS architecture',
         },
         {
-          value: 'monorepo-bun',
-          label: '🔥 Monorepo (Bun Native)',
+          value: 'bun-monorepo',
+          label: '🔥 Bun Monorepo',
           hint: 'Full-stack monorepo with Bun.serve() - no Next.js',
+        },
+        {
+          value: 'enterprise-monorepo',
+          label: '🏢 Enterprise Monorepo',
+          hint: 'Multiple Next.js apps + services - platform, app, service-identity',
         },
       ],
     }) as PresetType;
@@ -214,7 +232,8 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     options.database
   );
 
-  if (!database && (preset === 'api' || preset === 'bun-api' || preset === 'bun-fullstack' || preset === 'full' || preset === 'monorepo-bun')) {
+  const normalizedPreset = normalizePresetForComparison(preset);
+  if (!database && (normalizedPreset === 'hono-api' || normalizedPreset === 'bun-api' || normalizedPreset === 'bun-fullstack' || normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'bun-monorepo' || normalizedPreset === 'enterprise-monorepo')) {
     if (!isNonInteractive) {
       database = await p.select({
         message: '🗄️  Database configuration',
@@ -480,7 +499,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     options.cssFramework
   );
 
-  if (!cssFramework && (preset === 'web' || preset === 'full')) {
+  if (!cssFramework && (normalizedPreset === 'nextjs' || normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'enterprise-monorepo')) {
     if (!isNonInteractive) {
       cssFramework = await p.select({
         message: '🎨 CSS framework',
@@ -520,7 +539,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     options.uiLibrary
   );
 
-  if (!uiLibrary && (preset === 'web' || preset === 'full') && cssFramework === 'tailwind') {
+  if (!uiLibrary && (normalizedPreset === 'nextjs' || normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'enterprise-monorepo') && cssFramework === 'tailwind') {
     if (!isNonInteractive) {
       uiLibrary = await p.select({
         message: '🧩 UI component library',
@@ -768,7 +787,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     false
   );
 
-  if (!redis && (preset === 'api' || preset === 'bun-api' || preset === 'bun-fullstack' || preset === 'full' || preset === 'monorepo-bun')) {
+  if (!redis && (normalizedPreset === 'hono-api' || normalizedPreset === 'bun-api' || normalizedPreset === 'bun-fullstack' || normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'bun-monorepo' || normalizedPreset === 'enterprise-monorepo')) {
     if (!isNonInteractive) {
       redis = await p.confirm({
         message: '🔴 Redis cache/session store',
@@ -791,7 +810,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     'none'
   );
 
-  if (!auth && (preset === 'api' || preset === 'bun-api' || preset === 'bun-fullstack' || preset === 'full' || preset === 'monorepo-bun')) {
+  if (!auth && (normalizedPreset === 'hono-api' || normalizedPreset === 'bun-api' || normalizedPreset === 'bun-fullstack' || normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'bun-monorepo' || normalizedPreset === 'enterprise-monorepo')) {
     // Skip auth prompt if Supabase is selected (Supabase includes auth)
     if (database && (database === 'supabase' || database === 'supabase-drizzle' || database === 'supabase-prisma')) {
       auth = 'supabase';
@@ -918,7 +937,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         (database === 'supabase' || database === 'supabase-drizzle') && supabaseFeatures ? `  ${chalk.bold('Features:')} ${chalk.cyan(supabaseFeatures.join(', '))}` : '',
       ].filter(Boolean).join('\n') : '',
       '',
-      (preset === 'api' || preset === 'bun-api' || preset === 'bun-fullstack' || preset === 'full' || preset === 'monorepo-bun') ? [
+      (normalizedPreset === 'hono-api' || normalizedPreset === 'bun-api' || normalizedPreset === 'bun-fullstack' || normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'bun-monorepo' || normalizedPreset === 'enterprise-monorepo') ? [
         `${chalk.bold.yellow('🔐 Authentication & Infrastructure')}`,
         auth && auth !== 'none' ? `  ${chalk.bold('Auth:')} ${chalk.cyan(auth)}` : `  ${chalk.bold('Auth:')} ${chalk.dim('None')}`,
         redis ? `  ${chalk.bold('Redis:')} ${chalk.green('✓ Enabled')}` : `  ${chalk.bold('Redis:')} ${chalk.dim('Disabled')}`,
@@ -1038,6 +1057,9 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       case 'monorepo-bun':
         await buildMonorepoBunPreset(projectPath, context);
         break;
+      case 'enterprise-monorepo':
+        await buildEnterprisePreset(projectPath, context);
+        break;
     }
 
     // Additional setup based on options
@@ -1106,17 +1128,17 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       } else {
         await installDependencies(projectPath);
       }
-    } else if (shouldInstall && preset === 'full') {
+    } else if (shouldInstall && (normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'enterprise-monorepo')) {
       // For monorepo, just run bun install to install from catalog
       await installDependencies(projectPath);
     }
 
     // Install default shadcn/ui components if shadcn/ui is configured
-    if (shouldInstall && uiLibrary === 'shadcn' && (preset === 'web' || preset === 'bun-fullstack' || preset === 'full' || preset === 'monorepo-bun')) {
+    if (shouldInstall && uiLibrary === 'shadcn' && (normalizedPreset === 'nextjs' || normalizedPreset === 'bun-fullstack' || normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'bun-monorepo' || normalizedPreset === 'enterprise-monorepo')) {
       const componentSpinner = p.spinner();
       componentSpinner.start(`${chalk.cyan('🧩')} Installing default shadcn/ui components (button, card)...`);
       try {
-        if (preset === 'full' || preset === 'monorepo-bun') {
+        if (normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'bun-monorepo' || normalizedPreset === 'enterprise-monorepo') {
           // For monorepos, install components in packages/ui
           await installDefaultShadcnComponents(join(projectPath, 'packages/ui'), {
             silent: true,
@@ -1136,7 +1158,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     }
 
     const getDevCommand = () => {
-      if (preset === 'full' || preset === 'monorepo-bun' || preset === 'web') return 'bun dev';
+      if (normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'bun-monorepo' || normalizedPreset === 'enterprise-monorepo' || normalizedPreset === 'nextjs') return 'bun dev';
       return 'bun run dev';
     };
 
@@ -1171,8 +1193,8 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       '',
       database && database !== 'none' ? `  ${chalk.dim('•')} Configure your database connection in ${chalk.cyan('.env')}` : '',
       uiLibrary === 'shadcn' ? `  ${chalk.dim('•')} Add more components: ${chalk.cyan('bunkit add component --all')}` : '',
-      (preset === 'full' || preset === 'monorepo-bun') ? `  ${chalk.dim('•')} Add workspaces: ${chalk.cyan('bunkit add workspace')}` : '',
-      (preset === 'full' || preset === 'monorepo-bun') ? `  ${chalk.dim('•')} Add packages: ${chalk.cyan('bunkit add package')}` : '',
+      (normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'bun-monorepo' || normalizedPreset === 'enterprise-monorepo') ? `  ${chalk.dim('•')} Add workspaces: ${chalk.cyan('bunkit add workspace')}` : '',
+      (normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'bun-monorepo' || normalizedPreset === 'enterprise-monorepo') ? `  ${chalk.dim('•')} Add packages: ${chalk.cyan('bunkit add package')}` : '',
       `  ${chalk.dim('•')} Read the ${chalk.cyan('README.md')} for project-specific documentation`,
       database === 'supabase' || database === 'supabase-drizzle' ? `  ${chalk.dim('•')} Check ${chalk.cyan('SHADCN.md')} for shadcn/ui usage guide` : '',
     ].filter(Boolean).join('\n');

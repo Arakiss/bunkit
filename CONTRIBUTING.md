@@ -6,7 +6,7 @@ Thank you for your interest in contributing to bunkit! This guide will help you 
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) v1.1.0 or higher
+- [Bun](https://bun.sh) v1.3.0 or higher (required for catalogs, isolated installs, MySQL, Redis)
 - [Node.js](https://nodejs.org) v20.9.0 or higher (required for Next.js 16)
 - Git
 
@@ -114,9 +114,9 @@ git commit -m "docs: update README with new examples"
 
 ## Release Process
 
-### Automated Release (Recommended)
+bunkit uses **GitHub Actions + Changesets** for automated releases.
 
-We use GitHub Actions + Changesets for automated releases:
+### Automated Release (Recommended)
 
 1. **Add your changes** with a changeset (see above)
 
@@ -132,7 +132,7 @@ We use GitHub Actions + Changesets for automated releases:
    - Update package versions and CHANGELOGs
 
 4. **Merge the release PR**:
-   - GitHub Actions will automatically publish to npm
+   - GitHub Actions will automatically publish to npm ✨
 
 ### Manual Release (Emergency)
 
@@ -151,7 +151,24 @@ bun run build
 bun run release
 ```
 
+### Semantic Versioning
+
+We follow [SemVer 2.0.0](https://semver.org/):
+- **Major** (1.0.0) - Breaking changes that require user action
+- **Minor** (0.1.0) - New features, backwards compatible
+- **Patch** (0.0.1) - Bug fixes, no new features
+- **Prerelease** (0.1.0-alpha.1) - Alpha/beta releases for testing
+
 ## CI/CD Setup
+
+### GitHub Actions Workflow
+
+- **Workflow**: `.github/workflows/release.yml`
+- **Triggers**: Push to `main` branch
+- **Process**:
+  1. Detects changesets
+  2. Creates release PR with version bumps
+  3. Publishes to npm on PR merge
 
 ### GitHub Secrets
 
@@ -168,6 +185,27 @@ The following secrets must be configured in GitHub Settings → Secrets:
   - Triggers on push to `main`
   - Creates release PR or publishes packages
   - Requires `NPM_TOKEN` secret
+
+## Keeping Dependencies Updated
+
+bunkit maintains all dependencies at their latest stable versions. To keep dependencies up to date:
+
+**Check for outdated dependencies:**
+```bash
+bun run check-deps
+```
+
+**Update all dependencies to latest versions:**
+```bash
+bun run update-deps
+```
+
+This will:
+- Update all dependencies to their latest compatible versions
+- Update the lockfile (`bun.lock`)
+- Verify everything still builds correctly
+
+**Note:** Major version updates (e.g., Zod 3 → 4, Vitest 2 → 4) are kept at stable versions to avoid breaking changes. These are updated manually after thorough testing.
 
 ## Testing
 

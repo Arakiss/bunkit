@@ -283,7 +283,8 @@ export async function initCommand(options: InitOptions = {}) {
     }
 
     const getDevCommand = () => {
-      if (preset === 'full' || preset === 'web') return 'bun dev';
+      const normalizedPreset = preset === 'web' ? 'nextjs' : preset === 'full' ? 'nextjs-monorepo' : preset === 'api' ? 'hono-api' : preset === 'monorepo-bun' ? 'bun-monorepo' : preset === 'monorepo-nextjs' ? 'nextjs-monorepo' : preset;
+      if (normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'nextjs') return 'bun dev';
       return 'bun run dev';
     };
 

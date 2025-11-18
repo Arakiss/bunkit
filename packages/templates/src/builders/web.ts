@@ -191,6 +191,7 @@ export default config;
   await setupVSCodeDebug(projectPath, context, 'web');
 
   // Update package.json with Next.js and React dependencies
+  // Preserve existing scripts (including debug scripts from createPackageJson)
   const packageJsonPath = join(projectPath, 'package.json');
   const existingPackageJson = JSON.parse(await Bun.file(packageJsonPath).text());
   existingPackageJson.dependencies = {
@@ -205,5 +206,18 @@ export default config;
     '@types/react-dom': '^19.1.0',
     '@types/node': '^22.10.6',
   };
+  // Ensure debug scripts are present (they should already be from createPackageJson)
+  if (!existingPackageJson.scripts) {
+    existingPackageJson.scripts = {};
+  }
+  if (!existingPackageJson.scripts.debug) {
+    existingPackageJson.scripts.debug = 'bun --inspect node_modules/.bin/next dev --turbopack';
+  }
+  if (!existingPackageJson.scripts['debug:brk']) {
+    existingPackageJson.scripts['debug:brk'] = 'bun --inspect-brk node_modules/.bin/next dev --turbopack';
+  }
+  if (!existingPackageJson.scripts['debug:wait']) {
+    existingPackageJson.scripts['debug:wait'] = 'bun --inspect-wait node_modules/.bin/next dev --turbopack';
+  }
   await writeFile(packageJsonPath, JSON.stringify(existingPackageJson, null, 2));
 }

@@ -18,6 +18,7 @@ import {
   buildBunFullstackPreset,
   buildFullPreset,
   buildMonorepoBunPreset,
+  buildEnterprisePreset,
 } from '@bunkit/templates';
 
 /**
@@ -29,16 +30,27 @@ export async function createCommand(
   name: string,
   options: { git?: boolean; install?: boolean }
 ) {
-  // Normalize preset (handle aliases)
+  // Normalize preset (handle aliases to primary names)
   const presetMap: Record<string, string> = {
-    'nextjs': 'web',
-    'hono-api': 'api',
-    'monorepo-nextjs': 'full',
+    'web': 'nextjs',
+    'api': 'hono-api',
+    'full': 'nextjs-monorepo',
+    'monorepo-nextjs': 'nextjs-monorepo',
+    'monorepo-bun': 'bun-monorepo',
   };
   const normalizedPreset = presetMap[preset] || preset;
   
-  // Validate preset
-  const validPresets = ['minimal', 'web', 'api', 'bun-api', 'bun-fullstack', 'full', 'monorepo-bun'];
+  // Validate preset (accept both primary names and aliases)
+  const validPresets = [
+    'minimal', 
+    'nextjs', 'web',
+    'hono-api', 'api',
+    'bun-api', 
+    'bun-fullstack', 
+    'nextjs-monorepo', 'full', 'monorepo-nextjs',
+    'bun-monorepo', 'monorepo-bun',
+    'enterprise-monorepo'
+  ];
   if (!validPresets.includes(normalizedPreset)) {
     throw new Error(
       `Invalid preset: ${preset}. Valid options: ${validPresets.join(', ')}`
@@ -67,7 +79,7 @@ export async function createCommand(
       database: 'none', // Default: no database
       redis: false, // Default: no Redis
       useBunSecrets: false, // Default: use .env
-      codeQuality: 'biome', // Default: biome
+      codeQuality: 'ultracite', // Default: ultracite (AI-optimized)
       tsStrictness: 'strict', // Default: strict TypeScript
       testing: 'bun-test', // Default: bun's built-in test
       docker: false, // Default: no Docker
@@ -89,10 +101,10 @@ export async function createCommand(
       case 'minimal':
         await buildMinimalPreset(projectPath, context);
         break;
-      case 'web':
+      case 'nextjs':
         await buildWebPreset(projectPath, context);
         break;
-      case 'api':
+      case 'hono-api':
         await buildApiPreset(projectPath, context);
         break;
       case 'bun-api':
@@ -101,11 +113,14 @@ export async function createCommand(
       case 'bun-fullstack':
         await buildBunFullstackPreset(projectPath, context);
         break;
-      case 'full':
+      case 'nextjs-monorepo':
         await buildFullPreset(projectPath, context);
         break;
-      case 'monorepo-bun':
+      case 'bun-monorepo':
         await buildMonorepoBunPreset(projectPath, context);
+        break;
+      case 'enterprise-monorepo':
+        await buildEnterprisePreset(projectPath, context);
         break;
     }
 
@@ -115,12 +130,13 @@ export async function createCommand(
     const getPresetEmoji = () => {
       switch (normalizedPreset) {
         case 'minimal': return '⚡';
-        case 'web': return '🌐';
-        case 'api': return '🚀';
+        case 'nextjs': return '🌐';
+        case 'hono-api': return '🚀';
         case 'bun-api': return '⚡';
         case 'bun-fullstack': return '🔥';
-        case 'full': return '📦';
-        case 'monorepo-bun': return '🔥';
+        case 'nextjs-monorepo': return '📦';
+        case 'bun-monorepo': return '🔥';
+        case 'enterprise-monorepo': return '🏢';
         default: return '✨';
       }
     };
@@ -136,7 +152,7 @@ export async function createCommand(
         '',
       ].join('\n') : '',
       `${chalk.bold.cyan('🚀 Start development')}`,
-      `${chalk.cyan(normalizedPreset === 'web' ? 'bun dev' : 'bun run dev')} ${chalk.dim('# Start development server')}`,
+      `${chalk.cyan(normalizedPreset === 'nextjs' ? 'bun dev' : 'bun run dev')} ${chalk.dim('# Start development server')}`,
       '',
       `${chalk.dim('─'.repeat(40))}`,
       `${chalk.bold.yellow('💡 Tip')}`,

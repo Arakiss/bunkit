@@ -93,6 +93,8 @@ function getScriptsForPreset(preset: string): Record<string, string> {
         lint: 'biome check .',
         format: 'biome check --write .',
         debug: 'bun --inspect node_modules/.bin/next dev --turbopack',
+        'debug:brk': 'bun --inspect-brk node_modules/.bin/next dev --turbopack',
+        'debug:wait': 'bun --inspect-wait node_modules/.bin/next dev --turbopack',
       };
     case 'api':
       return {
@@ -194,6 +196,7 @@ export function createTemplateContext(config: ProjectConfig): TemplateContext {
     license: 'MIT',
     features: config.features || [],
     supportsTypeScript: true,
+    preset: config.preset, // Pass preset to context for Ultracite configuration
 
     // Pass through all configuration options
     database: config.database,

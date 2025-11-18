@@ -10,6 +10,7 @@ export { buildBunApiPreset } from './builders/bun-api';
 export { buildBunFullstackPreset } from './builders/bun-fullstack';
 export { buildFullPreset } from './builders/full';
 export { buildMonorepoBunPreset } from './builders/monorepo-bun';
+export { buildEnterprisePreset } from './builders/enterprise';
 export { buildWorkspace } from './builders/workspace';
 export type { PresetConfig } from './types';
 
@@ -46,6 +47,7 @@ export { setupDocker } from './generators/docker';
 export { setupGitHubActions } from './generators/cicd';
 export { setupVSCodeDebug } from './generators/debug';
 export { setupShadcnWeb, setupShadcnMonorepo } from './generators/shadcn';
+export { setupTooling } from './generators/tooling';
 export {
   installShadcnComponents,
   installDefaultShadcnComponents,

@@ -1,211 +1,343 @@
 import { join } from 'pathe';
-import { writeFile, type TemplateContext } from '@bunkit/core';
+import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
+
+/**
+ * Determine which Ultracite presets to use based on project preset
+ */
+function getUltracitePresets(preset: string | undefined): string[] {
+  const presets: string[] = ['ultracite/core'];
+  
+  const presetStr = preset || 'minimal';
+  
+  // Determine if React is used
+  const usesReact = [
+    'nextjs',
+    'web',
+    'bun-fullstack',
+    'nextjs-monorepo',
+    'full',
+    'monorepo-nextjs',
+    'bun-monorepo',
+    'monorepo-bun',
+    'enterprise-monorepo',
+  ].includes(presetStr);
+  
+  // Determine if Next.js is used
+  const usesNext = [
+    'nextjs',
+    'web',
+    'nextjs-monorepo',
+    'full',
+    'monorepo-nextjs',
+    'enterprise-monorepo',
+  ].includes(presetStr);
+  
+  if (usesReact) {
+    presets.push('ultracite/react');
+  }
+  
+  if (usesNext) {
+    presets.push('ultracite/next');
+  }
+  
+  return presets;
+}
 
 /**
  * Setup Ultracite (AI-optimized Biome preset)
+ * Follows official Ultracite structure and conventions
  */
 export async function setupUltracite(
   projectPath: string,
   context: TemplateContext
 ): Promise<void> {
-  // biome.jsonc with Ultracite presets
+  const preset = (context.preset as string) || 'minimal';
+  const ultracitePresets = getUltracitePresets(preset);
+  
+  // biome.jsonc with Ultracite presets - minimal config as per official Ultracite
   const biomeConfig = `{
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "extends": [
-    "ultracite/core",
-    ${context.cssFramework === 'tailwind' ? '"ultracite/react",\n    "ultracite/next"' : '"ultracite/react"'}
-  ],
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
-  "files": {
-    "ignore": [
-      "node_modules",
-      "dist",
-      "build",
-      ".next",
-      ".turbo",
-      "coverage"
-    ]
-  },
-  "formatter": {
-    "enabled": true,
-    "formatWithErrors": false,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 100,
-    "lineEnding": "lf"
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true
-    }
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "single",
-      "trailingCommas": "es5",
-      "semicolons": "always",
-      "arrowParentheses": "always",
-      "bracketSpacing": true,
-      "jsxQuoteStyle": "double",
-      "quoteProperties": "asNeeded"
-    }
-  },
-  "json": {
-    "formatter": {
-      "enabled": true,
-      "indentWidth": 2
-    }
-  }
+${ultracitePresets.map(p => `    "${p}"`).join(',\n')}
+  ]
 }
 `;
 
   await writeFile(join(projectPath, 'biome.jsonc'), biomeConfig);
 
-  // .cursorrules for Cursor AI
-  const cursorRules = `# ${context.projectName} - Cursor AI Rules
+  // .cursor/rules/ultracite.mdc for Cursor AI (official Ultracite format)
+  const cursorRulesContent = `---
+description: Ultracite Rules - AI-Ready Formatter and Linter
+globs: "**/*.{ts,tsx,js,jsx,json,jsonc,html,vue,svelte,astro,css,yaml,yml,graphql,gql,md,mdx,grit}"
+alwaysApply: false
+---
 
-## Code Style (Ultracite)
-- Follow Biome configuration in biome.jsonc
-- Use single quotes for JavaScript/TypeScript
-- Use double quotes for JSX attributes
-- Always use semicolons
-- 2-space indentation
-- 100 character line width
-- ES5 trailing commas
+# Ultracite Code Standards
 
-## TypeScript
-- Strict mode: ${context.tsStrictness === 'strict' ? 'enabled' : context.tsStrictness === 'moderate' ? 'moderate' : 'disabled'}
-- Always define types explicitly for function parameters and return values
-- Use \`type\` for object types, \`interface\` for contracts
-- Prefer \`const\` assertions for literal types
+This project uses **Ultracite**, a zero-config Biome preset that enforces strict code quality standards through automated formatting and linting.
 
-## React/Next.js Best Practices
-- Use Server Components by default (Next.js 16)
-- Add 'use client' only when needed (hooks, browser APIs, interactivity)
-- Always await \`params\` and \`searchParams\` in Next.js 16
+## Quick Reference
+
+- **Format code**: \`bun run format\` or \`npx ultracite fix\`
+- **Check for issues**: \`bun run lint\` or \`npx ultracite check\`
+- **Diagnose setup**: \`npx ultracite doctor\`
+
+Biome (the underlying engine) provides extremely fast Rust-based linting and formatting. Most issues are automatically fixable.
+
+---
+
+## Core Principles
+
+Write code that is **accessible, performant, type-safe, and maintainable**. Focus on clarity and explicit intent over brevity.
+
+### Type Safety & Explicitness
+
+- Use explicit types for function parameters and return values when they enhance clarity
+- Prefer \`unknown\` over \`any\` when the type is genuinely unknown
+- Use const assertions (\`as const\`) for immutable values and literal types
+- Leverage TypeScript's type narrowing instead of type assertions
+- Use meaningful variable names instead of magic numbers - extract constants with descriptive names
+- **TypeScript strictness**: ${context.tsStrictness} mode
+
+### Modern JavaScript/TypeScript
+
+- Use arrow functions for callbacks and short functions
+- Prefer \`for...of\` loops over \`.forEach()\` and indexed \`for\` loops
+- Use optional chaining (\`?.\`) and nullish coalescing (\`??\`) for safer property access
+- Prefer template literals over string concatenation
+- Use destructuring for object and array assignments
+- Use \`const\` by default, \`let\` only when reassignment is needed, never \`var\`
+
+### Async & Promises
+
+- Always \`await\` promises in async functions - don't forget to use the return value
+- Use \`async/await\` syntax instead of promise chains for better readability
+- Handle errors appropriately in async code with try-catch blocks
+- Don't use async functions as Promise executors
+
+${ultracitePresets.includes('ultracite/react') ? `### React & JSX
+
+- Use function components over class components
+- Call hooks at the top level only, never conditionally
+- Specify all dependencies in hook dependency arrays correctly
+- Use the \`key\` prop for elements in iterables (prefer unique IDs over array indices)
+- Nest children between opening and closing tags instead of passing as props
+- Don't define components inside other components
+- Use semantic HTML and ARIA attributes for accessibility:
+  - Provide meaningful alt text for images
+  - Use proper heading hierarchy
+  - Add labels for form inputs
+  - Include keyboard event handlers alongside mouse events
+  - Use semantic elements (\`<button>\`, \`<nav>\`, etc.) instead of divs with roles
+
+${ultracitePresets.includes('ultracite/next') ? `### Next.js Specific
+
+- Use Next.js \`<Image>\` component for images
+- Use \`next/head\` or App Router metadata API for head elements
+- Use Server Components for async data fetching instead of async Client Components
+- Always \`await params\` and \`await searchParams\` in Next.js 16
+- Add \`'use client'\` only when needed (hooks, browser APIs, interactivity)
 - Use descriptive variable names (no \`c\`, \`ctx\`, \`req\`, \`res\`)
 
-${context.cssFramework === 'tailwind' ? `## Tailwind CSS
-- Use utility classes for styling
-- Follow mobile-first responsive design
-- Use OKLCH colors from theme when available
-- Avoid arbitrary values unless necessary` : ''}
+` : ''}` : ''}### Error Handling & Debugging
 
-${context.database && context.database !== 'none' ? `## Database (${context.database})
-- Always use Drizzle ORM for type-safe queries
+- Remove \`console.log\`, \`debugger\`, and \`alert\` statements from production code
+- Throw \`Error\` objects with descriptive messages, not strings or other values
+- Use \`try-catch\` blocks meaningfully - don't catch errors just to rethrow them
+- Prefer early returns over nested conditionals for error cases
+
+### Code Organization
+
+- Keep functions focused and under reasonable cognitive complexity limits
+- Extract complex conditions into well-named boolean variables
+- Use early returns to reduce nesting
+- Prefer simple conditionals over nested ternary operators
+- Group related code together and separate concerns
+
+### Security
+
+- Add \`rel="noopener"\` when using \`target="_blank"\` on links
+- Avoid \`dangerouslySetInnerHTML\` unless absolutely necessary
+- Don't use \`eval()\` or assign directly to \`document.cookie\`
+- Validate and sanitize user input
+
+### Performance
+
+- Avoid spread syntax in accumulators within loops
+- Use top-level regex literals instead of creating them in loops
+- Prefer specific imports over namespace imports
+- Avoid barrel files (index files that re-export everything)
+${ultracitePresets.includes('ultracite/next') ? '- Use proper image components (e.g., Next.js \`<Image>\`) over \`<img>\` tags' : ''}
+
+${context.database && context.database !== 'none' ? `### Database (${context.database})
+
+- Always use type-safe queries (Drizzle ORM or Prisma ORM)
 - Define schema in separate files by domain
 - Use transactions for multi-step operations
-- Always handle database errors gracefully` : ''}
+- Always handle database errors gracefully
 
-## File Naming
-- Pages: \`page.tsx\`, \`layout.tsx\`
-- Components: PascalCase (\`UserCard.tsx\`)
-- Utilities: camelCase (\`formatDate.ts\`)
-- Types: \`*.types.ts\` or in \`types/\` directory
+` : ''}### Variable Naming (CRITICAL)
 
-## Testing
-- Write tests for critical business logic
-- Use Bun's built-in test runner
-- Follow AAA pattern: Arrange, Act, Assert
-- Mock external dependencies
-
-## AI Code Generation Guidelines
-- Always generate complete, working code
-- Include error handling
-- Add TypeScript types
-- Write self-documenting code with clear names
-- Add comments only for complex logic
-- Follow the project's existing patterns
-`;
-
-  await writeFile(join(projectPath, '.cursorrules'), cursorRules);
-
-  // .windsurfrules for Windsurf
-  const windsurfRules = `# ${context.projectName} - Windsurf AI Rules
-
-This project uses **Ultracite** for code quality - an AI-optimized Biome preset.
-
-## Code Quality Rules
-- Lint: \`bun run lint\`
-- Format: \`bun run format\`
-- Config: See \`biome.jsonc\`
-
-## Key Conventions
-1. **TypeScript**: ${context.tsStrictness} mode
-2. **Quotes**: Single quotes (JS/TS), double quotes (JSX)
-3. **Semicolons**: Always required
-4. **Indentation**: 2 spaces
-5. **Line width**: 100 characters
-
-## Framework-Specific
-${context.cssFramework === 'tailwind' ? '- **Tailwind CSS**: Utility-first styling\n' : ''}${context.database && context.database !== 'none' ? `- **Database**: ${context.database} with Drizzle ORM\n` : ''}- **Testing**: ${context.testing}
-
-## Variable Naming (CRITICAL)
 ❌ NEVER use: \`c\`, \`ctx\`, \`e\`, \`req\`, \`res\`, \`data\`, \`temp\`
 ✅ ALWAYS use: \`context\`, \`error\`, \`request\`, \`response\`, \`userData\`, \`temporaryBuffer\`
 
-## React/Next.js 16
-- Server Components by default
-- \`'use client'\` only when necessary
-- Always \`await params\` and \`await searchParams\`
+### Testing
 
-Sync with \`.cursorrules\` for full AI guidelines.
+- Write tests for critical business logic
+- Use ${context.testing === 'bun-test' ? "Bun's built-in test runner" : context.testing === 'vitest' ? 'Vitest' : 'your preferred testing framework'}
+- Follow AAA pattern: Arrange, Act, Assert
+- Mock external dependencies
 `;
 
-  await writeFile(join(projectPath, '.windsurfrules'), windsurfRules);
+  await ensureDirectory(join(projectPath, '.cursor', 'rules'));
+  await writeFile(join(projectPath, '.cursor', 'rules', 'ultracite.mdc'), cursorRulesContent);
 
-  // CLAUDE.md for Claude Code (if doesn't exist)
-  const claudeMd = `# ${context.projectName}
+  // .windsurf/rules/ultracite.md for Windsurf (official Ultracite format)
+  const windsurfRulesContent = `# Ultracite Code Standards
 
-AI-assisted development with Ultracite code quality.
+This project uses **Ultracite**, a zero-config Biome preset that enforces strict code quality standards through automated formatting and linting.
 
-## Quick Start
+## Quick Reference
 
-\`\`\`bash
-bun install
-bun dev
-\`\`\`
+- **Format code**: \`bun run format\` or \`npx ultracite fix\`
+- **Check for issues**: \`bun run lint\` or \`npx ultracite check\`
+- **Diagnose setup**: \`npx ultracite doctor\`
 
-## Code Quality
+Biome (the underlying engine) provides extremely fast Rust-based linting and formatting. Most issues are automatically fixable.
 
-This project uses **Ultracite** - an AI-optimized Biome preset that keeps code consistent across:
-- Cursor
-- Windsurf
-- Claude Code
-- Zed
+---
 
-### Commands
+## Core Principles
 
-\`\`\`bash
-bun run lint      # Check code quality
-bun run format    # Auto-fix issues
-\`\`\`
+Write code that is **accessible, performant, type-safe, and maintainable**. Focus on clarity and explicit intent over brevity.
 
-## AI Development Guidelines
+### Type Safety & Explicitness
 
-See \`.cursorrules\` and \`.windsurfrules\` for comprehensive AI coding guidelines.
+- Use explicit types for function parameters and return values when they enhance clarity
+- Prefer \`unknown\` over \`any\` when the type is genuinely unknown
+- Use const assertions (\`as const\`) for immutable values and literal types
+- Leverage TypeScript's type narrowing instead of type assertions
+- Use meaningful variable names instead of magic numbers - extract constants with descriptive names
+- **TypeScript strictness**: ${context.tsStrictness} mode
 
-### Critical Rules
+### Modern JavaScript/TypeScript
 
-1. **Descriptive Names**: No \`c\`, \`ctx\`, \`e\` - use \`context\`, \`error\`, etc.
-2. **TypeScript**: ${context.tsStrictness} mode
-3. **Server Components**: Default in Next.js 16
-4. **Error Handling**: Always handle errors gracefully
+- Use arrow functions for callbacks and short functions
+- Prefer \`for...of\` loops over \`.forEach()\` and indexed \`for\` loops
+- Use optional chaining (\`?.\`) and nullish coalescing (\`??\`) for safer property access
+- Prefer template literals over string concatenation
+- Use destructuring for object and array assignments
+- Use \`const\` by default, \`let\` only when reassignment is needed, never \`var\`
+
+### Async & Promises
+
+- Always \`await\` promises in async functions - don't forget to use the return value
+- Use \`async/await\` syntax instead of promise chains for better readability
+- Handle errors appropriately in async code with try-catch blocks
+- Don't use async functions as Promise executors
+
+${ultracitePresets.includes('ultracite/react') ? `### React & JSX
+
+- Use function components over class components
+- Call hooks at the top level only, never conditionally
+- Specify all dependencies in hook dependency arrays correctly
+- Use the \`key\` prop for elements in iterables (prefer unique IDs over array indices)
+- Nest children between opening and closing tags instead of passing as props
+- Don't define components inside other components
+- Use semantic HTML and ARIA attributes for accessibility
+
+${ultracitePresets.includes('ultracite/next') ? `### Next.js Specific
+
+- Use Next.js \`<Image>\` component for images
+- Use Server Components for async data fetching
+- Always \`await params\` and \`await searchParams\` in Next.js 16
+- Add \`'use client'\` only when needed
+
+` : ''}` : ''}### Variable Naming (CRITICAL)
+
+❌ NEVER use: \`c\`, \`ctx\`, \`e\`, \`req\`, \`res\`, \`data\`, \`temp\`
+✅ ALWAYS use: \`context\`, \`error\`, \`request\`, \`response\`, \`userData\`, \`temporaryBuffer\`
+`;
+
+  await ensureDirectory(join(projectPath, '.windsurf', 'rules'));
+  await writeFile(join(projectPath, '.windsurf', 'rules', 'ultracite.md'), windsurfRulesContent);
+
+  // .claude/CLAUDE.md for Claude Code (official Ultracite format)
+  const claudeMdContent = `# Ultracite Code Standards
+
+This project uses **Ultracite**, a zero-config Biome preset that enforces strict code quality standards through automated formatting and linting.
+
+## Quick Reference
+
+- **Format code**: \`bun run format\` or \`npx ultracite fix\`
+- **Check for issues**: \`bun run lint\` or \`npx ultracite check\`
+- **Diagnose setup**: \`npx ultracite doctor\`
+
+Biome (the underlying engine) provides extremely fast Rust-based linting and formatting. Most issues are automatically fixable.
+
+---
+
+## Core Principles
+
+Write code that is **accessible, performant, type-safe, and maintainable**. Focus on clarity and explicit intent over brevity.
+
+### Type Safety & Explicitness
+
+- Use explicit types for function parameters and return values when they enhance clarity
+- Prefer \`unknown\` over \`any\` when the type is genuinely unknown
+- Use const assertions (\`as const\`) for immutable values and literal types
+- Leverage TypeScript's type narrowing instead of type assertions
+- Use meaningful variable names instead of magic numbers - extract constants with descriptive names
+- **TypeScript strictness**: ${context.tsStrictness} mode
+
+### Modern JavaScript/TypeScript
+
+- Use arrow functions for callbacks and short functions
+- Prefer \`for...of\` loops over \`.forEach()\` and indexed \`for\` loops
+- Use optional chaining (\`?.\`) and nullish coalescing (\`??\`) for safer property access
+- Prefer template literals over string concatenation
+- Use destructuring for object and array assignments
+- Use \`const\` by default, \`let\` only when reassignment is needed, never \`var\`
+
+### Async & Promises
+
+- Always \`await\` promises in async functions - don't forget to use the return value
+- Use \`async/await\` syntax instead of promise chains for better readability
+- Handle errors appropriately in async code with try-catch blocks
+- Don't use async functions as Promise executors
+
+${ultracitePresets.includes('ultracite/react') ? `### React & JSX
+
+- Use function components over class components
+- Call hooks at the top level only, never conditionally
+- Specify all dependencies in hook dependency arrays correctly
+- Use the \`key\` prop for elements in iterables (prefer unique IDs over array indices)
+- Nest children between opening and closing tags instead of passing as props
+- Don't define components inside other components
+- Use semantic HTML and ARIA attributes for accessibility
+
+${ultracitePresets.includes('ultracite/next') ? `### Next.js Specific
+
+- Use Next.js \`<Image>\` component for images
+- Use Server Components for async data fetching
+- Always \`await params\` and \`await searchParams\` in Next.js 16
+- Add \`'use client'\` only when needed
+
+` : ''}` : ''}### Variable Naming (CRITICAL)
+
+❌ NEVER use: \`c\`, \`ctx\`, \`e\`, \`req\`, \`res\`, \`data\`, \`temp\`
+✅ ALWAYS use: \`context\`, \`error\`, \`request\`, \`response\`, \`userData\`, \`temporaryBuffer\`
 
 ## Tech Stack
 
 - **Runtime**: Bun
-- **Framework**: ${context.preset === 'web' || context.preset === 'full' ? 'Next.js 16 + React 19' : context.preset === 'api' ? 'Hono' : 'Minimal'}
+- **Framework**: ${context.preset === 'nextjs' || context.preset === 'web' || context.preset === 'nextjs-monorepo' || context.preset === 'full' || context.preset === 'enterprise-monorepo' ? 'Next.js 16 + React 19' : context.preset === 'hono-api' || context.preset === 'api' ? 'Hono' : context.preset === 'bun-fullstack' || context.preset === 'bun-monorepo' ? 'Bun.serve() + React' : 'Minimal'}
 ${context.cssFramework === 'tailwind' ? '- **Styling**: Tailwind CSS 4\n' : ''}${context.database && context.database !== 'none' ? `- **Database**: ${context.database}\n` : ''}${context.uiLibrary === 'shadcn' ? '- **UI**: shadcn/ui\n' : ''}- **Code Quality**: Ultracite (Biome)
 - **Testing**: ${context.testing}
 `;
 
-  await writeFile(join(projectPath, 'CLAUDE.md'), claudeMd);
+  await ensureDirectory(join(projectPath, '.claude'));
+  await writeFile(join(projectPath, '.claude', 'CLAUDE.md'), claudeMdContent);
 }
 
 /**
@@ -265,11 +397,11 @@ export async function setupBiome(
 export function getCodeQualityDependencies(codeQuality: string): Record<string, string> {
   if (codeQuality === 'ultracite') {
     return {
-      'ultracite': '^6.0.1',
-      '@biomejs/biome': '^2.3.0',
+      'ultracite': '^6.3.4',
+      '@biomejs/biome': '^2.3.6',
     };
   }
   return {
-    '@biomejs/biome': '^2.3.0',
+    '@biomejs/biome': '^2.3.6',
   };
 }

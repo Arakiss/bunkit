@@ -24,6 +24,7 @@ import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
 import { setupVSCodeDebug } from '../generators/debug';
+import { setupTooling } from '../generators/tooling';
 
 // Database setup function map
 const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
@@ -68,8 +69,10 @@ export async function buildMonorepoBunPreset(
       dev: 'bun run --filter "*" dev',
       build: 'bun run --filter "*" build',
       lint: context.codeQuality === 'biome' ? 'biome check .' : 'ultracite check .',
-      format: context.codeQuality === 'biome' ? 'biome check --write .' : 'ultracite format .',
+      format: context.codeQuality === 'biome' ? 'biome check --write .' : 'ultracite fix .',
       test: 'bun test',
+      'dev:web': 'bun run --filter "@*/web" dev',
+      'dev:api': 'bun run --filter "@*/api" dev',
       debug: 'bun --inspect apps/api/src/index.ts',
       'debug:brk': 'bun --inspect-brk apps/api/src/index.ts',
       'debug:wait': 'bun --inspect-wait apps/api/src/index.ts',
@@ -220,6 +223,9 @@ export async function buildMonorepoBunPreset(
     await setupGitHubActions(projectPath, context);
   }
 
+  // Setup shared tooling (TypeScript configs)
+  await setupTooling(projectPath, context);
+
   // Setup VSCode debugging
   await setupVSCodeDebug(projectPath, context, 'full');
 
@@ -312,6 +318,9 @@ packages/
 ├── types/        # Shared TypeScript types
 ├── utils/        # Shared utilities
 ${context.database && context.database !== 'none' ? '└── db/          # Shared database schema' : ''}
+
+tooling/
+└── typescript/   # Shared TypeScript configurations
 \`\`\`
 
 ## Features
@@ -329,10 +338,14 @@ ${context.database && context.database !== 'none' ? '└── db/          # Sh
 bun install
 
 # Run all apps in development
-bun run dev
+bun dev
+
+# Start individual apps
+bun run dev:web    # Start web app
+bun run dev:api    # Start API server
 
 # Build all apps
-bun run build
+bun build
 
 # Debug API
 bun run debug
@@ -345,8 +358,8 @@ bun run debug
 Bun.serve() native API server with zero dependencies.
 
 \`\`\`bash
-cd apps/api
-bun run dev
+bun run dev:api
+# Or: cd apps/api && bun dev
 \`\`\`
 
 ### Web (\`apps/web\`)
@@ -354,13 +367,28 @@ bun run dev
 Full-stack app with HTML imports and React.
 
 \`\`\`bash
-cd apps/web
-bun run dev
+bun run dev:web
+# Or: cd apps/web && bun dev
 \`\`\`
 
 Built with [bunkit](https://github.com/Arakiss/bunkit) 🍞
 `;
 
   await writeFile(join(projectPath, 'README.md'), readmeContent);
+
+  // Root tsconfig.json (references tooling)
+  const tsconfigContent = {
+    extends: './tooling/typescript/base.json',
+    compilerOptions: {
+      // Can override base config here if needed
+    },
+    include: ['apps/*/src/**/*', 'packages/*/**/*'],
+    exclude: ['node_modules'],
+  };
+
+  await writeFile(
+    join(projectPath, 'tsconfig.json'),
+    JSON.stringify(tsconfigContent, null, 2)
+  );
 }
 

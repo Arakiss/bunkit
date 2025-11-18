@@ -2,28 +2,88 @@
 
 > Bake production-ready apps in seconds | Modern CLI tool for Bun monorepo scaffolding
 
-**bunkit** is a modern, opinionated CLI tool for scaffolding Bun-powered projects with enterprise-grade patterns built-in. Create production-ready full-stack applications, APIs, monorepos, and web apps with Next.js, Hono, TypeScript, Tailwind CSS, shadcn/ui, Drizzle ORM, and Supabase in seconds.
+**bunkit** is a modern, opinionated CLI tool for scaffolding Bun-powered projects with enterprise-grade patterns built-in. Create production-ready full-stack applications, APIs, monorepos, and web apps with Next.js, Hono, TypeScript, Tailwind CSS, shadcn/ui, Drizzle ORM, Prisma ORM, MySQL, Redis, Supabase, better-auth, NextAuth.js, and more in seconds.
 
-[![npm version](https://img.shields.io/npm/v/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli) [![npm downloads](https://img.shields.io/npm/dm/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli) [![License](https://img.shields.io/npm/l/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli) [![Bun](https://img.shields.io/badge/bun-1.3+-orange.svg)](https://bun.sh) [![Status](https://img.shields.io/badge/status-beta-blue.svg)](./packages/cli/CHANGELOG.md) [![CI/CD](https://github.com/Arakiss/bunkit/actions/workflows/release.yml/badge.svg)](https://github.com/Arakiss/bunkit/actions/workflows/release.yml) [![GitHub stars](https://img.shields.io/github/stars/Arakiss/bunkit)](https://github.com/Arakiss/bunkit) [![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
+[![npm version](https://img.shields.io/npm/v/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli) [![npm downloads](https://img.shields.io/npm/dm/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli) [![License](https://img.shields.io/npm/l/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli) [![Bun](https://img.shields.io/badge/bun-1.3+-orange.svg)](https://bun.sh) [![Status](https://img.shields.io/badge/status-stable-green.svg)](./packages/cli/CHANGELOG.md) [![CI/CD](https://github.com/Arakiss/bunkit/actions/workflows/release.yml/badge.svg)](https://github.com/Arakiss/bunkit/actions/workflows/release.yml) [![GitHub stars](https://img.shields.io/github/stars/Arakiss/bunkit)](https://github.com/Arakiss/bunkit) [![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
 
-> **🚀 Beta Release**: bunkit is in active development. Production-ready for early adopters. See [CHANGELOG](./packages/cli/CHANGELOG.md) for latest updates.
-
-**Keywords**: Bun CLI, Bun scaffold, Bun monorepo, Next.js starter, Hono API template, TypeScript boilerplate, Tailwind CSS starter, shadcn/ui setup, Drizzle ORM template, Supabase starter, full-stack template, project generator, developer tools, Bun runtime, Bun workspaces
+> **✨ Stable Release**: bunkit is production-ready and actively maintained. See [CHANGELOG](./packages/cli/CHANGELOG.md) for latest updates and [ROADMAP](./ROADMAP.md) for planned features.
 
 ## ✨ Features
 
+### Core Architecture
 - 🏗️ **Monorepo Architecture** - Bun workspaces + catalogs + isolated installs done right
-- 🎨 **Beautiful Interactive CLI** - Built with @clack/prompts (same as Astro)
+- 🎨 **Beautiful Interactive CLI** - Built with @clack/prompts (same as Astro) with 21+ configuration prompts
 - 📦 **Modern Stack** - Next.js 16, React 19, Hono, Tailwind CSS 4
-- 🎭 **shadcn/ui Integration** - Complete UI component system with themes, customization, and auto-installation
 - ⚡ **Bun-Native** - Leverages Bun 1.3+ features (catalogs, isolated installs, HMR)
-- 🗄️ **Database Patterns** - PostgreSQL/Drizzle, Supabase (with presets and feature selection), SQLite setup (structure, not models)
-- 🤖 **AI-Optimized** - Ultracite integration (Cursor, Windsurf, Claude Code, Zed)
-- 🐳 **Docker Ready** - Multi-stage Dockerfiles with Bun official images
+- 🔒 **Type-Safe by Default** - TypeScript strict mode everywhere (configurable: strict, moderate, loose)
+- 🛠️ **Shared TypeScript Tooling** - Centralized TypeScript configurations (`tooling/typescript/`) for consistent setup
+
+### Database & ORM Support
+- 🗄️ **PostgreSQL** - With Drizzle ORM or Prisma ORM
+- 🗄️ **MySQL** - Native Bun 1.3 MySQL client with Drizzle ORM or Prisma ORM
+- 🗄️ **SQLite** - With Drizzle ORM or Prisma ORM
+- 🗄️ **Supabase** - Complete integration with presets (full-stack, auth-only, database-only, custom)
+  - Configurable features: auth, storage, realtime, edge-functions, database
+  - With or without Drizzle ORM / Prisma ORM
+
+### Authentication Systems
+- 🔐 **better-auth** - Modern, flexible authentication library with database adapters
+- 🔐 **NextAuth.js** - Popular Next.js authentication solution with database adapters
+- 🔐 **Supabase Auth** - Built-in Supabase authentication
+
+### Infrastructure & Caching
+- ⚡ **Redis Support** - Native Bun 1.3 Redis client for caching and session storage
+- 🔑 **Bun.secrets** - Secure credential management using Bun.secrets API (alternative to .env files)
+
+### UI & Styling
+- 🎭 **shadcn/ui Integration** - Complete UI component system with themes, customization, and auto-installation
+  - 5 base color themes (neutral, gray, zinc, stone, slate) with OKLCH color values
+  - Style options (new-york, default)
+  - Customizable border radius
+  - Auto-installed default components
+  - `bunkit add component` command for adding components
+- 🎨 **CSS Frameworks** - Tailwind CSS 4, Vanilla CSS, CSS Modules
+
+### Developer Experience
+- 🤖 **AI-Optimized** - Ultracite integration (Cursor, Windsurf, Claude Code, Zed) - Official Ultracite structure with proper presets
+- 🐛 **Bun Debugging** - Complete debugging support with WebKit Inspector Protocol
+  - **Interactive Debugging** - `bun --inspect` for WebSocket-based debugging
+  - **Break on Start** - `bun --inspect-brk` to pause at first line
+  - **Wait for Debugger** - `bun --inspect-wait` to wait for debugger attachment
+  - **VSCode Integration** - Complete `.vscode/launch.json` with Bun debugger configurations
+  - **Network Debugging** - `BUN_CONFIG_VERBOSE_FETCH` for debugging fetch/node:http requests
+    - Set to `curl` to print requests as curl commands
+    - Set to `true` to print request & response info
+  - **Sourcemaps** - Automatic sourcemap generation for TypeScript/JSX
+  - **V8 Stack Traces** - Node.js-compatible stack traces with V8 Stack Trace API
+  - **Pre-configured Scripts** - `debug`, `debug:brk`, `debug:wait` scripts in all presets
+- 💾 **Custom Presets** - Save and reuse project configurations (`bunkit preset save/load/list/delete`)
+- 📚 **Dependency Catalog** - Centralized version management (`bunkit catalog add/sync/list`)
+- 🎯 **Workspace Management** - Add workspaces and shared packages easily (`bunkit add workspace/package`)
+- ⚙️ **Bun Configuration Defaults** - Comprehensive `bunfig.toml` with sensible defaults
+  - Package installation settings (auto-install, isolated installs for monorepos)
+  - Test runner configuration (coverage, reporters, thresholds)
+  - Runtime configuration (log levels, telemetry, console depth)
+  - Script execution settings (shell, node aliasing)
+  - Fully documented with inline comments and debugging tips
+
+### DevOps & Quality
+- 🐳 **Docker Ready** - Complete Docker setup for local development and production
+  - **Multi-stage Dockerfiles** - Optimized builds with Bun official images
+  - **Docker Compose** - Full local development stack with all dependencies
+  - **Supabase Local** - Complete Supabase stack (PostgreSQL, Auth, Storage, Realtime, Studio) when using Supabase
+  - **Redis Local** - Redis container for caching and sessions when enabled
+  - **Database Containers** - PostgreSQL, MySQL, or SQLite containers based on configuration
+  - **Network Isolation** - Proper Docker networks for service communication
+  - **Production Ready** - Non-root user, optimized layers, proper caching
 - 🔄 **CI/CD Built-in** - GitHub Actions workflows with lint/test/build/docker
-- 🔒 **Type-Safe by Default** - TypeScript strict mode everywhere (configurable)
-- 🎯 **Workspace Management** - Add workspaces and shared packages easily
+- 🧪 **Testing Frameworks** - Bun Test (built-in) or Vitest
+- 📝 **Code Quality** - Biome or Ultracite for linting and formatting
+
+### Enterprise Features
 - 🏢 **Enterprise Patterns** - Monorepo architecture, shared packages, proper structure
+- 📦 **8 Production-Ready Presets** - From minimal to enterprise monorepo
+- 🔧 **Individual Dev Scripts** - Run specific apps/services independently (`dev:web`, `dev:app`, `dev:platform`, etc.)
 
 ## 🚀 Quick Start
 
@@ -42,12 +102,20 @@ bunkit init
 
 ### Requirements
 
-- [Bun](https://bun.sh) v1.1.0 or higher
+- [Bun](https://bun.sh) v1.3.0 or higher (required for catalogs, isolated installs, MySQL, Redis)
 - Node.js v20.9.0 or higher (required for Next.js 16)
 
 ## 📦 Presets
 
-bunkit offers **7 presets** to choose from, including options **without Next.js** for those who prefer different frameworks:
+bunkit offers **8 presets** with clear, descriptive names following the pattern `{framework}-{architecture}`. All presets support aliases for backwards compatibility.
+
+### Preset Naming Convention
+
+- **Framework**: `nextjs`, `hono-api`, `bun-api`, `bun-fullstack`
+- **Architecture**: (none) = single repo, `monorepo` = monorepo structure
+- **Aliases**: Old names still work (`web` → `nextjs`, `api` → `hono-api`, `full` → `nextjs-monorepo`)
+
+---
 
 ### `minimal` - Single Repo, Clean Start
 
@@ -69,7 +137,7 @@ bun run dev
 
 ---
 
-### `web` - Next.js 16 Frontend
+### `nextjs` - Next.js 16 Frontend (Single Repo)
 
 Complete Next.js application with React 19, Tailwind CSS 4, and modern tooling.
 
@@ -88,7 +156,8 @@ Complete Next.js application with React 19, Tailwind CSS 4, and modern tooling.
 - Optimal folder structure
 
 ```bash
-bunkit create web my-app
+bunkit create nextjs my-app
+# Alias: bunkit create web my-app
 cd my-app
 bun install  # If --no-install was used
 bun dev
@@ -98,7 +167,7 @@ bun dev
 
 ---
 
-### `api` - Hono Backend
+### `hono-api` - Hono Backend (Single Repo)
 
 Lightning-fast API built with Hono and Bun.serve() with native HMR.
 
@@ -111,7 +180,8 @@ Lightning-fast API built with Hono and Bun.serve() with native HMR.
 - TypeScript with Bun types
 
 ```bash
-bunkit create api my-api
+bunkit create hono-api my-api
+# Alias: bunkit create api my-api
 cd my-api
 bun run dev
 ```
@@ -120,35 +190,7 @@ bun run dev
 
 ---
 
-### `full` - Full-Stack Monorepo
-
-Enterprise-grade monorepo with Next.js frontend, Hono backend, and shared packages.
-
-**What you get:**
-- Bun workspaces configured
-- Dependency catalogs (centralized versions)
-- Isolated installs (no phantom deps)
-- Apps:
-  - `web/` - Next.js frontend
-  - `api/` - Hono backend
-- Packages:
-  - `types/` - Shared TypeScript types
-  - `utils/` - Shared utilities
-- Biome for code quality
-- Proper TypeScript project references
-
-```bash
-bunkit create full my-saas
-cd my-saas
-bun install
-bun dev  # Starts all apps
-```
-
-**Use cases:** SaaS products, full-stack applications, multi-app projects
-
----
-
-### `bun-api` - Bun.serve() Native API (No Dependencies)
+### `bun-api` - Bun.serve() Native API (Single Repo, No Dependencies)
 
 Ultra-fast API server using Bun.serve() native routing with zero external dependencies.
 
@@ -170,7 +212,7 @@ bun run dev
 
 ---
 
-### `bun-fullstack` - Bun.serve() + HTML Imports (No Next.js)
+### `bun-fullstack` - Bun.serve() + HTML Imports (Single Repo, No Next.js)
 
 Full-stack application using Bun.serve() with HTML imports - React without Next.js.
 
@@ -192,43 +234,141 @@ bun run dev
 
 ---
 
-### `monorepo-bun` - Monorepo with Bun.serve() (No Next.js)
+### `nextjs-monorepo` - Full-Stack Monorepo (Next.js + Hono)
+
+Enterprise-grade monorepo with Next.js frontend, Hono backend, and shared packages.
+
+**What you get:**
+- Bun workspaces configured
+- Dependency catalogs (centralized versions)
+- Isolated installs (no phantom deps)
+- Apps:
+  - `apps/web/` - Next.js frontend (customer-facing)
+  - `apps/platform/` - Next.js admin dashboard (port 3001)
+  - `apps/api/` - Hono backend API
+- Packages:
+  - `packages/types/` - Shared TypeScript types
+  - `packages/utils/` - Shared utilities
+- **Shared tooling:**
+  - `tooling/typescript/` - Shared TypeScript configurations
+- Biome for code quality
+- Proper TypeScript project references
+- Individual dev commands per app
+
+```bash
+bunkit create nextjs-monorepo my-saas
+# Aliases: bunkit create full my-saas
+#          bunkit create monorepo-nextjs my-saas
+cd my-saas
+bun install
+bun dev  # Starts all apps
+
+# Or start individually:
+bun run dev:web       # Start customer-facing app
+bun run dev:platform  # Start admin dashboard
+bun run dev:api       # Start backend API
+```
+
+**Use cases:** SaaS products, full-stack applications, multi-app projects
+
+---
+
+### `bun-monorepo` - Monorepo with Bun.serve() (No Next.js)
 
 Enterprise monorepo using Bun.serve() for both frontend and backend - no Next.js required.
 
 **What you get:**
 - Bun workspaces configured
 - Apps:
-  - `web/` - Bun.serve() + HTML imports (React frontend)
-  - `api/` - Bun.serve() native API
+  - `apps/web/` - Bun.serve() + HTML imports (React frontend)
+  - `apps/api/` - Bun.serve() native API
 - Packages:
-  - `types/` - Shared TypeScript types
-  - `utils/` - Shared utilities
+  - `packages/types/` - Shared TypeScript types
+  - `packages/utils/` - Shared utilities
+- **Shared tooling:**
+  - `tooling/typescript/` - Shared TypeScript configurations
 - All Bun-native, no Next.js
+- Individual dev commands per app
 
 ```bash
-bunkit create monorepo-bun my-saas
+bunkit create bun-monorepo my-saas
+# Alias: bunkit create monorepo-bun my-saas
 cd my-saas
 bun install
 bun dev  # Starts all apps
+
+# Or start individually:
+bun run dev:web    # Start web app
+bun run dev:api    # Start API server
 ```
 
 **Use cases:** Full-stack monorepos without Next.js, Bun-native architectures
 
+---
+
+### `enterprise-monorepo` - Enterprise Monorepo (Multiple Apps + Services)
+
+Enterprise-grade monorepo with multiple Next.js applications and microservices - perfect for complex SaaS platforms.
+
+**What you get:**
+- **Multiple Next.js apps:**
+  - `apps/web/` - Marketing/Landing site (port 3000)
+  - `apps/app/` - Main SaaS product application (port 3002)
+  - `apps/platform/` - Admin dashboard (port 3001)
+- **Microservices:**
+  - `apps/service-identity/` - Identity & authentication service (port 3003)
+- **Shared packages:**
+  - `packages/types/` - Shared TypeScript types
+  - `packages/utils/` - Shared utilities
+  - `packages/ui/` - Shared UI components (shadcn/ui)
+  - `packages/db/` - Shared database schema (if configured)
+- **Shared tooling:**
+  - `tooling/typescript/` - Shared TypeScript configurations
+- Bun workspaces configured
+- Dependency catalogs (centralized versions)
+- Individual dev commands per app/service
+- Ready for microservices architecture
+
+```bash
+bunkit create enterprise-monorepo my-platform
+cd my-platform
+bun install
+bun dev  # Starts all apps and services
+
+# Or start individually:
+bun run dev:web         # Start marketing site
+bun run dev:app         # Start main product app
+bun run dev:platform    # Start admin dashboard
+bun run dev:identity    # Start identity service
+```
+
+**Use cases:** Enterprise SaaS platforms, multi-tenant applications, complex architectures with multiple apps and services
+
+**Adding more services:**
+```bash
+# Add a new service
+bunkit add workspace --name apps/service-payments --preset hono
+
+# Add another Next.js app
+bunkit add workspace --name apps/docs --preset nextjs
+```
+
 ## 🎯 Commands
 
-### `bunkit init`
+### `bunkit init` (or `bunkit i`)
 
 Interactive project creation with beautiful prompts.
 
 ```bash
 bunkit init
+# Alias: bunkit i
 ```
 
-You'll be guided through **21+ interactive prompts** in "buffet libre" style - choose exactly what you need:
+You'll be guided through **21+ interactive prompts** à la carte - choose exactly what you need:
 
 1. Project name
-2. Preset type (minimal/web/api/bun-api/bun-fullstack/full/monorepo-bun)
+2. Preset type (minimal/nextjs/hono-api/bun-api/bun-fullstack/nextjs-monorepo/bun-monorepo/enterprise-monorepo)
+   - All old names still work: `web` → `nextjs`, `api` → `hono-api`, `full` → `nextjs-monorepo`
 3. Database configuration (PostgreSQL/Drizzle/Prisma, MySQL/Drizzle/Prisma, SQLite/Drizzle/Prisma, Supabase variants, none)
 4. Supabase configuration (if selected):
    - Preset: full-stack, auth-only, database-only, or custom
@@ -250,34 +390,12 @@ You'll be guided through **21+ interactive prompts** in "buffet libre" style - c
 16. Install dependencies? (default: yes)
 17. Initialize git? (default: yes)
 
-**Save your configuration as a preset:**
-```bash
-bunkit init --save-preset my-api-preset
-```
-
-**Reuse saved presets:**
-```bash
-bunkit init --load-preset my-api-preset
-bunkit preset list
-bunkit preset delete my-api-preset
-```
-
-### `bunkit create <preset> <name>`
-
-Quick, non-interactive project creation.
-
-```bash
-bunkit create web my-app
-bunkit create api my-api --no-git
-bunkit create full my-saas --no-install
-```
-
 **Options:**
-- `--name <name>` - Project name
-- `--preset <preset>` - Preset type (minimal, web, api, bun-api, bun-fullstack, full, monorepo-bun)
+- `--name <name>` - Project name (kebab-case recommended)
+- `--preset <preset>` - Preset type (minimal, nextjs, hono-api, bun-api, bun-fullstack, nextjs-monorepo, bun-monorepo, enterprise-monorepo)
 - `--database <database>` - Database option (postgres-drizzle, postgres-prisma, mysql-drizzle, mysql-prisma, supabase, supabase-drizzle, supabase-prisma, sqlite-drizzle, sqlite-prisma, none)
-- `--auth <auth>` - Authentication system (better-auth, nextauth, supabase, none)
-- `--redis` - Enable Redis cache/session store
+- `--auth <auth>` - Authentication system (better-auth, nextauth, supabase, none) - for API/Full-stack presets
+- `--redis` - Enable Redis cache/session store - for API/Full-stack presets
 - `--use-bun-secrets` - Use Bun.secrets API instead of .env files
 - `--supabase-preset <preset>` - Supabase preset (full-stack, auth-only, database-only, custom)
 - `--supabase-features <features>` - Comma-separated Supabase features (auth,storage,realtime,edge-functions,database)
@@ -293,7 +411,61 @@ bunkit create full my-saas --no-install
 - `--cicd` - Include GitHub Actions CI/CD
 - `--no-git` - Skip git initialization
 - `--no-install` - Skip dependency installation
-- `--non-interactive` - Run without prompts (requires all options)
+- `--non-interactive` - Run without prompts (requires all options via flags)
+- `--save-preset <name>` - Save current configuration as a custom preset
+- `--load-preset <name>` - Load configuration from a custom preset
+
+**Examples:**
+```bash
+# Interactive mode (recommended)
+bunkit init
+
+# Quick creation with preset
+bunkit init --name my-app --preset nextjs
+
+# Full customization via flags
+bunkit init --name my-saas --preset nextjs-monorepo --database supabase --docker --cicd
+
+# Save configuration as preset
+bunkit init --save-preset my-api-preset
+
+# Load saved preset
+bunkit init --load-preset my-api-preset
+```
+
+### `bunkit create <preset> <name>` (or `bunkit c`)
+
+Quick, non-interactive project creation with sensible defaults.
+
+```bash
+bunkit create nextjs my-app
+# Alias: bunkit c nextjs my-app
+bunkit create hono-api my-api --no-git
+bunkit create nextjs-monorepo my-saas --no-install
+# Aliases still work: bunkit create web my-app
+```
+
+**Options:**
+- `--no-git` - Skip git initialization
+- `--no-install` - Skip dependency installation
+
+**Note:** This command uses sensible defaults. Use `bunkit init` for full customization with all options.
+
+**Presets:**
+- `minimal` - Single-file Bun project
+- `nextjs` - Next.js 16 + React 19 web application (single repo)
+- `hono-api` - Hono 4 + Bun.serve() API server (single repo)
+- `bun-api` - Bun.serve() native routing (zero dependencies, single repo)
+- `bun-fullstack` - Bun.serve() + HTML imports (no Next.js, single repo)
+- `nextjs-monorepo` - Monorepo with Next.js + Hono
+- `bun-monorepo` - Monorepo with Bun.serve() (no Next.js)
+- `enterprise-monorepo` - Enterprise monorepo with multiple apps and services
+
+**Aliases (backwards compatible):**
+- `web` → `nextjs`
+- `api` → `hono-api`
+- `full` → `nextjs-monorepo`
+- `monorepo-bun` → `bun-monorepo`
 
 ### `bunkit add <feature>` (or `bunkit a`)
 
@@ -333,10 +505,17 @@ bunkit add component --components button,card,input
 bunkit add component --all
 ```
 
+**Options:**
+- `--name <name>` - Feature name (e.g., apps/admin, @myapp/utils, button)
+- `--preset <preset>` - Workspace preset (nextjs, hono, library) - for workspace feature
+- `--type <type>` - Package type (library, utils, types, config) - for package feature
+- `--components <components>` - Comma-separated component names (e.g., button,card,input) - for component feature
+- `--all` - Show interactive component browser - for component feature
+
 **Examples:**
 ```bash
 # Create a full-stack monorepo
-bunkit init full my-saas
+bunkit init --preset nextjs-monorepo --name my-saas
 cd my-saas
 
 # Add admin dashboard workspace
@@ -348,12 +527,132 @@ bunkit add package --name @myapp/email --type library
 # Add shared types package
 bunkit add package --name @myapp/types --type types
 
+# Add shadcn/ui components
+bunkit add component --components button,card,input
+
 # Use shared packages in workspaces
 # apps/admin/package.json:
 # "dependencies": {
 #   "@myapp/email": "workspace:*",
 #   "@myapp/types": "workspace:*"
 # }
+```
+
+### `bunkit preset`
+
+Manage custom presets - save and reuse project configurations.
+
+```bash
+# List all custom presets
+bunkit preset list
+
+# Delete a custom preset
+bunkit preset delete <name>
+
+# Save preset (use during init flow)
+bunkit init --save-preset <name>
+
+# Load preset
+bunkit init --load-preset <name>
+```
+
+**Subcommands:**
+- `list` - List all custom presets
+- `delete [name]` - Delete a custom preset (interactive if name not provided)
+- `save [name]` - Save current configuration (use `bunkit init --save-preset` instead)
+
+**Examples:**
+```bash
+# List all saved presets
+bunkit preset list
+
+# Delete a preset interactively
+bunkit preset delete
+
+# Delete a specific preset
+bunkit preset delete my-api-preset
+
+# Save a preset during init
+bunkit init --save-preset my-custom-preset
+
+# Use a saved preset
+bunkit init --load-preset my-custom-preset
+```
+
+### `bunkit catalog` (or `bunkit cat`)
+
+Manage dependency catalog for version synchronization across monorepo workspaces.
+
+```bash
+# Alias: bunkit cat
+bunkit catalog add <package> [version]
+bunkit catalog sync
+bunkit catalog list
+```
+
+**Subcommands:**
+
+**1. `add <package> [version]`** - Add package to catalog
+```bash
+# Interactive mode
+bunkit catalog add
+
+# Add with version
+bunkit catalog add zod ^3.24.1
+bunkit catalog add hono ^4.10.6
+bunkit catalog add @prisma/client latest
+```
+
+**2. `sync`** - Sync catalog versions across all workspaces
+```bash
+bunkit catalog sync
+```
+Updates all workspace `package.json` files to use `catalog:` for packages that exist in the catalog.
+
+**3. `list`** - List all packages in catalog
+```bash
+bunkit catalog list
+```
+
+**How it works:**
+1. Add packages to catalog in root `package.json`:
+   ```json
+   {
+     "catalog": {
+       "react": "^19.1.0",
+       "hono": "^4.10.6"
+     }
+   }
+   ```
+
+2. Reference in workspace `package.json`:
+   ```json
+   {
+     "dependencies": {
+       "react": "catalog:",
+       "hono": "catalog:"
+     }
+   }
+   ```
+
+3. Sync versions across all workspaces:
+   ```bash
+   bunkit catalog sync
+   ```
+
+**Examples:**
+```bash
+# Add packages to catalog
+bunkit catalog add react ^19.1.0
+bunkit catalog add next ^16.0.0
+bunkit catalog add hono ^4.10.6
+
+# List catalog contents
+bunkit catalog list
+
+# Sync versions across workspaces
+bunkit catalog sync
+bun install  # Update lockfile
 ```
 
 ## 📁 Project Structure
@@ -403,17 +702,42 @@ my-api/
 └── README.md
 ```
 
-### Full Preset
+### Full Preset (nextjs-monorepo)
 
 ```
 my-saas/
 ├── apps/
-│   ├── web/          # Next.js app
-│   └── api/          # Hono API
+│   ├── web/          # Next.js frontend (customer-facing)
+│   ├── platform/     # Next.js admin dashboard (port 3001)
+│   └── api/          # Hono API backend
 ├── packages/
-│   ├── types/        # Shared types
+│   ├── types/        # Shared TypeScript types
 │   └── utils/        # Shared utilities
+├── tooling/
+│   └── typescript/   # Shared TypeScript configurations
 ├── package.json      # Root with catalogs
+├── bunfig.toml
+├── tsconfig.json
+└── README.md
+```
+
+### Enterprise Monorepo Preset
+
+```
+my-platform/
+├── apps/
+│   ├── web/               # Marketing/Landing site (port 3000)
+│   ├── app/               # Main SaaS product (port 3002)
+│   ├── platform/          # Admin/Dashboard (port 3001)
+│   └── service-identity/  # Identity service API (port 3003)
+├── packages/
+│   ├── types/             # Shared TypeScript types
+│   ├── utils/             # Shared utilities
+│   ├── ui/                # Shared UI components (shadcn/ui)
+│   └── db/                # Shared database schema (if configured)
+├── tooling/
+│   └── typescript/        # Shared TypeScript configurations
+├── package.json           # Root with catalogs
 ├── bunfig.toml
 ├── tsconfig.json
 └── README.md
@@ -432,7 +756,7 @@ my-saas/
 | Styling | Tailwind CSS | 4.1.17+ |
 | UI Components | shadcn/ui | Latest |
 | Language | TypeScript | 5.9.3+ |
-| Code Quality | Biome / Ultracite | 2.3.6+ / 6.0.1+ |
+| Code Quality | Biome / Ultracite | 2.3.6+ / 6.3.4+ |
 | Testing | Bun Test / Vitest | Built-in / 2.0.0+ |
 
 ## 💡 Philosophy
@@ -448,191 +772,36 @@ my-saas/
 
 ## 🔄 Comparison
 
-| Feature | bunkit | create-next-app | create-t3-app | turborepo |
-|---------|--------|----------------|---------------|-----------|
-| Bun-native | ✅ | ❌ | ❌ | ⚠️ |
-| Workspace management | ✅ | ❌ | ❌ | ⚠️ (manual) |
-| Shared packages | ✅ | ❌ | ❌ | ⚠️ (manual) |
-| Dependency catalogs | ✅ | ❌ | ❌ | ❌ |
-| Isolated installs | ✅ | ❌ | ❌ | ❌ |
-| Multiple presets | ✅ (7) | ❌ (1) | ✅ | ❌ |
-| No Next.js options | ✅ (3 presets) | ❌ | ❌ | ❌ |
-| API backend | ✅ Hono | ❌ | ✅ tRPC | ❌ |
-| Interactive CLI | ✅ | ✅ | ✅ | ⚠️ |
+| Feature | bunkit | create-next-app | create-t3-app | turborepo | v1 |
+|---------|--------|----------------|---------------|-----------|-----|
+| Bun-native | ✅ | ❌ | ❌ | ⚠️ | ❌ |
+| Workspace management | ✅ | ❌ | ❌ | ⚠️ (manual) | ✅ (Turborepo) |
+| Shared packages | ✅ | ❌ | ❌ | ⚠️ (manual) | ✅ |
+| Dependency catalogs | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Isolated installs | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Multiple presets | ✅ (8) | ❌ (1) | ✅ | ❌ | ❌ (1) |
+| No Next.js options | ✅ (3 presets) | ❌ | ❌ | ❌ | ❌ |
+| API backend | ✅ Hono | ❌ | ✅ tRPC | ❌ | ❌ |
+| Interactive CLI | ✅ | ✅ | ✅ | ⚠️ | ❌ |
+| Monorepo tooling | ✅ Bun workspaces | ❌ | ❌ | ✅ Turborepo | ✅ Turborepo |
 
-**bunkit's unique value:** Bun monorepo management made easy. Nobody else does this well.
+**bunkit's unique value:** Bun-native monorepo management with dependency catalogs and isolated installs. Perfect for Bun-first projects that want enterprise patterns without Turborepo complexity.
 
 ## 📝 Versioning & Releases
 
 bunkit uses [Changesets](https://github.com/changesets/changesets) for semantic versioning and changelog management.
 
-### Version History
+### Recent Releases
 
-- **v0.9.0** (Current) - Bun 1.3 integration, database expansion, auth systems, and "buffet libre" CLI
-- **v0.8.0** - Major release with Supabase integration and CLI improvements
-  - Complete Supabase integration with presets and granular feature selection
-  - New database options: `supabase` (client-only) and `supabase-drizzle` (with Drizzle ORM)
-  - Supabase presets: full-stack, auth-only, database-only, and custom
-  - Configurable Supabase features: auth, storage, realtime, edge-functions, database
-  - All major dependencies updated to latest stable versions
-  - Dependency management scripts (`update-deps`, `check-deps`)
-  - Significantly improved CLI developer experience and visual polish
-  - Enhanced banner, progress messages, and configuration summaries
-  - Professional nomenclature improvements across all commands
-  - Command aliases (init|i, create|c, add|a)
+- **v1.0.0** (Current) - Enterprise-grade monorepo improvements, shared TypeScript tooling, enhanced scripts
+- **v0.9.0** - Bun 1.3 integration, database expansion (Prisma, MySQL, Redis), auth systems, à la carte CLI
+- **v0.8.0** - Complete Supabase integration with presets and granular feature selection
 
-- **v0.7.0** - Deep shadcn/ui integration
-  - Full theme system with 5 base colors (neutral, gray, zinc, stone, slate) and OKLCH color values
-  - Style options (new-york, default) configurable via CLI
-  - Customizable border radius
-  - Automatic installation of default components (button, card)
-  - New `bunkit add component` command for adding shadcn/ui components
-  - Example components and comprehensive documentation
-
-- **v0.6.0** - Workspace and package management
-  - `bunkit add workspace` command - Add Next.js, Hono, or library workspaces to monorepos
-  - `bunkit add package` command - Add shared packages (library, utils, types, config) to monorepos
-  - Monorepo detection and validation utilities
-  - Automatic catalog integration for new workspaces and packages
-  - TypeScript project references support
-
-- **v0.5.0** - Major customization update
-  - Database integration (PostgreSQL/Drizzle, Supabase, SQLite)
-  - Ultracite AI-optimized code quality (.cursorrules, .windsurfrules, CLAUDE.md)
-  - Docker support (multi-stage builds with Bun official images)
-  - GitHub Actions CI/CD (lint, typecheck, test, build, docker)
-  - TypeScript strictness levels (strict, moderate, loose)
-  - Testing framework options (bun-test, vitest)
-  - Bun dependency catalog implementation
-
-- **v0.1.0-alpha.1** - Initial alpha release
-  - All 4 presets (minimal, web, api, full)
-  - Beautiful interactive CLI
-  - Bun 1.3+ monorepo features
-  - See [CHANGELOG](./packages/cli/CHANGELOG.md) for full details
-
-### Semantic Versioning
-
-We follow [SemVer 2.0.0](https://semver.org/):
-- **Major** (1.0.0) - Breaking changes
-- **Minor** (0.1.0) - New features, backwards compatible
-- **Patch** (0.0.1) - Bug fixes
-- **Prerelease** (0.1.0-alpha.1) - Testing and early adoption
-
-### Release Process
-
-**Automated (Recommended):**
-
-1. Add a changeset for your changes:
-   ```bash
-   bun run changeset
-   ```
-
-2. Push to main (via PR merge)
-
-3. GitHub Actions automatically creates "Release: Version Packages" PR
-
-4. Merge the release PR → Packages auto-publish to npm ✨
-
-**Manual:**
-
-```bash
-# Version packages (updates package.json + CHANGELOG)
-bun run version
-
-# Build and publish to npm
-bun run release
-```
-
-### CI/CD
-
-bunkit uses **GitHub Actions + Changesets** for automated releases:
-
-- **Workflow**: `.github/workflows/release.yml`
-- **Triggers**: Push to `main` branch
-- **Process**:
-  1. Detects changesets
-  2. Creates release PR with version bumps
-  3. Publishes to npm on PR merge
-
-**Setup Requirements:**
-- `NPM_TOKEN` secret configured in GitHub
-- Token type: "Automation" (no 2FA)
-- Token permissions: "Read and write"
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for full setup guide.
-
-### Keeping Dependencies Updated
-
-bunkit maintains all dependencies at their latest stable versions. To keep your project dependencies up to date:
-
-**Check for outdated dependencies:**
-```bash
-bun run check-deps
-```
-
-**Update all dependencies to latest versions:**
-```bash
-bun run update-deps
-```
-
-This will:
-- Update all dependencies to their latest compatible versions
-- Update the lockfile (`bun.lock`)
-- Verify everything still builds correctly
-
-**Note:** Major version updates (e.g., Zod 3 → 4, Vitest 2 → 4) are kept at stable versions to avoid breaking changes. These are updated manually after thorough testing.
+See [CHANGELOG](./packages/cli/CHANGELOG.md) for complete version history and [CONTRIBUTING.md](./CONTRIBUTING.md) for release process details.
 
 ### Roadmap
 
-**Current (v0.9.0)**
-- ✅ Core CLI functionality
-- ✅ All 7 presets working (minimal, web, api, bun-api, bun-fullstack, full, monorepo-bun)
-- ✅ Beautiful interactive experience
-- ✅ Automated CI/CD with GitHub Actions
-- ✅ Semantic versioning with Changesets
-- ✅ **Complete Supabase integration** - Full-stack, auth-only, database-only, and custom presets with granular feature selection
-- ✅ Database setup (PostgreSQL, Supabase, SQLite) - structure only
-- ✅ AI-optimized code quality (Ultracite)
-- ✅ Docker support (multi-stage builds)
-- ✅ GitHub Actions workflows
-- ✅ Dependency catalog management
-- ✅ Enhanced `bunkit init` with 12+ customization prompts
-- ✅ `bunkit add workspace` - Add workspaces to monorepo
-- ✅ `bunkit add package` - Add shared packages
-- ✅ **Deep shadcn/ui integration** - Complete UI component system
-  - 5 base color themes with OKLCH color values
-  - Style options (new-york, default)
-  - Customizable border radius
-  - Auto-installation of default components
-  - `bunkit add component` command
-  - Example components and documentation
-- ✅ Dependency management scripts (`update-deps`, `check-deps`)
-- ✅ Enhanced CLI developer experience with improved visuals and messaging
-
-**v0.9.0** (Current) - Bun 1.3 Integration, Database Expansion & Auth Systems 🚀
-- ✅ **Prisma ORM support** - Full Prisma integration as alternative to Drizzle (PostgreSQL, MySQL, SQLite)
-- ✅ **MySQL & Redis support** - Native Bun 1.3 clients (MySQL + Drizzle/Prisma, Redis for caching/sessions)
-- ✅ **Authentication systems** - better-auth and NextAuth.js integration with database adapters
-- ✅ **Enhanced Hono defaults** - Comprehensive middleware, utilities, and patterns for faster iteration
-- ✅ **Bun.secrets integration** - Secure credential management using Bun.secrets API with type-safe helpers
-- ✅ **New presets** - `bun-api` (Bun.serve() native), `bun-fullstack` (Bun.serve() + HTML imports), `monorepo-bun` (monorepo without Next.js)
-- ✅ **"Buffet libre" CLI** - Fully interactive `bunkit init` with 21+ configuration prompts
-- ✅ **Custom presets** - Save and reuse project configurations (`bunkit preset save/load/list/delete`)
-- ✅ `bunkit catalog add` - Manage catalog dependencies
-- ✅ `bunkit catalog sync` - Sync versions across workspaces
-- ✅ **VSCode debugging** - Complete debugging configuration with launch.json, settings.json, extensions.json
-- ✅ **bunfig.toml defaults** - Comprehensive Bun configuration with customizable defaults
-- ✅ Improved Bun.serve() configuration with full-stack dev server features
-
-**v1.0.0 - Type Safety & Advanced Features**
-- `bunkit add trpc` - tRPC setup for type-safe APIs
-- `bunkit generate types` - Generate types from schema
-- Enhanced workspace TypeScript project references
-- Example projects
-- Production-ready monorepo toolkit
-- Full test coverage
-- Complete documentation
+See [ROADMAP.md](./ROADMAP.md) for the complete roadmap and planned features.
 
 ## 🤝 Contributing
 
@@ -646,6 +815,7 @@ MIT © [Arakiss](https://github.com/Arakiss)
 
 - [@clack/prompts](https://www.clack.cc/) - Beautiful CLI prompts by the Astro team
 - [create-t3-app](https://create.t3.gg/) - Inspiration for modular approach
+- [v1](https://github.com/midday-ai/v1) - Inspiration for SaaS starter patterns and architecture
 - [Bun](https://bun.sh) - The amazing all-in-one JavaScript runtime
 
 ---

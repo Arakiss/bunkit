@@ -2,6 +2,7 @@ import { join } from 'pathe';
 import { writeFile, type TemplateContext } from '@bunkit/core';
 import { generateBunfigContent } from '../generators/bunfig';
 import { setupVSCodeDebug } from '../generators/debug';
+import { setupUltracite, setupBiome } from '../generators/ultracite';
 
 /**
  * Build minimal preset files
@@ -54,6 +55,13 @@ greet('Bun');
   // bunfig.toml with enhanced defaults
   const bunfigContent = generateBunfigContent(context);
   await writeFile(join(projectPath, 'bunfig.toml'), bunfigContent);
+
+  // Setup code quality tools
+  if (context.codeQuality === 'ultracite') {
+    await setupUltracite(projectPath, context);
+  } else {
+    await setupBiome(projectPath, context);
+  }
 
   // Setup VSCode debugging configuration
   await setupVSCodeDebug(projectPath, context, 'minimal');

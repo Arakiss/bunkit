@@ -89,24 +89,11 @@ export default config;
 
   await writeFile(join(workspacePath, 'tailwind.config.ts'), tailwindConfigContent);
 
-  // tsconfig.json
+  // tsconfig.json - extends tooling if available, otherwise root
   const tsconfigContent = {
-    extends: '../../tsconfig.json',
+    extends: '../../tooling/typescript/nextjs.json',
     compilerOptions: {
-      target: 'ES2017',
-      lib: ['dom', 'dom.iterable', 'esnext'],
-      allowJs: true,
-      skipLibCheck: true,
-      strict: true,
-      noEmit: true,
-      esModuleInterop: true,
-      module: 'esnext',
-      moduleResolution: 'bundler',
-      resolveJsonModule: true,
-      isolatedModules: true,
-      jsx: 'react-jsx',
-      incremental: true,
-      plugins: [{ name: 'next' }],
+      // Override specific options if needed
       paths: {
         '@/*': ['./src/*'],
       },
@@ -191,18 +178,11 @@ if (import.meta.main) {
 
   await writeFile(join(workspacePath, 'src/index.ts'), indexContent);
 
-  // tsconfig.json
+  // tsconfig.json - extends tooling if available
   const tsconfigContent = {
-    extends: '../../tsconfig.json',
+    extends: '../../tooling/typescript/api.json',
     compilerOptions: {
-      target: 'ESNext',
-      module: 'ESNext',
-      moduleResolution: 'bundler',
-      strict: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      resolveJsonModule: true,
-      isolatedModules: true,
+      // Override specific options if needed
       types: ['bun-types'],
     },
     include: ['src/**/*'],
@@ -254,20 +234,11 @@ export function example() {
 
   await writeFile(join(workspacePath, 'src/index.ts'), indexContent);
 
-  // tsconfig.json
+  // tsconfig.json - extends tooling if available
   const tsconfigContent = {
-    extends: '../../tsconfig.json',
+    extends: '../../tooling/typescript/library.json',
     compilerOptions: {
-      target: 'ESNext',
-      module: 'ESNext',
-      moduleResolution: 'bundler',
-      strict: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      resolveJsonModule: true,
-      declaration: true,
-      declarationMap: true,
-      outDir: './dist',
+      // Override specific options if needed
     },
     include: ['src/**/*'],
     exclude: ['node_modules', 'dist'],

@@ -38,6 +38,7 @@ import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
 import { setupShadcnMonorepo } from '../generators/shadcn';
 import { setupVSCodeDebug } from '../generators/debug';
+import { setupTooling } from '../generators/tooling';
 
 /**
  * Build full-stack monorepo preset files
@@ -67,15 +68,18 @@ export async function buildFullPreset(
     scripts: {
       dev: 'bun run --filter "*" dev',
       build: 'bun run --filter "*" build',
-      lint: 'biome check .',
-      format: 'biome check --write .',
+      lint: context.codeQuality === 'biome' ? 'biome check .' : 'ultracite check .',
+      format: context.codeQuality === 'biome' ? 'biome check --write .' : 'ultracite fix .',
       test: 'bun test',
+      'dev:web': 'bun run --filter "@*/web" dev',
+      'dev:platform': 'bun run --filter "@*/platform" dev',
+      'dev:api': 'bun run --filter "@*/api" dev',
       debug: 'bun --inspect apps/api/src/index.ts',
       'debug:brk': 'bun --inspect-brk apps/api/src/index.ts',
       'debug:wait': 'bun --inspect-wait apps/api/src/index.ts',
     },
     devDependencies: {
-      '@biomejs/biome': 'catalog:',
+      ...(context.codeQuality === 'biome' ? { '@biomejs/biome': 'catalog:' } : {}),
       '@types/bun': 'latest',
       typescript: 'catalog:',
     },
@@ -109,8 +113,8 @@ export async function buildFullPreset(
       'lucide-react': '^0.468.0',
 
       // Code Quality
-      '@biomejs/biome': '^2.3.0',
-      ultracite: '^6.0.1',
+      ...(context.codeQuality === 'biome' ? { '@biomejs/biome': '^2.3.6' } : {}),
+      ...(context.codeQuality === 'ultracite' ? { ultracite: '^6.3.4', '@biomejs/biome': '^2.3.6' } : {}),
 
       // Testing
       vitest: '^2.0.0',
@@ -143,6 +147,8 @@ export async function buildFullPreset(
       build: 'next build',
       start: 'next start',
       debug: 'bun --inspect node_modules/.bin/next dev',
+      'debug:brk': 'bun --inspect-brk node_modules/.bin/next dev',
+      'debug:wait': 'bun --inspect-wait node_modules/.bin/next dev',
     },
     dependencies: {
       react: 'catalog:',
@@ -174,6 +180,8 @@ export async function buildFullPreset(
       build: 'next build',
       start: 'next start --port 3001',
       debug: 'bun --inspect node_modules/.bin/next dev --port 3001',
+      'debug:brk': 'bun --inspect-brk node_modules/.bin/next dev --port 3001',
+      'debug:wait': 'bun --inspect-wait node_modules/.bin/next dev --port 3001',
     },
     dependencies: {
       react: 'catalog:',
@@ -442,7 +450,11 @@ export default config;
   };
 
   const webTsconfigContent = {
-    compilerOptions: getWebTsConfig(),
+    extends: '../../tooling/typescript/nextjs.json',
+    compilerOptions: {
+      ...getWebTsConfig(),
+      // Override specific options if needed
+    },
     include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/dev/types/**/*.ts'],
     exclude: ['node_modules'],
   };
@@ -556,9 +568,13 @@ export default config;
 
   await writeFile(join(projectPath, 'apps/platform/tailwind.config.ts'), platformTailwindConfigContent);
 
-  // apps/platform/tsconfig.json - same strictness as web
+  // apps/platform/tsconfig.json - extends tooling
   const platformTsconfigContent = {
-    compilerOptions: getWebTsConfig(), // Reuse same config as web
+    extends: '../../tooling/typescript/nextjs.json',
+    compilerOptions: {
+      ...getWebTsConfig(),
+      // Override specific options if needed
+    },
     include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/dev/types/**/*.ts'],
     exclude: ['node_modules'],
   };
@@ -635,21 +651,11 @@ console.log('🚀 ${context.projectName} API running on http://localhost:3001');
 
   await writeFile(join(projectPath, 'apps/api/src/index.ts'), apiIndexContent);
 
-  // apps/api/tsconfig.json
+  // apps/api/tsconfig.json - extends tooling
   const apiTsconfigContent = {
+    extends: '../../tooling/typescript/api.json',
     compilerOptions: {
-      lib: ['ESNext'],
-      target: 'ESNext',
-      module: 'ESNext',
-      moduleDetection: 'force',
-      allowJs: true,
-      moduleResolution: 'bundler',
-      allowImportingTsExtensions: true,
-      verbatimModuleSyntax: true,
-      noEmit: true,
-      strict: true,
-      skipLibCheck: true,
-      noFallthroughCasesInSwitch: true,
+      // Override specific options if needed
       types: ['@types/bun'],
     },
   };
@@ -670,11 +676,13 @@ Enterprise-grade SaaS monorepo created with [bunkit](https://github.com/Arakiss/
 ${context.projectName}/
 ├── apps/
 │   ├── web/        # Customer-facing app (landing, marketing)
-│   ├── platform/   # Dashboard/Admin panel (port 3001)
-│   └── api/        # Backend API (Hono)
-└── packages/
-    ├── types/      # Shared TypeScript types
-    └── utils/      # Shared utilities
+│   ├── platform/  # Dashboard/Admin panel (port 3001)
+│   └── api/       # Backend API (Hono)
+├── packages/
+│   ├── types/     # Shared TypeScript types
+│   └── utils/     # Shared utilities
+└── tooling/
+    └── typescript/ # Shared TypeScript configurations
 \`\`\`
 
 ## The Enterprise SaaS Trifecta
@@ -712,9 +720,15 @@ bun dev
 ## Individual Apps
 
 \`\`\`bash
-cd apps/web && bun dev         # Start customer-facing app
-cd apps/platform && bun dev    # Start admin dashboard
-cd apps/api && bun dev         # Start backend API
+# Start individual apps (from root)
+bun run dev:web       # Start customer-facing app
+bun run dev:platform  # Start admin dashboard
+bun run dev:api       # Start backend API
+
+# Or from individual directories
+cd apps/web && bun dev
+cd apps/platform && bun dev
+cd apps/api && bun dev
 \`\`\`
 
 ---
@@ -724,15 +738,11 @@ Built with ❤️ using Bun monorepo features
 
   await writeFile(join(projectPath, 'README.md'), readmeContent);
 
-  // Root tsconfig.json
+  // Root tsconfig.json (references tooling)
   const tsconfigContent = {
+    extends: './tooling/typescript/base.json',
     compilerOptions: {
-      target: 'ESNext',
-      lib: ['ESNext'],
-      module: 'ESNext',
-      moduleResolution: 'bundler',
-      strict: true,
-      skipLibCheck: true,
+      // Can override base config here if needed
     },
     include: ['apps/*/src/**/*', 'packages/*/src/**/*'],
     exclude: ['node_modules'],
@@ -845,6 +855,10 @@ Built with ❤️ using Bun monorepo features
     await setupDocker(projectPath, context);
 
     // Create docker-compose for monorepo with all services
+    const isSupabase = context.database === 'supabase' || context.database === 'supabase-drizzle' || context.database === 'supabase-prisma';
+    const hasLocalDb = context.database && context.database !== 'none' && !isSupabase;
+    const hasRedis = context.redis === true;
+    
     const dockerCompose = `version: '3.8'
 
 services:
@@ -855,9 +869,15 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
-      ${(context.database === 'supabase' || context.database === 'supabase-drizzle') ? '- NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\n      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}' : ''}
+      - NODE_ENV=development
+      ${isSupabase ? `- NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0` : ''}
+      ${hasRedis ? '- REDIS_URL=redis://redis:6379' : ''}
+    ${isSupabase ? 'depends_on:\n      - supabase-db\n      - supabase-auth\n      - supabase-storage\n      - supabase-realtime' : ''}
+    ${hasRedis ? 'depends_on:\n      - redis' : ''}
     restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
 
   platform:
     build:
@@ -866,36 +886,235 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - NODE_ENV=production
-      ${(context.database === 'supabase' || context.database === 'supabase-drizzle') ? '- NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\n      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}' : ''}
+      - NODE_ENV=development
+      ${isSupabase ? `- NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0` : ''}
+      ${hasRedis ? '- REDIS_URL=redis://redis:6379' : ''}
+    ${isSupabase ? 'depends_on:\n      - supabase-db\n      - supabase-auth\n      - supabase-storage\n      - supabase-realtime' : ''}
+    ${hasRedis ? 'depends_on:\n      - redis' : ''}
     restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
 
   api:
     build:
       context: ./apps/api
       dockerfile: ../../Dockerfile
     ports:
-      - "3002:3001"
+      - "3002:3000"
     environment:
-      - NODE_ENV=production
-      ${context.database && context.database !== 'none' && context.database !== 'supabase' ? `- DATABASE_URL=\${DATABASE_URL}` : ''}
-    ${context.database && context.database !== 'none' && context.database !== 'supabase' ? 'depends_on:\n      - db' : ''}
+      - NODE_ENV=development
+      ${hasLocalDb ? `- DATABASE_URL=postgres://postgres:postgres@db:5432/${context.projectName}` : ''}
+      ${isSupabase ? `- SUPABASE_URL=http://localhost:8000
+      - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU` : ''}
+      ${hasRedis ? '- REDIS_URL=redis://redis:6379' : ''}
+    ${hasLocalDb ? 'depends_on:\n      - db' : ''}
+    ${isSupabase ? 'depends_on:\n      - supabase-db\n      - supabase-auth\n      - supabase-storage\n      - supabase-realtime' : ''}
+    ${hasRedis ? 'depends_on:\n      - redis' : ''}
     restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
 
-  ${context.database && context.database !== 'none' && context.database !== 'supabase' ? `db:
-    image: ${context.database === 'sqlite-drizzle' ? 'alpine:latest' : 'postgres:16-alpine'}
-    ${context.database !== 'sqlite-drizzle' ? `environment:
+  ${hasLocalDb ? `db:
+    image: ${context.database === 'sqlite-drizzle' ? 'alpine:latest' : context.database?.includes('mysql') ? 'mysql:8.0' : 'postgres:16-alpine'}
+    ${context.database !== 'sqlite-drizzle' && !context.database?.includes('mysql') ? `environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=${context.projectName}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"` : 'volumes:\n      - sqlite_data:/data'}
+      - "5432:5432"` : context.database?.includes('mysql') ? `environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=${context.projectName}
+      - MYSQL_USER=app
+      - MYSQL_PASSWORD=app
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"` : 'volumes:\n      - sqlite_data:/data'}
     restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
 ` : ''}
-${context.database && context.database !== 'none' && context.database !== 'supabase' ? `volumes:
-  ${context.database === 'sqlite-drizzle' ? 'sqlite_data:' : 'postgres_data:'}` : ''}
+
+  ${isSupabase ? `# Supabase Local Development Stack
+  supabase-db:
+    image: supabase/postgres:15.1.0.147
+    ports:
+      - "54322:5432"
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      PGPASSWORD: postgres
+      POSTGRES_PASSWORD: postgres
+      PGUSER: postgres
+      POSTGRES_USER: postgres
+      JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      JWT_EXP: 3600
+    volumes:
+      - supabase_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
+
+  supabase-auth:
+    image: supabase/gotrue:v2.99.0
+    ports:
+      - "9999:9999"
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:9999
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:postgres@supabase-db:5432/postgres
+      GOTRUE_SITE_URL: http://localhost:3000
+      GOTRUE_URI_ALLOW_LIST: "*"
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+    depends_on:
+      - supabase-db
+    restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
+
+  supabase-storage:
+    image: supabase/storage-api:v1.8.0
+    ports:
+      - "5000:5000"
+    environment:
+      ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+      POSTGREST_URL: http://supabase-rest:3000
+      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      DATABASE_URL: postgres://postgres:postgres@supabase-db:5432/postgres
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+    volumes:
+      - supabase_storage_data:/var/lib/storage
+    depends_on:
+      - supabase-db
+      - supabase-rest
+    restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
+
+  supabase-rest:
+    image: postgrest/postgrest:v12.0.1
+    ports:
+      - "8000:3000"
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgres@supabase-db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage,graphql_public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_APP_SETTINGS_JWT_EXP: 3600
+    depends_on:
+      - supabase-db
+    restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
+
+  supabase-realtime:
+    image: supabase/realtime:v2.25.35
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      DB_HOST: supabase-db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: 'SET search_path TO _realtime'
+      DB_ENC_KEY: supabaserealtime
+      API_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      FLY_ALLOC_ID: fly123
+      FLY_APP_NAME: realtime
+      SECRET_KEY_BASE: UpNVntn3cDxHJpq99YMc1T1AQgQpc8kfYTuRgBiYa15BLrx8etQoXz3gZv1/u2oq
+      ERL_AFLAGS: -proto_dist inet_tcp
+      ENABLE_TAILSCALE: "false"
+      DNS_NODES: "''"
+    depends_on:
+      - supabase-db
+    restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
+
+  supabase-studio:
+    image: supabase/studio:20240415-0b8c736
+    ports:
+      - "54323:3000"
+    environment:
+      STUDIO_PG_META_URL: http://supabase-meta:8080
+      POSTGRES_PASSWORD: postgres
+      DEFAULT_ORGANIZATION_NAME: Default Organization
+      DEFAULT_PROJECT_NAME: Default Project
+      SUPABASE_URL: http://localhost:8000
+      SUPABASE_PUBLIC_URL: http://localhost:8000
+      SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
+      SUPABASE_SERVICE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU
+    depends_on:
+      - supabase-db
+      - supabase-meta
+    restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
+
+  supabase-meta:
+    image: supabase/postgres-meta:v0.80.0
+    ports:
+      - "8080:8080"
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: supabase-db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: postgres
+      PG_META_DB_PASSWORD: postgres
+    depends_on:
+      - supabase-db
+    restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
+` : ''}
+
+  ${hasRedis ? `redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - ${context.projectName}-network
+` : ''}
+
+${hasLocalDb || isSupabase || hasRedis ? `volumes:
+  ${hasLocalDb && !context.database?.includes('mysql') && context.database !== 'sqlite-drizzle' ? 'postgres_data:' : ''}
+  ${context.database?.includes('mysql') ? 'mysql_data:' : ''}
+  ${context.database === 'sqlite-drizzle' ? 'sqlite_data:' : ''}
+  ${isSupabase ? `supabase_db_data:
+  supabase_storage_data:` : ''}
+  ${hasRedis ? 'redis_data:' : ''}
+
+networks:
+  ${context.projectName}-network:
+    driver: bridge
+` : ''}
 `;
 
     await writeFile(join(projectPath, 'docker-compose.yml'), dockerCompose);
@@ -910,6 +1129,9 @@ ${context.database && context.database !== 'none' && context.database !== 'supab
   if (context.uiLibrary === 'shadcn' && context.cssFramework === 'tailwind') {
     await setupShadcnMonorepo(projectPath, context);
   }
+
+  // Setup shared tooling (TypeScript configs)
+  await setupTooling(projectPath, context);
 
   // Setup VSCode debugging configuration
   await setupVSCodeDebug(projectPath, context, 'full');

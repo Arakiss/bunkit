@@ -3,25 +3,41 @@ import { z } from 'zod';
 /**
  * Preset types for project scaffolding
  * 
+ * Naming convention: {framework}-{architecture}
+ * - Framework: nextjs, hono-api, bun-api, bun-fullstack
+ * - Architecture: (none) = single repo, monorepo = monorepo
+ * 
+ * Presets:
  * - minimal: Single-file Bun project - perfect for CLIs and scripts
- * - web/nextjs: Next.js 16 + React 19 - Production-ready web application
- * - api/hono-api: Hono 4 + Bun.serve() - Full-featured API with middleware ecosystem
- * - bun-api: Bun.serve() native routing - Ultra-fast API with zero dependencies
- * - bun-fullstack: Bun.serve() + HTML imports - Full-stack app without Next.js
- * - full/monorepo-nextjs: Monorepo with Next.js + Hono - Enterprise SaaS architecture
- * - monorepo-bun: Monorepo with Bun.serve() - Full-stack without Next.js
+ * - nextjs: Next.js 16 + React 19 - Production-ready web application (single repo)
+ * - hono-api: Hono 4 + Bun.serve() - Full-featured API with middleware ecosystem (single repo)
+ * - bun-api: Bun.serve() native routing - Ultra-fast API with zero dependencies (single repo)
+ * - bun-fullstack: Bun.serve() + HTML imports - Full-stack app without Next.js (single repo)
+ * - nextjs-monorepo: Monorepo with Next.js + Hono - Enterprise SaaS architecture
+ * - bun-monorepo: Monorepo with Bun.serve() - Full-stack without Next.js
+ * - enterprise-monorepo: Enterprise monorepo with multiple Next.js apps and services
+ * 
+ * Aliases (for backwards compatibility):
+ * - web → nextjs
+ * - api → hono-api
+ * - full → nextjs-monorepo
+ * - monorepo-nextjs → nextjs-monorepo
+ * - monorepo-bun → bun-monorepo
  */
 export type PresetType = 
   | 'minimal' 
-  | 'web' 
-  | 'nextjs' // Alias for web
-  | 'api' 
-  | 'hono-api' // Alias for api
-  | 'bun-api' // New: Bun.serve() native
-  | 'bun-fullstack' // New: Bun.serve() + HTML imports
-  | 'full' 
-  | 'monorepo-nextjs' // Alias for full
-  | 'monorepo-bun'; // New: Monorepo with Bun.serve()
+  | 'nextjs'           // Next.js single repo (primary name)
+  | 'web'              // Alias for nextjs (backwards compatibility)
+  | 'hono-api'         // Hono API single repo (primary name)
+  | 'api'              // Alias for hono-api (backwards compatibility)
+  | 'bun-api'          // Bun.serve() native API single repo
+  | 'bun-fullstack'     // Bun.serve() + HTML imports single repo
+  | 'nextjs-monorepo'   // Next.js + Hono monorepo (primary name)
+  | 'full'              // Alias for nextjs-monorepo (backwards compatibility)
+  | 'monorepo-nextjs'   // Alias for nextjs-monorepo (backwards compatibility)
+  | 'bun-monorepo'      // Bun.serve() monorepo (primary name)
+  | 'monorepo-bun'      // Alias for bun-monorepo (backwards compatibility)
+  | 'enterprise-monorepo'; // Enterprise monorepo with multiple apps and services
 
 /**
  * Feature types that can be added to projects
@@ -105,15 +121,18 @@ export const ProjectConfigSchema = z.object({
   name: z.string().min(1),
   preset: z.enum([
     'minimal', 
-    'web', 
     'nextjs',
-    'api', 
+    'web',              // Alias for nextjs
     'hono-api',
+    'api',              // Alias for hono-api
     'bun-api',
     'bun-fullstack',
-    'full', 
-    'monorepo-nextjs',
-    'monorepo-bun'
+    'nextjs-monorepo',
+    'full',             // Alias for nextjs-monorepo
+    'monorepo-nextjs',  // Alias for nextjs-monorepo
+    'bun-monorepo',
+    'monorepo-bun',     // Alias for bun-monorepo
+    'enterprise-monorepo'
   ]),
   path: z.string(),
   features: z.array(z.string()).optional(),
