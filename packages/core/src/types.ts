@@ -2,8 +2,26 @@ import { z } from 'zod';
 
 /**
  * Preset types for project scaffolding
+ * 
+ * - minimal: Single-file Bun project - perfect for CLIs and scripts
+ * - web/nextjs: Next.js 16 + React 19 - Production-ready web application
+ * - api/hono-api: Hono 4 + Bun.serve() - Full-featured API with middleware ecosystem
+ * - bun-api: Bun.serve() native routing - Ultra-fast API with zero dependencies
+ * - bun-fullstack: Bun.serve() + HTML imports - Full-stack app without Next.js
+ * - full/monorepo-nextjs: Monorepo with Next.js + Hono - Enterprise SaaS architecture
+ * - monorepo-bun: Monorepo with Bun.serve() - Full-stack without Next.js
  */
-export type PresetType = 'minimal' | 'web' | 'api' | 'full';
+export type PresetType = 
+  | 'minimal' 
+  | 'web' 
+  | 'nextjs' // Alias for web
+  | 'api' 
+  | 'hono-api' // Alias for api
+  | 'bun-api' // New: Bun.serve() native
+  | 'bun-fullstack' // New: Bun.serve() + HTML imports
+  | 'full' 
+  | 'monorepo-nextjs' // Alias for full
+  | 'monorepo-bun'; // New: Monorepo with Bun.serve()
 
 /**
  * Feature types that can be added to projects
@@ -85,7 +103,18 @@ export type TestingFramework = 'bun-test' | 'vitest' | 'none';
  */
 export const ProjectConfigSchema = z.object({
   name: z.string().min(1),
-  preset: z.enum(['minimal', 'web', 'api', 'full']),
+  preset: z.enum([
+    'minimal', 
+    'web', 
+    'nextjs',
+    'api', 
+    'hono-api',
+    'bun-api',
+    'bun-fullstack',
+    'full', 
+    'monorepo-nextjs',
+    'monorepo-bun'
+  ]),
   path: z.string(),
   features: z.array(z.string()).optional(),
   git: z.boolean().default(true),

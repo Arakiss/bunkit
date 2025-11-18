@@ -12,6 +12,13 @@ import {
   setupSQLitePrisma,
   setupRedis,
 } from '../generators/database';
+import {
+  setupBetterAuth,
+  setupNextAuth,
+} from '../generators/auth';
+import { setupEnhancedHono } from '../generators/hono';
+import { setupBunSecrets } from '../generators/secrets';
+import { generateBunfigContent } from '../generators/bunfig';
 
 // Database setup function map
 const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
@@ -122,20 +129,8 @@ export async function buildFullPreset(
     JSON.stringify(rootPackageJson, null, 2)
   );
 
-  // bunfig.toml
-  const bunfigContent = `[install]
-# Fast installs - don't freeze lockfile during development
-frozenLockfile = false
-
-[test]
-# Enable test coverage
-coverage = true
-
-# Development settings
-# Set BUN_CONFIG_VERBOSE_FETCH=true to debug network requests
-# Set BUN_CONFIG_VERBOSE_FETCH=curl to see requests as curl commands
-`;
-
+  // bunfig.toml with enhanced defaults
+  const bunfigContent = generateBunfigContent(context);
   await writeFile(join(projectPath, 'bunfig.toml'), bunfigContent);
 
   // apps/web/package.json
@@ -805,10 +800,27 @@ Built with ❤️ using Bun monorepo features
       }
     }
 
-    // Setup Redis if configured
-    if (context.redis) {
-      await setupRedis(projectPath, context, true);
+  // Setup Redis if configured (independent of database)
+  if (context.redis) {
+    await setupRedis(projectPath, context, true);
+  }
+
+  // Setup authentication if configured (independent of database)
+  if (context.auth && context.auth !== 'none') {
+    if (context.auth === 'better-auth') {
+      await setupBetterAuth(projectPath, context, true);
+    } else if (context.auth === 'nextauth') {
+      await setupNextAuth(projectPath, context, true);
     }
+  }
+
+  // Setup enhanced Hono middleware and utilities for API
+  await setupEnhancedHono(projectPath, context, true);
+
+  // Setup Bun.secrets if configured
+  if (context.useBunSecrets) {
+    await setupBunSecrets(projectPath, context, true);
+  }
 
     // Update apps/api to use database
     const apiPackageJson = JSON.parse(

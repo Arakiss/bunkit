@@ -6,6 +6,17 @@ import { showBanner } from '@bunkit/core';
 import { enhancedInitCommand } from './commands/init.enhanced';
 import { createCommand } from './commands/create';
 import { addCommand } from './commands/add';
+import {
+  catalogAddCommand,
+  catalogSyncCommand,
+  catalogListCommand,
+} from './commands/catalog';
+import {
+  savePresetCommand,
+  listPresetsCommand,
+  deletePresetCommand,
+  loadPresetCommand,
+} from './commands/preset';
 
 // Read version from package.json
 const packageJson = await Bun.file(new URL('../package.json', import.meta.url)).json();
@@ -50,6 +61,8 @@ program
   .option('--no-git', 'Skip Git repository initialization')
   .option('--no-install', 'Skip dependency installation after project creation')
   .option('--non-interactive', 'Run in non-interactive mode (requires all options via flags)')
+  .option('--save-preset <name>', 'Save current configuration as a custom preset')
+  .option('--load-preset <name>', 'Load configuration from a custom preset')
   .addHelpText('after', `
 Examples:
   $ bunkit init                                    Interactive project creation
@@ -57,10 +70,13 @@ Examples:
   $ bunkit init --preset full --database supabase Full-stack with Supabase
   
 Presets:
-  minimal  Single-file project, clean start
-  web      Next.js 16 + React 19 web application
-  api      Hono API server with Bun.serve()
-  full     Full-stack monorepo (web + api + packages)
+  minimal         Single-file Bun project
+  web/nextjs      Next.js 16 + React 19 web application
+  api/hono-api    Hono 4 + Bun.serve() API server
+  bun-api         Bun.serve() native routing (zero dependencies)
+  bun-fullstack   Bun.serve() + HTML imports (no Next.js)
+  full            Monorepo with Next.js + Hono
+  monorepo-bun    Monorepo with Bun.serve() (no Next.js)
   `)
   .action(async (options) => {
     showBanner(VERSION);
@@ -77,7 +93,7 @@ Presets:
 program
   .command('create')
   .alias('c')
-  .argument('<preset>', 'Project preset: minimal | web | api | full')
+  .argument('<preset>', 'Project preset: minimal | web | api | bun-api | bun-fullstack | full | monorepo-bun')
   .argument('<name>', 'Project name (kebab-case recommended)')
   .option('--no-git', 'Skip Git repository initialization')
   .option('--no-install', 'Skip dependency installation after project creation')
@@ -102,6 +118,72 @@ Note: This command uses sensible defaults. Use 'bunkit init' for full customizat
       process.exit(1);
     }
   });
+
+// Preset management commands
+const presetCmd = new Command('preset')
+  .description('Manage custom presets')
+  .addHelpText('after', `
+Subcommands:
+  save [name]      Save current configuration as preset
+  list             List all custom presets
+  delete [name]    Delete a custom preset
+
+Examples:
+  $ bunkit preset save my-api-preset
+  $ bunkit preset list
+  $ bunkit preset delete my-api-preset
+  
+Custom presets allow you to save and reuse project configurations.
+  `);
+
+presetCmd
+  .command('save')
+  .argument('[name]', 'Preset name')
+  .description('Save current configuration as a custom preset')
+  .action(async (name) => {
+    showBanner(VERSION);
+    try {
+      // This would need to be called from init command context
+      // For now, show a helpful message
+      log.info('To save a preset, use: bunkit init --save-preset <name>');
+      log.info('Or complete an init flow and choose to save at the end.');
+    } catch (error) {
+      log.error((error as Error).message);
+      outro(pc.red('❌ Failed to save preset'));
+      process.exit(1);
+    }
+  });
+
+presetCmd
+  .command('list')
+  .description('List all custom presets')
+  .action(async () => {
+    showBanner(VERSION);
+    try {
+      await listPresetsCommand();
+    } catch (error) {
+      log.error((error as Error).message);
+      outro(pc.red('❌ Failed to list presets'));
+      process.exit(1);
+    }
+  });
+
+presetCmd
+  .command('delete')
+  .argument('[name]', 'Preset name')
+  .description('Delete a custom preset')
+  .action(async (name) => {
+    showBanner(VERSION);
+    try {
+      await deletePresetCommand(name);
+    } catch (error) {
+      log.error((error as Error).message);
+      outro(pc.red('❌ Failed to delete preset'));
+      process.exit(1);
+    }
+  });
+
+program.addCommand(presetCmd);
 
 program
   .command('add')
@@ -144,6 +226,77 @@ Features:
       process.exit(1);
     }
   });
+
+// Catalog management commands
+const catalogCmd = new Command('catalog')
+  .alias('cat')
+  .description('Manage dependency catalog for version synchronization')
+  .addHelpText('after', `
+Subcommands:
+  add <package> [version]   Add package to catalog
+  sync                      Sync catalog versions across workspaces
+  list                      List all packages in catalog
+
+Examples:
+  $ bunkit catalog add zod ^3.24.1
+  $ bunkit catalog add hono ^4.10.6
+  $ bunkit catalog sync
+  $ bunkit catalog list
+  
+The catalog allows you to centralize dependency versions in monorepos.
+Use "catalog:" in package.json dependencies to reference catalog versions.
+  `);
+
+catalogCmd
+  .command('add')
+  .argument('[package]', 'Package name (e.g., zod, hono, @prisma/client)')
+  .option('--version <version>', 'Package version (e.g., ^3.24.1, latest)')
+  .description('Add package to dependency catalog')
+  .action(async (packageName, options) => {
+    showBanner(VERSION);
+    try {
+      await catalogAddCommand({
+        package: packageName,
+        version: options.version,
+      });
+      outro(pc.green('✨ Package added to catalog!'));
+    } catch (error) {
+      log.error((error as Error).message);
+      outro(pc.red('❌ Failed to add package to catalog'));
+      process.exit(1);
+    }
+  });
+
+catalogCmd
+  .command('sync')
+  .description('Sync catalog versions across all workspaces in monorepo')
+  .action(async () => {
+    showBanner(VERSION);
+    try {
+      await catalogSyncCommand();
+      outro(pc.green('✨ Catalog synced!'));
+    } catch (error) {
+      log.error((error as Error).message);
+      outro(pc.red('❌ Failed to sync catalog'));
+      process.exit(1);
+    }
+  });
+
+catalogCmd
+  .command('list')
+  .description('List all packages in dependency catalog')
+  .action(async () => {
+    showBanner(VERSION);
+    try {
+      await catalogListCommand();
+    } catch (error) {
+      log.error((error as Error).message);
+      outro(pc.red('❌ Failed to list catalog'));
+      process.exit(1);
+    }
+  });
+
+program.addCommand(catalogCmd);
 
 // Show banner when no command is provided
 if (process.argv.length === 2 || (process.argv.length === 3 && (process.argv[2] === '--help' || process.argv[2] === '-h'))) {

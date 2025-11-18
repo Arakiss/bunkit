@@ -8,3 +8,4 @@ export * from './types';
 export * from './project';
 export * from './install';
 export * from './monorepo';
+export * from './presets';

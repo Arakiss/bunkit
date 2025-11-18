@@ -197,6 +197,9 @@ export function createTemplateContext(config: ProjectConfig): TemplateContext {
 
     // Pass through all configuration options
     database: config.database,
+    auth: config.auth,
+    redis: config.redis,
+    useBunSecrets: config.useBunSecrets,
     codeQuality: config.codeQuality,
     tsStrictness: config.tsStrictness,
     uiLibrary: config.uiLibrary,

@@ -2,18 +2,37 @@ import type { PresetConfig } from './types';
 import type { PresetType } from '@bunkit/core';
 
 /**
+ * Normalize preset name (handle aliases)
+ */
+function normalizePreset(preset: PresetType): PresetType {
+  // Handle aliases
+  if (preset === 'nextjs') return 'web';
+  if (preset === 'hono-api') return 'api';
+  if (preset === 'monorepo-nextjs') return 'full';
+  return preset;
+}
+
+/**
  * Get configuration for a preset
  */
 export function getPresetConfig(preset: PresetType): PresetConfig {
-  switch (preset) {
+  const normalized = normalizePreset(preset);
+  
+  switch (normalized) {
     case 'minimal':
       return getMinimalPreset();
     case 'web':
       return getWebPreset();
     case 'api':
       return getApiPreset();
+    case 'bun-api':
+      return getBunApiPreset();
+    case 'bun-fullstack':
+      return getBunFullstackPreset();
     case 'full':
       return getFullPreset();
+    case 'monorepo-bun':
+      return getMonorepoBunPreset();
     default:
       throw new Error(`Unknown preset: ${preset}`);
   }
@@ -22,7 +41,7 @@ export function getPresetConfig(preset: PresetType): PresetConfig {
 function getMinimalPreset(): PresetConfig {
   return {
     name: 'minimal',
-    description: 'Minimal Bun project',
+    description: 'Single-file Bun project - perfect for CLIs and scripts',
     files: [
       {
         path: 'src/index.ts',
@@ -45,7 +64,7 @@ function getMinimalPreset(): PresetConfig {
 function getWebPreset(): PresetConfig {
   return {
     name: 'web',
-    description: 'Next.js 16 with React 19',
+    description: 'Next.js 16 + React 19 - Production-ready web application',
     files: [],
     dependencies: {
       react: '^19.1.0',
@@ -69,7 +88,7 @@ function getWebPreset(): PresetConfig {
 function getApiPreset(): PresetConfig {
   return {
     name: 'api',
-    description: 'Hono API with Bun',
+    description: 'Hono 4 + Bun.serve() - Full-featured API with middleware ecosystem',
     files: [],
     dependencies: {
       hono: '^4.7.12',
@@ -85,10 +104,67 @@ function getApiPreset(): PresetConfig {
   };
 }
 
+function getBunApiPreset(): PresetConfig {
+  return {
+    name: 'bun-api',
+    description: 'Bun.serve() native routing - Ultra-fast API with zero dependencies',
+    files: [],
+    dependencies: {},
+    devDependencies: {
+      '@types/bun': 'latest',
+      typescript: '^5.9.3',
+    },
+    scripts: {
+      dev: 'bun run --hot src/index.ts',
+      start: 'bun run src/index.ts',
+    },
+  };
+}
+
+function getBunFullstackPreset(): PresetConfig {
+  return {
+    name: 'bun-fullstack',
+    description: 'Bun.serve() + HTML imports - Full-stack app without Next.js',
+    files: [],
+    dependencies: {
+      react: '^19.1.0',
+      'react-dom': '^19.1.0',
+    },
+    devDependencies: {
+      '@types/react': '^19.1.0',
+      '@types/react-dom': '^19.1.0',
+      '@types/bun': 'latest',
+      typescript: '^5.9.3',
+    },
+    scripts: {
+      dev: 'bun run --hot src/index.ts',
+      build: 'bun build src/index.ts --outdir ./dist --target bun',
+      start: 'bun run dist/index.js',
+    },
+  };
+}
+
 function getFullPreset(): PresetConfig {
   return {
     name: 'full',
-    description: 'Full-stack monorepo with Next.js, Hono, and shared packages',
+    description: 'Monorepo with Next.js + Hono - Enterprise SaaS architecture',
+    files: [],
+    dependencies: {},
+    devDependencies: {
+      '@types/bun': 'latest',
+      typescript: '^5.9.3',
+    },
+    scripts: {
+      dev: 'bun run --filter "*" dev',
+      build: 'bun run --filter "*" build',
+    },
+  };
+}
+
+function getMonorepoBunPreset(): PresetConfig {
+  return {
+    name: 'monorepo-bun',
+    description: 'Monorepo with Bun.serve() - Full-stack without Next.js',
     files: [],
     dependencies: {},
     devDependencies: {

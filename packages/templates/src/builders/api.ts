@@ -12,6 +12,13 @@ import {
   setupSQLitePrisma,
   setupRedis,
 } from '../generators/database';
+import {
+  setupBetterAuth,
+  setupNextAuth,
+} from '../generators/auth';
+import { setupEnhancedHono } from '../generators/hono';
+import { setupBunSecrets } from '../generators/secrets';
+import { generateBunfigContent } from '../generators/bunfig';
 import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
@@ -212,19 +219,8 @@ export default users;
     JSON.stringify(tsconfigContent, null, 2)
   );
 
-  // bunfig.toml
-  const bunfigContent = `[install]
-# Fast installs - don't freeze lockfile during development
-frozenLockfile = false
-
-${context.testing !== 'none' ? `[test]
-# Enable test coverage
-coverage = true
-` : ''}
-# Development settings
-# Set BUN_CONFIG_VERBOSE_FETCH=true to debug network requests
-# Set BUN_CONFIG_VERBOSE_FETCH=curl to see requests as curl commands
-`;
+  // bunfig.toml with enhanced defaults
+  const bunfigContent = generateBunfigContent(context);
 
   await writeFile(join(projectPath, 'bunfig.toml'), bunfigContent);
 
@@ -239,6 +235,23 @@ coverage = true
   // Setup Redis if configured
   if (context.redis) {
     await setupRedis(projectPath, context, false);
+  }
+
+  // Setup authentication if configured
+  if (context.auth && context.auth !== 'none') {
+    if (context.auth === 'better-auth') {
+      await setupBetterAuth(projectPath, context, false);
+    } else if (context.auth === 'nextauth') {
+      await setupNextAuth(projectPath, context, false);
+    }
+  }
+
+  // Setup enhanced Hono middleware and utilities
+  await setupEnhancedHono(projectPath, context, false);
+
+  // Setup Bun.secrets if configured
+  if (context.useBunSecrets) {
+    await setupBunSecrets(projectPath, context, false);
   }
 
   // Setup code quality tools
@@ -260,4 +273,13 @@ coverage = true
 
   // Setup VSCode debugging configuration
   await setupVSCodeDebug(projectPath, context, 'api');
+
+  // Update package.json with Hono dependency
+  const packageJsonPath = join(projectPath, 'package.json');
+  const existingPackageJson = JSON.parse(await Bun.file(packageJsonPath).text());
+  existingPackageJson.dependencies = {
+    hono: '^4.7.12',
+    ...existingPackageJson.dependencies,
+  };
+  await writeFile(packageJsonPath, JSON.stringify(existingPackageJson, null, 2));
 }

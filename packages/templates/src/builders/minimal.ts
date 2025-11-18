@@ -1,5 +1,6 @@
 import { join } from 'pathe';
 import { writeFile, type TemplateContext } from '@bunkit/core';
+import { generateBunfigContent } from '../generators/bunfig';
 import { setupVSCodeDebug } from '../generators/debug';
 
 /**
@@ -50,20 +51,8 @@ greet('Bun');
     JSON.stringify(tsconfigContent, null, 2)
   );
 
-  // bunfig.toml
-  const bunfigContent = `[install]
-# Fast installs - don't freeze lockfile during development
-frozenLockfile = false
-
-[test]
-# Enable test coverage
-coverage = true
-
-# Development settings
-# Set BUN_CONFIG_VERBOSE_FETCH=true to debug network requests
-# Set BUN_CONFIG_VERBOSE_FETCH=curl to see requests as curl commands
-`;
-
+  // bunfig.toml with enhanced defaults
+  const bunfigContent = generateBunfigContent(context);
   await writeFile(join(projectPath, 'bunfig.toml'), bunfigContent);
 
   // Setup VSCode debugging configuration

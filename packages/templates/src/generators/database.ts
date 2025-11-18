@@ -419,7 +419,7 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   email     String   @unique
   name      String?
   createdAt DateTime @default(now()) @map("created_at")
@@ -593,7 +593,7 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   email     String   @unique
   name      String?
   createdAt DateTime @default(now()) @map("created_at")
@@ -662,7 +662,7 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   email     String   @unique @db.VarChar(255)
   name      String?  @db.VarChar(255)
   createdAt DateTime @default(now()) @map("created_at")
@@ -735,20 +735,21 @@ export default defineConfig({
     drizzleConfig
   );
 
-  // Database client using Bun native MySQL
-  const clientContent = `import { drizzle } from 'drizzle-orm/bun-mysql';
-import { Database } from 'bun:mysql';
+  // Database client using MySQL connection URL (compatible with Drizzle)
+  // Note: Drizzle ORM for MySQL uses mysql2 driver, but we can use connection URL
+  const clientContent = `import { drizzle } from 'drizzle-orm/mysql2';
+import mysql from 'mysql2/promise';
 import * as schema from './schema';
 
-const client = new Database({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || '${context.projectName}',
+// Create MySQL connection pool
+const connection = mysql.createPool({
+  uri: process.env.DATABASE_URL,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
-export const db = drizzle(client, { schema });
+export const db = drizzle(connection, { schema, mode: 'default' });
 `;
 
   await writeFile(join(dbPath, 'index.ts'), clientContent);
@@ -844,7 +845,7 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
   // .env.example
   const envExample = `# Database
-DATABASE_URL=file:./local.db
+DATABASE_URL="file:./dev.db"
 `;
 
   await writeFile(join(projectPath, '.env.example'), envExample);
@@ -994,18 +995,19 @@ export function getDatabaseDependencies(databaseType: string): Record<string, st
       };
     case 'postgres-prisma':
       return {
-        '@prisma/client': '^6.0.0',
-        'prisma': '^6.0.0',
+        '@prisma/client': '^6.19.0',
+        'prisma': '^6.19.0',
       };
     case 'mysql-drizzle':
       return {
         'drizzle-orm': '^0.44.7',
         'drizzle-kit': '^0.31.7',
+        'mysql2': '^3.11.5',
       };
     case 'mysql-prisma':
       return {
-        '@prisma/client': '^6.0.0',
-        'prisma': '^6.0.0',
+        '@prisma/client': '^6.19.0',
+        'prisma': '^6.19.0',
       };
     case 'supabase':
       // Supabase only (without Drizzle)
@@ -1024,8 +1026,8 @@ export function getDatabaseDependencies(databaseType: string): Record<string, st
       // Supabase with Prisma ORM
       return {
         '@supabase/supabase-js': '^2.81.1',
-        '@prisma/client': '^6.0.0',
-        'prisma': '^6.0.0',
+        '@prisma/client': '^6.19.0',
+        'prisma': '^6.19.0',
       };
     case 'sqlite-drizzle':
       return {
@@ -1034,8 +1036,8 @@ export function getDatabaseDependencies(databaseType: string): Record<string, st
       };
     case 'sqlite-prisma':
       return {
-        '@prisma/client': '^6.0.0',
-        'prisma': '^6.0.0',
+        '@prisma/client': '^6.19.0',
+        'prisma': '^6.19.0',
       };
     default:
       return {};

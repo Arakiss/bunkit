@@ -14,7 +14,10 @@ import {
   buildMinimalPreset,
   buildWebPreset,
   buildApiPreset,
+  buildBunApiPreset,
+  buildBunFullstackPreset,
   buildFullPreset,
+  buildMonorepoBunPreset,
 } from '@bunkit/templates';
 
 /**
@@ -26,9 +29,17 @@ export async function createCommand(
   name: string,
   options: { git?: boolean; install?: boolean }
 ) {
+  // Normalize preset (handle aliases)
+  const presetMap: Record<string, string> = {
+    'nextjs': 'web',
+    'hono-api': 'api',
+    'monorepo-nextjs': 'full',
+  };
+  const normalizedPreset = presetMap[preset] || preset;
+  
   // Validate preset
-  const validPresets = ['minimal', 'web', 'api', 'full'];
-  if (!validPresets.includes(preset)) {
+  const validPresets = ['minimal', 'web', 'api', 'bun-api', 'bun-fullstack', 'full', 'monorepo-bun'];
+  if (!validPresets.includes(normalizedPreset)) {
     throw new Error(
       `Invalid preset: ${preset}. Valid options: ${validPresets.join(', ')}`
     );
@@ -49,7 +60,7 @@ export async function createCommand(
     // Create project with sensible defaults
     const config: ProjectConfig = {
       name,
-      preset: preset as PresetType,
+      preset: normalizedPreset as PresetType,
       path: name,
       git: options.git !== false, // Default: true
       install: options.install !== false, // Default: true
@@ -74,7 +85,7 @@ export async function createCommand(
     s.message(`${chalk.cyan('📝')} Generating project files...`);
 
     // Build preset-specific files
-    switch (preset) {
+    switch (normalizedPreset) {
       case 'minimal':
         await buildMinimalPreset(projectPath, context);
         break;
@@ -84,8 +95,17 @@ export async function createCommand(
       case 'api':
         await buildApiPreset(projectPath, context);
         break;
+      case 'bun-api':
+        await buildBunApiPreset(projectPath, context);
+        break;
+      case 'bun-fullstack':
+        await buildBunFullstackPreset(projectPath, context);
+        break;
       case 'full':
         await buildFullPreset(projectPath, context);
+        break;
+      case 'monorepo-bun':
+        await buildMonorepoBunPreset(projectPath, context);
         break;
     }
 
@@ -93,11 +113,14 @@ export async function createCommand(
     s.stop(`${chalk.green('✅')} Project ${chalk.bold(name)} created successfully!`);
 
     const getPresetEmoji = () => {
-      switch (preset) {
+      switch (normalizedPreset) {
         case 'minimal': return '⚡';
         case 'web': return '🌐';
         case 'api': return '🚀';
+        case 'bun-api': return '⚡';
+        case 'bun-fullstack': return '🔥';
         case 'full': return '📦';
+        case 'monorepo-bun': return '🔥';
         default: return '✨';
       }
     };
@@ -113,7 +136,7 @@ export async function createCommand(
         '',
       ].join('\n') : '',
       `${chalk.bold.cyan('🚀 Start development')}`,
-      `${chalk.cyan(preset === 'web' ? 'bun dev' : 'bun run dev')} ${chalk.dim('# Start development server')}`,
+      `${chalk.cyan(normalizedPreset === 'web' ? 'bun dev' : 'bun run dev')} ${chalk.dim('# Start development server')}`,
       '',
       `${chalk.dim('─'.repeat(40))}`,
       `${chalk.bold.yellow('💡 Tip')}`,

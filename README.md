@@ -47,6 +47,8 @@ bunkit init
 
 ## 📦 Presets
 
+bunkit offers **7 presets** to choose from, including options **without Next.js** for those who prefer different frameworks:
+
 ### `minimal` - Single Repo, Clean Start
 
 Perfect for CLIs, scripts, utilities, and proof-of-concepts.
@@ -144,6 +146,75 @@ bun dev  # Starts all apps
 
 **Use cases:** SaaS products, full-stack applications, multi-app projects
 
+---
+
+### `bun-api` - Bun.serve() Native API (No Dependencies)
+
+Ultra-fast API server using Bun.serve() native routing with zero external dependencies.
+
+**What you get:**
+- Bun.serve() with native routing (SIMD-accelerated)
+- Zero dependencies (pure Bun runtime)
+- Type-safe route parameters
+- Built-in error handling
+- Request utilities and middleware patterns
+- TypeScript with Bun types
+
+```bash
+bunkit create bun-api my-api
+cd my-api
+bun run dev
+```
+
+**Use cases:** High-performance APIs, microservices, serverless functions
+
+---
+
+### `bun-fullstack` - Bun.serve() + HTML Imports (No Next.js)
+
+Full-stack application using Bun.serve() with HTML imports - React without Next.js.
+
+**What you get:**
+- Bun.serve() with HTML imports support
+- React 19 (client-side)
+- Hot reloading
+- API routes alongside frontend
+- TypeScript configured
+- No Next.js dependency
+
+```bash
+bunkit create bun-fullstack my-app
+cd my-app
+bun run dev
+```
+
+**Use cases:** Full-stack apps without Next.js, React SPA with Bun backend
+
+---
+
+### `monorepo-bun` - Monorepo with Bun.serve() (No Next.js)
+
+Enterprise monorepo using Bun.serve() for both frontend and backend - no Next.js required.
+
+**What you get:**
+- Bun workspaces configured
+- Apps:
+  - `web/` - Bun.serve() + HTML imports (React frontend)
+  - `api/` - Bun.serve() native API
+- Packages:
+  - `types/` - Shared TypeScript types
+  - `utils/` - Shared utilities
+- All Bun-native, no Next.js
+
+```bash
+bunkit create monorepo-bun my-saas
+cd my-saas
+bun install
+bun dev  # Starts all apps
+```
+
+**Use cases:** Full-stack monorepos without Next.js, Bun-native architectures
+
 ## 🎯 Commands
 
 ### `bunkit init`
@@ -154,22 +225,42 @@ Interactive project creation with beautiful prompts.
 bunkit init
 ```
 
-You'll be guided through:
+You'll be guided through **21+ interactive prompts** in "buffet libre" style - choose exactly what you need:
+
 1. Project name
-2. Preset type (minimal/web/api/full)
-3. Database configuration (PostgreSQL/Drizzle, Supabase with presets, SQLite, none)
+2. Preset type (minimal/web/api/bun-api/bun-fullstack/full/monorepo-bun)
+3. Database configuration (PostgreSQL/Drizzle/Prisma, MySQL/Drizzle/Prisma, SQLite/Drizzle/Prisma, Supabase variants, none)
 4. Supabase configuration (if selected):
    - Preset: full-stack, auth-only, database-only, or custom
    - Features: auth, storage, realtime, edge-functions, database
-5. Code quality tool (Ultracite, Biome)
-6. TypeScript strictness level
-7. CSS framework (Tailwind, Vanilla, CSS Modules)
-8. UI library (shadcn/ui with full customization)
-9. Testing framework (Bun Test, Vitest, none)
-10. Docker configuration
-11. CI/CD setup
-12. Install dependencies? (default: yes)
-13. Initialize git? (default: yes)
+5. Authentication system (better-auth, NextAuth.js, Supabase, none) - for API/Full-stack presets
+6. Redis cache/session store (yes/no) - for API/Full-stack presets
+7. Bun.secrets for environment variables (yes/no) - all presets
+8. Code quality tool (Ultracite, Biome)
+9. TypeScript strictness level (strict, moderate, loose)
+10. CSS framework (Tailwind, Vanilla, CSS Modules)
+11. UI library (shadcn/ui with full customization, none)
+12. shadcn/ui options (if selected):
+    - Style: new-york, default
+    - Base color: neutral, gray, zinc, stone, slate
+    - Border radius: customizable
+13. Testing framework (Bun Test, Vitest, none)
+14. Docker configuration (yes/no)
+15. CI/CD setup (yes/no)
+16. Install dependencies? (default: yes)
+17. Initialize git? (default: yes)
+
+**Save your configuration as a preset:**
+```bash
+bunkit init --save-preset my-api-preset
+```
+
+**Reuse saved presets:**
+```bash
+bunkit init --load-preset my-api-preset
+bunkit preset list
+bunkit preset delete my-api-preset
+```
 
 ### `bunkit create <preset> <name>`
 
@@ -183,8 +274,11 @@ bunkit create full my-saas --no-install
 
 **Options:**
 - `--name <name>` - Project name
-- `--preset <preset>` - Preset type (minimal, web, api, full)
-- `--database <database>` - Database option (postgres-drizzle, supabase, supabase-drizzle, sqlite-drizzle, none)
+- `--preset <preset>` - Preset type (minimal, web, api, bun-api, bun-fullstack, full, monorepo-bun)
+- `--database <database>` - Database option (postgres-drizzle, postgres-prisma, mysql-drizzle, mysql-prisma, supabase, supabase-drizzle, supabase-prisma, sqlite-drizzle, sqlite-prisma, none)
+- `--auth <auth>` - Authentication system (better-auth, nextauth, supabase, none)
+- `--redis` - Enable Redis cache/session store
+- `--use-bun-secrets` - Use Bun.secrets API instead of .env files
 - `--supabase-preset <preset>` - Supabase preset (full-stack, auth-only, database-only, custom)
 - `--supabase-features <features>` - Comma-separated Supabase features (auth,storage,realtime,edge-functions,database)
 - `--code-quality <tool>` - Code quality tool (ultracite, biome)
@@ -361,7 +455,8 @@ my-saas/
 | Shared packages | ✅ | ❌ | ❌ | ⚠️ (manual) |
 | Dependency catalogs | ✅ | ❌ | ❌ | ❌ |
 | Isolated installs | ✅ | ❌ | ❌ | ❌ |
-| Multiple presets | ✅ (4) | ❌ (1) | ✅ | ❌ |
+| Multiple presets | ✅ (7) | ❌ (1) | ✅ | ❌ |
+| No Next.js options | ✅ (3 presets) | ❌ | ❌ | ❌ |
 | API backend | ✅ Hono | ❌ | ✅ tRPC | ❌ |
 | Interactive CLI | ✅ | ✅ | ✅ | ⚠️ |
 
@@ -373,7 +468,8 @@ bunkit uses [Changesets](https://github.com/changesets/changesets) for semantic 
 
 ### Version History
 
-- **v0.8.0** (Current) - Major release with Supabase integration and CLI improvements
+- **v0.9.0** (Current) - Bun 1.3 integration, database expansion, auth systems, and "buffet libre" CLI
+- **v0.8.0** - Major release with Supabase integration and CLI improvements
   - Complete Supabase integration with presets and granular feature selection
   - New database options: `supabase` (client-only) and `supabase-drizzle` (with Drizzle ORM)
   - Supabase presets: full-stack, auth-only, database-only, and custom
@@ -514,16 +610,19 @@ This will:
 - ✅ Dependency management scripts (`update-deps`, `check-deps`)
 - ✅ Enhanced CLI developer experience with improved visuals and messaging
 
-**v0.9.0 - Bun 1.3 Integration, Database Expansion & Auth Systems** 🚀
-- ✅ **Prisma ORM support** - Add Prisma as alternative to Drizzle (PostgreSQL, MySQL, SQLite)
-- ✅ **MySQL & Redis support** - Native Bun 1.3 clients (MySQL + Drizzle/Prisma, Redis for caching)
-- ✅ **Authentication systems** - better-auth and NextAuth integration
-- ✅ **Enhanced Hono defaults** - More middleware, utilities, and patterns for faster iteration
-- ✅ **Bun.secrets integration** - Secure credential management using Bun.secrets API
+**v0.9.0** (Current) - Bun 1.3 Integration, Database Expansion & Auth Systems 🚀
+- ✅ **Prisma ORM support** - Full Prisma integration as alternative to Drizzle (PostgreSQL, MySQL, SQLite)
+- ✅ **MySQL & Redis support** - Native Bun 1.3 clients (MySQL + Drizzle/Prisma, Redis for caching/sessions)
+- ✅ **Authentication systems** - better-auth and NextAuth.js integration with database adapters
+- ✅ **Enhanced Hono defaults** - Comprehensive middleware, utilities, and patterns for faster iteration
+- ✅ **Bun.secrets integration** - Secure credential management using Bun.secrets API with type-safe helpers
+- ✅ **New presets** - `bun-api` (Bun.serve() native), `bun-fullstack` (Bun.serve() + HTML imports), `monorepo-bun` (monorepo without Next.js)
+- ✅ **"Buffet libre" CLI** - Fully interactive `bunkit init` with 21+ configuration prompts
+- ✅ **Custom presets** - Save and reuse project configurations (`bunkit preset save/load/list/delete`)
 - ✅ `bunkit catalog add` - Manage catalog dependencies
 - ✅ `bunkit catalog sync` - Sync versions across workspaces
-- ✅ `bunkit generate migration` - Database migration generator (Drizzle & Prisma)
-- ✅ `bunkit add middleware` - API middleware patterns
+- ✅ **VSCode debugging** - Complete debugging configuration with launch.json, settings.json, extensions.json
+- ✅ **bunfig.toml defaults** - Comprehensive Bun configuration with customizable defaults
 - ✅ Improved Bun.serve() configuration with full-stack dev server features
 
 **v1.0.0 - Type Safety & Advanced Features**

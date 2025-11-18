@@ -20,12 +20,16 @@ import {
   type ShadcnBaseColor,
   type SupabasePreset,
   type SupabaseFeature,
+  type AuthProvider,
 } from '@bunkit/core';
 import {
   buildMinimalPreset,
   buildWebPreset,
   buildApiPreset,
+  buildBunApiPreset,
+  buildBunFullstackPreset,
   buildFullPreset,
+  buildMonorepoBunPreset,
   getDatabaseDependencies,
   getCodeQualityDependencies,
 } from '@bunkit/templates';
@@ -60,6 +64,10 @@ export interface EnhancedInitOptions {
   git?: boolean;
   install?: boolean;
   nonInteractive?: boolean;
+  // Auth and infrastructure
+  auth?: AuthProvider;
+  redis?: boolean;
+  useBunSecrets?: boolean;
   // shadcn/ui specific options
   shadcnStyle?: ShadcnStyle;
   shadcnBaseColor?: ShadcnBaseColor;
@@ -157,22 +165,37 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         {
           value: 'minimal',
           label: '⚡ Minimal',
-          hint: 'Single-file project, clean start - perfect for CLIs and scripts',
+          hint: 'Single-file Bun project - perfect for CLIs and scripts',
         },
         {
           value: 'web',
-          label: '🌐 Web Application',
+          label: '🌐 Web Application (Next.js)',
           hint: 'Next.js 16 + React 19 + Tailwind CSS 4 - production-ready web app',
         },
         {
           value: 'api',
-          label: '🚀 API Server',
-          hint: 'Hono 4 + Bun.serve() - ultra-fast REST API with native HMR',
+          label: '🚀 API Server (Hono)',
+          hint: 'Hono 4 + Bun.serve() - full-featured API with middleware ecosystem',
+        },
+        {
+          value: 'bun-api',
+          label: '⚡ API Server (Bun Native)',
+          hint: 'Bun.serve() native routing - ultra-fast API with zero dependencies',
+        },
+        {
+          value: 'bun-fullstack',
+          label: '🔥 Full-Stack (Bun Native)',
+          hint: 'Bun.serve() + HTML imports - full-stack app without Next.js',
         },
         {
           value: 'full',
-          label: '📦 Full-Stack Monorepo',
-          hint: 'Web + API + shared packages - enterprise-grade SaaS architecture',
+          label: '📦 Monorepo (Next.js + Hono)',
+          hint: 'Web + API + shared packages - enterprise SaaS architecture',
+        },
+        {
+          value: 'monorepo-bun',
+          label: '🔥 Monorepo (Bun Native)',
+          hint: 'Full-stack monorepo with Bun.serve() - no Next.js',
         },
       ],
     }) as PresetType;
@@ -191,7 +214,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     options.database
   );
 
-  if (!database && (preset === 'api' || preset === 'full')) {
+  if (!database && (preset === 'api' || preset === 'bun-api' || preset === 'bun-fullstack' || preset === 'full' || preset === 'monorepo-bun')) {
     if (!isNonInteractive) {
       database = await p.select({
         message: '🗄️  Database configuration',
@@ -737,7 +760,97 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   }
 
   // ====================
-  // 11. INSTALL DEPENDENCIES
+  // 10. REDIS (only for api/full/bun-api/bun-fullstack/monorepo-bun presets)
+  // ====================
+  let redis = getOptionValue<boolean>(
+    'BUNKIT_REDIS',
+    options.redis,
+    false
+  );
+
+  if (!redis && (preset === 'api' || preset === 'bun-api' || preset === 'bun-fullstack' || preset === 'full' || preset === 'monorepo-bun')) {
+    if (!isNonInteractive) {
+      redis = await p.confirm({
+        message: '🔴 Redis cache/session store',
+        initialValue: false,
+      }) as boolean;
+
+      if (p.isCancel(redis)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    }
+  }
+
+  // ====================
+  // 11. AUTHENTICATION (only for api/full/bun-api/bun-fullstack/monorepo-bun presets)
+  // ====================
+  let auth: AuthProvider | undefined = getOptionValue<AuthProvider>(
+    'BUNKIT_AUTH',
+    options.auth as AuthProvider | undefined,
+    'none'
+  );
+
+  if (!auth && (preset === 'api' || preset === 'bun-api' || preset === 'bun-fullstack' || preset === 'full' || preset === 'monorepo-bun')) {
+    // Skip auth prompt if Supabase is selected (Supabase includes auth)
+    if (database && (database === 'supabase' || database === 'supabase-drizzle' || database === 'supabase-prisma')) {
+      auth = 'supabase';
+    } else if (!isNonInteractive) {
+      auth = await p.select({
+        message: '🔐 Authentication system',
+        options: [
+          {
+            value: 'none',
+            label: 'None',
+            hint: 'Skip authentication - add later if needed',
+          },
+          {
+            value: 'better-auth',
+            label: 'better-auth',
+            hint: 'Modern auth library - flexible, type-safe, supports multiple providers',
+          },
+          {
+            value: 'nextauth',
+            label: 'NextAuth.js',
+            hint: 'Popular Next.js auth solution - great for Next.js apps',
+          },
+        ],
+      }) as AuthProvider;
+
+      if (p.isCancel(auth)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    } else {
+      auth = 'none';
+    }
+  }
+
+  // ====================
+  // 12. BUN.SECRETS (for all presets)
+  // ====================
+  let useBunSecrets = getOptionValue<boolean>(
+    'BUNKIT_USE_BUN_SECRETS',
+    options.useBunSecrets,
+    false
+  );
+
+  if (!useBunSecrets) {
+    if (!isNonInteractive) {
+      useBunSecrets = await p.confirm({
+        message: '🔑 Use Bun.secrets for environment variables (Use Bun.secrets API instead of .env files)',
+        initialValue: false,
+      }) as boolean;
+
+      if (p.isCancel(useBunSecrets)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    }
+  }
+
+  // ====================
+  // 13. INSTALL DEPENDENCIES
   // ====================
   let shouldInstall = getOptionValue<boolean>(
     'BUNKIT_INSTALL',
@@ -762,7 +875,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   }
 
   // ====================
-  // 12. GIT INIT
+  // 14. GIT INIT
   // ====================
   let shouldInitGit = getOptionValue<boolean>(
     'BUNKIT_GIT',
@@ -803,6 +916,13 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         `  ${chalk.bold('Type:')} ${chalk.cyan(database)}`,
         (database === 'supabase' || database === 'supabase-drizzle') && supabasePreset ? `  ${chalk.bold('Preset:')} ${chalk.cyan(supabasePreset)}` : '',
         (database === 'supabase' || database === 'supabase-drizzle') && supabaseFeatures ? `  ${chalk.bold('Features:')} ${chalk.cyan(supabaseFeatures.join(', '))}` : '',
+      ].filter(Boolean).join('\n') : '',
+      '',
+      (preset === 'api' || preset === 'bun-api' || preset === 'bun-fullstack' || preset === 'full' || preset === 'monorepo-bun') ? [
+        `${chalk.bold.yellow('🔐 Authentication & Infrastructure')}`,
+        auth && auth !== 'none' ? `  ${chalk.bold('Auth:')} ${chalk.cyan(auth)}` : `  ${chalk.bold('Auth:')} ${chalk.dim('None')}`,
+        redis ? `  ${chalk.bold('Redis:')} ${chalk.green('✓ Enabled')}` : `  ${chalk.bold('Redis:')} ${chalk.dim('Disabled')}`,
+        useBunSecrets ? `  ${chalk.bold('Bun.secrets:')} ${chalk.green('✓ Enabled')}` : `  ${chalk.bold('Bun.secrets:')} ${chalk.dim('Disabled')}`,
       ].filter(Boolean).join('\n') : '',
       '',
       `${chalk.bold.yellow('🛠️  Development Tools')}`,
@@ -863,8 +983,9 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       git: shouldInitGit as boolean,
       install: shouldInstall as boolean,
       database,
-      redis: false, // TODO: Add Redis prompt in v0.9.0
-      useBunSecrets: false, // TODO: Add Bun.secrets prompt in v0.9.0
+      redis: redis as boolean,
+      useBunSecrets: useBunSecrets as boolean,
+      auth: auth as AuthProvider,
       codeQuality: codeQuality as CodeQualityType,
       tsStrictness: tsStrictness as TypeScriptStrictness,
       uiLibrary,
@@ -897,13 +1018,25 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         await buildMinimalPreset(projectPath, context);
         break;
       case 'web':
+      case 'nextjs':
         await buildWebPreset(projectPath, context);
         break;
       case 'api':
+      case 'hono-api':
         await buildApiPreset(projectPath, context);
         break;
+      case 'bun-api':
+        await buildBunApiPreset(projectPath, context);
+        break;
+      case 'bun-fullstack':
+        await buildBunFullstackPreset(projectPath, context);
+        break;
       case 'full':
+      case 'monorepo-nextjs':
         await buildFullPreset(projectPath, context);
+        break;
+      case 'monorepo-bun':
+        await buildMonorepoBunPreset(projectPath, context);
         break;
     }
 
@@ -979,11 +1112,11 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     }
 
     // Install default shadcn/ui components if shadcn/ui is configured
-    if (shouldInstall && uiLibrary === 'shadcn' && (preset === 'web' || preset === 'full')) {
+    if (shouldInstall && uiLibrary === 'shadcn' && (preset === 'web' || preset === 'bun-fullstack' || preset === 'full' || preset === 'monorepo-bun')) {
       const componentSpinner = p.spinner();
       componentSpinner.start(`${chalk.cyan('🧩')} Installing default shadcn/ui components (button, card)...`);
       try {
-        if (preset === 'full') {
+        if (preset === 'full' || preset === 'monorepo-bun') {
           // For monorepos, install components in packages/ui
           await installDefaultShadcnComponents(join(projectPath, 'packages/ui'), {
             silent: true,
@@ -1003,7 +1136,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     }
 
     const getDevCommand = () => {
-      if (preset === 'full' || preset === 'web') return 'bun dev';
+      if (preset === 'full' || preset === 'monorepo-bun' || preset === 'web') return 'bun dev';
       return 'bun run dev';
     };
 
@@ -1012,7 +1145,10 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         case 'minimal': return '⚡';
         case 'web': return '🌐';
         case 'api': return '🚀';
+        case 'bun-api': return '⚡';
+        case 'bun-fullstack': return '🔥';
         case 'full': return '📦';
+        case 'monorepo-bun': return '🔥';
         default: return '✨';
       }
     };
@@ -1035,8 +1171,8 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       '',
       database && database !== 'none' ? `  ${chalk.dim('•')} Configure your database connection in ${chalk.cyan('.env')}` : '',
       uiLibrary === 'shadcn' ? `  ${chalk.dim('•')} Add more components: ${chalk.cyan('bunkit add component --all')}` : '',
-      preset === 'full' ? `  ${chalk.dim('•')} Add workspaces: ${chalk.cyan('bunkit add workspace')}` : '',
-      preset === 'full' ? `  ${chalk.dim('•')} Add packages: ${chalk.cyan('bunkit add package')}` : '',
+      (preset === 'full' || preset === 'monorepo-bun') ? `  ${chalk.dim('•')} Add workspaces: ${chalk.cyan('bunkit add workspace')}` : '',
+      (preset === 'full' || preset === 'monorepo-bun') ? `  ${chalk.dim('•')} Add packages: ${chalk.cyan('bunkit add package')}` : '',
       `  ${chalk.dim('•')} Read the ${chalk.cyan('README.md')} for project-specific documentation`,
       database === 'supabase' || database === 'supabase-drizzle' ? `  ${chalk.dim('•')} Check ${chalk.cyan('SHADCN.md')} for shadcn/ui usage guide` : '',
     ].filter(Boolean).join('\n');

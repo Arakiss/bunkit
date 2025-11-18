@@ -1,5 +1,6 @@
 import { join } from 'pathe';
 import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
+import { generateBunfigContent } from '../generators/bunfig';
 import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
@@ -160,6 +161,10 @@ export default config;
     JSON.stringify(tsconfigContent, null, 2)
   );
 
+  // bunfig.toml with enhanced defaults
+  const bunfigContent = generateBunfigContent(context);
+  await writeFile(join(projectPath, 'bunfig.toml'), bunfigContent);
+
   // Setup code quality tools
   if (context.codeQuality === 'ultracite') {
     await setupUltracite(projectPath, context);
@@ -184,4 +189,21 @@ export default config;
 
   // Setup VSCode debugging configuration
   await setupVSCodeDebug(projectPath, context, 'web');
+
+  // Update package.json with Next.js and React dependencies
+  const packageJsonPath = join(projectPath, 'package.json');
+  const existingPackageJson = JSON.parse(await Bun.file(packageJsonPath).text());
+  existingPackageJson.dependencies = {
+    react: '^19.1.0',
+    'react-dom': '^19.1.0',
+    next: '^16.0.0',
+    ...existingPackageJson.dependencies,
+  };
+  existingPackageJson.devDependencies = {
+    ...existingPackageJson.devDependencies,
+    '@types/react': '^19.1.0',
+    '@types/react-dom': '^19.1.0',
+    '@types/node': '^22.10.6',
+  };
+  await writeFile(packageJsonPath, JSON.stringify(existingPackageJson, null, 2));
 }
