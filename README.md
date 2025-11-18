@@ -18,6 +18,7 @@
 - 🏗️ **Monorepo Architecture** - Bun workspaces + catalogs + isolated installs done right
 - 🎨 **Beautiful Interactive CLI** - Built with @clack/prompts (same as Astro)
 - 📦 **Modern Stack** - Next.js 16, React 19, Hono, Tailwind CSS 4
+- 🎭 **shadcn/ui Integration** - Complete UI component system with themes, customization, and auto-installation
 - ⚡ **Bun-Native** - Leverages Bun 1.3+ features (catalogs, isolated installs, HMR)
 - 🗄️ **Database Patterns** - PostgreSQL/Drizzle, Supabase, SQLite setup (structure, not models)
 - 🤖 **AI-Optimized** - Ultracite integration (Cursor, Windsurf, Claude Code, Zed)
@@ -77,6 +78,12 @@ Complete Next.js application with React 19, Tailwind CSS 4, and modern tooling.
 - Next.js 16 with App Router
 - React 19 (Server Components by default)
 - Tailwind CSS 4 (CSS-first configuration)
+- **shadcn/ui** - Complete UI component system (optional, configurable)
+  - 5 base color themes (neutral, gray, zinc, stone, slate)
+  - Style options (new-york, default)
+  - Customizable border radius
+  - Auto-installed default components (button, card)
+  - Example components and documentation
 - Biome (linting + formatting)
 - TypeScript strict mode
 - Optimal folder structure
@@ -187,6 +194,10 @@ bunkit add package                # Interactive mode
 bunkit add package --name @myapp/email --type library
 bunkit add package --name utils --type utils
 bunkit add package --name types --type types
+
+# Add shadcn/ui components (when shadcn/ui is configured)
+bunkit add component --components button,card,input
+bunkit add component --all  # Browse all available components
 ```
 
 **Examples:**
@@ -286,6 +297,7 @@ my-saas/
 | Database | Drizzle ORM | 0.38+ |
 | Database | Supabase JS | 2.48+ |
 | Styling | Tailwind CSS | 4.1+ |
+| UI Components | shadcn/ui | Latest |
 | Language | TypeScript | 5.9+ |
 | Code Quality | Biome / Ultracite | 2.3+ / 1.0+ |
 | Testing | Bun Test / Vitest | Built-in / 2.0+ |
@@ -394,7 +406,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for full setup guide.
 
 ### Roadmap
 
-**Beta (Current - v0.5.x)**
+**Beta (Current - v0.7.x)**
 - ✅ Core CLI functionality
 - ✅ All 4 presets working (minimal, web, api, full)
 - ✅ Beautiful interactive experience
@@ -405,18 +417,25 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for full setup guide.
 - ✅ Docker support (multi-stage builds)
 - ✅ GitHub Actions workflows
 - ✅ Dependency catalog management
-- ✅ Enhanced `bunkit init` with 12 customization prompts
+- ✅ Enhanced `bunkit init` with 12+ customization prompts
 - ✅ `bunkit add workspace` - Add workspaces to monorepo
 - ✅ `bunkit add package` - Add shared packages
+- ✅ **Deep shadcn/ui integration** - Complete UI component system
+  - 5 base color themes with OKLCH color values
+  - Style options (new-york, default)
+  - Customizable border radius
+  - Auto-installation of default components
+  - `bunkit add component` command
+  - Example components and documentation
 
-**v0.6.0 - Monorepo Tools**
+**v0.8.0 - Monorepo Tools**
 - `bunkit catalog add` - Manage catalog dependencies
 - `bunkit catalog sync` - Sync versions across workspaces
 - `bunkit generate migration` - Database migration generator
 - `bunkit add middleware` - API middleware patterns
 - Tests and test coverage
 
-**v0.7.0 - Type Safety**
+**v0.9.0 - Type Safety**
 - `bunkit add trpc` - tRPC setup for type-safe APIs
 - `bunkit generate types` - Generate types from schema
 - Enhanced workspace TypeScript project references

@@ -32,6 +32,7 @@
 - **Lightning Fast** - Powered by Bun runtime for instant scaffolding
 - **Interactive CLI** - Beautiful prompts powered by @clack/prompts (same as Astro)
 - **Multiple Presets** - Choose from minimal, web, api, or full-stack templates
+- **shadcn/ui Integration** - Complete UI component system with themes and customization
 - **Workspace Management** - Add workspaces and shared packages to monorepos
 - **Modern Stack** - Next.js 16, React 19, Hono, Drizzle ORM, TypeScript 5
 - **Monorepo Expertise** - Bun workspaces with dependency catalogs and isolated installs
@@ -64,8 +65,17 @@ bunkit init
 You'll be guided through:
 - Project name selection
 - Preset choice (minimal, web, api, full)
-- Feature selection (auth, database, payments, etc.)
-- Package manager preference
+- Database configuration (PostgreSQL, Supabase, SQLite, none)
+- Code quality tools (Ultracite, Biome)
+- TypeScript strictness level
+- CSS framework (Tailwind, Vanilla, CSS Modules)
+- UI library (shadcn/ui with full customization)
+  - Style (new-york, default)
+  - Base color (neutral, gray, zinc, stone, slate)
+  - Border radius
+- Testing framework (Bun Test, Vitest, none)
+- Docker configuration
+- CI/CD setup
 - Git initialization
 
 #### Non-Interactive Mode (AI-Friendly)
@@ -164,6 +174,11 @@ bunkit add <feature> [options]
 
 - `workspace` - Add a new workspace to monorepo (nextjs, hono, or library)
 - `package` - Add a shared package to monorepo (library, utils, types, or config)
+- `component` - Add shadcn/ui components to your project
+  ```bash
+  bunkit add component --components button,card,input
+  bunkit add component --all  # Browse all available components
+  ```
 
 ## Examples
 
@@ -208,6 +223,22 @@ bunkit add package --name @myapp/email --type library
 # Creates shared package in packages/email
 ```
 
+### Add shadcn/ui Components
+
+```bash
+# After creating a project with shadcn/ui configured
+cd my-app
+
+# Add specific components
+bunkit add component --components button,card,input
+
+# Browse all available components
+bunkit add component --all
+
+# Components are installed and ready to use!
+# Import them: import { Button } from "@/components/ui/button"
+```
+
 ## What You Get
 
 ### Full-Stack Monorepo Structure
@@ -237,7 +268,13 @@ my-app/
 - **Database:** Drizzle ORM with native Bun drivers
 - **Language:** TypeScript 5 (strict mode)
 - **Styling:** Tailwind CSS 4 (CSS-first configuration)
-- **UI Components:** shadcn/ui with iconoir-react icons
+- **UI Components:** shadcn/ui - Complete component system
+  - 5 base color themes (neutral, gray, zinc, stone, slate)
+  - Style variants (new-york, default)
+  - Customizable border radius
+  - Auto-installed default components (button, card)
+  - 60+ available components via `bunkit add component`
+  - Example components and comprehensive documentation
 - **Code Quality:** Biome (NO ESLint, NO Prettier)
 
 ## Why bunkit?
