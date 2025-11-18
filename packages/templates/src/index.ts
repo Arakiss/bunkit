@@ -13,9 +13,15 @@ export type { PresetConfig } from './types';
 // Generators
 export {
   setupPostgresDrizzle,
+  setupPostgresPrisma,
+  setupMySQLDrizzle,
+  setupMySQLPrisma,
   setupSupabaseOnly,
   setupSupabaseDrizzle,
+  setupSupabasePrisma,
   setupSQLiteDrizzle,
+  setupSQLitePrisma,
+  setupRedis,
   getDatabaseDependencies,
 } from './generators/database';
 export {
@@ -25,6 +31,7 @@ export {
 } from './generators/ultracite';
 export { setupDocker } from './generators/docker';
 export { setupGitHubActions } from './generators/cicd';
+export { setupVSCodeDebug } from './generators/debug';
 export { setupShadcnWeb, setupShadcnMonorepo } from './generators/shadcn';
 export {
   installShadcnComponents,

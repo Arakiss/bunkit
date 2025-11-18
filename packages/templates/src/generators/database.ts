@@ -385,6 +385,111 @@ ${hasDatabase ? 'DATABASE_URL=postgresql://postgres:[password]@db.your-project.s
 }
 
 /**
+ * Setup Supabase with Prisma ORM
+ */
+export async function setupSupabasePrisma(
+  projectPath: string,
+  context: TemplateContext,
+  isMonorepo: boolean = false
+): Promise<void> {
+  const dbPath = isMonorepo
+    ? join(projectPath, 'packages/db')
+    : join(projectPath, 'prisma');
+
+  await ensureDirectory(dbPath);
+
+  const features = context.supabaseFeatures || ['auth', 'storage', 'realtime', 'database'];
+  const hasAuth = features.includes('auth');
+  const hasStorage = features.includes('storage');
+  const hasRealtime = features.includes('realtime');
+  const hasEdgeFunctions = features.includes('edge-functions');
+  const hasDatabase = features.includes('database');
+
+  // Prisma schema for Supabase PostgreSQL
+  const prismaSchema = `// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+`;
+
+  await writeFile(join(dbPath, 'schema.prisma'), prismaSchema);
+
+  // Supabase client + Prisma wrapper
+  const clientContent = `import { createClient } from '@supabase/supabase-js';
+import { PrismaClient } from '@prisma/client';
+
+// Supabase client for auth, storage, realtime
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+    },
+  }
+);
+
+${hasAuth ? `// Auth helpers
+export const auth = supabase.auth;` : ''}
+
+${hasStorage ? `// Storage helpers
+export const storage = supabase.storage;` : ''}
+
+${hasRealtime ? `// Realtime helpers
+export const realtime = supabase.realtime;` : ''}
+
+${hasEdgeFunctions ? `// Edge Functions helpers
+export const functions = supabase.functions;` : ''}
+
+// Prisma client for type-safe database queries
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+`;
+
+  const clientPath = isMonorepo
+    ? join(projectPath, 'packages/db/src')
+    : join(projectPath, 'src/db');
+
+  await ensureDirectory(clientPath);
+  await writeFile(join(clientPath, 'index.ts'), clientContent);
+
+  // .env.example
+  const envExample = `# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+${hasDatabase ? 'DATABASE_URL=postgresql://postgres:[password]@db.your-project.supabase.co:5432/postgres' : ''}
+`;
+
+  await writeFile(join(projectPath, '.env.example'), envExample);
+}
+
+/**
  * Setup SQLite + Drizzle ORM
  */
 export async function setupSQLiteDrizzle(
@@ -461,6 +566,421 @@ DATABASE_URL=./local.db
 }
 
 /**
+ * Setup PostgreSQL + Prisma ORM
+ */
+export async function setupPostgresPrisma(
+  projectPath: string,
+  context: TemplateContext,
+  isMonorepo: boolean = false
+): Promise<void> {
+  const dbPath = isMonorepo
+    ? join(projectPath, 'packages/db')
+    : join(projectPath, 'prisma');
+
+  await ensureDirectory(dbPath);
+
+  // Prisma schema
+  const prismaSchema = `// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+`;
+
+  await writeFile(join(dbPath, 'schema.prisma'), prismaSchema);
+
+  // Prisma client wrapper
+  const clientContent = `import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+`;
+
+  const clientPath = isMonorepo
+    ? join(projectPath, 'packages/db/src')
+    : join(projectPath, 'src/db');
+
+  await ensureDirectory(clientPath);
+  await writeFile(join(clientPath, 'index.ts'), clientContent);
+
+  // .env.example
+  const envExample = `# Database
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/${context.projectName}
+`;
+
+  await writeFile(join(projectPath, '.env.example'), envExample);
+}
+
+/**
+ * Setup MySQL + Prisma ORM
+ */
+export async function setupMySQLPrisma(
+  projectPath: string,
+  context: TemplateContext,
+  isMonorepo: boolean = false
+): Promise<void> {
+  const dbPath = isMonorepo
+    ? join(projectPath, 'packages/db')
+    : join(projectPath, 'prisma');
+
+  await ensureDirectory(dbPath);
+
+  // Prisma schema
+  const prismaSchema = `// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique @db.VarChar(255)
+  name      String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+`;
+
+  await writeFile(join(dbPath, 'schema.prisma'), prismaSchema);
+
+  // Prisma client wrapper
+  const clientContent = `import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+`;
+
+  const clientPath = isMonorepo
+    ? join(projectPath, 'packages/db/src')
+    : join(projectPath, 'src/db');
+
+  await ensureDirectory(clientPath);
+  await writeFile(join(clientPath, 'index.ts'), clientContent);
+
+  // .env.example
+  const envExample = `# Database
+DATABASE_URL=mysql://root:password@localhost:3306/${context.projectName}
+`;
+
+  await writeFile(join(projectPath, '.env.example'), envExample);
+}
+
+/**
+ * Setup MySQL + Drizzle ORM (using Bun native MySQL client)
+ */
+export async function setupMySQLDrizzle(
+  projectPath: string,
+  context: TemplateContext,
+  isMonorepo: boolean = false
+): Promise<void> {
+  const dbPath = isMonorepo
+    ? join(projectPath, 'packages/db')
+    : join(projectPath, 'src/db');
+
+  await ensureDirectory(join(dbPath, 'schema'));
+
+  // Drizzle config
+  const drizzleConfig = `import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  schema: './src/schema/index.ts',
+  out: './drizzle',
+  dialect: 'mysql',
+  dbCredentials: {
+    url: process.env.DATABASE_URL!,
+  },
+});
+`;
+
+  await writeFile(
+    join(isMonorepo ? join(projectPath, 'packages/db') : projectPath, 'drizzle.config.ts'),
+    drizzleConfig
+  );
+
+  // Database client using Bun native MySQL
+  const clientContent = `import { drizzle } from 'drizzle-orm/bun-mysql';
+import { Database } from 'bun:mysql';
+import * as schema from './schema';
+
+const client = new Database({
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '3306'),
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || '${context.projectName}',
+});
+
+export const db = drizzle(client, { schema });
+`;
+
+  await writeFile(join(dbPath, 'index.ts'), clientContent);
+
+  // Example schema
+  const schemaContent = `import { mysqlTable, varchar, timestamp, char } from 'drizzle-orm/mysql-core';
+
+export const users = mysqlTable('users', {
+  id: char('id', { length: 36 }).primaryKey(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  name: varchar('name', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
+});
+`;
+
+  await writeFile(join(dbPath, 'schema/index.ts'), schemaContent);
+
+  // .env.example
+  const envExample = `# Database
+DATABASE_URL=mysql://root:password@localhost:3306/${context.projectName}
+# Or use individual connection parameters:
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=password
+DB_NAME=${context.projectName}
+`;
+
+  await writeFile(join(projectPath, '.env.example'), envExample);
+}
+
+/**
+ * Setup SQLite + Prisma ORM
+ */
+export async function setupSQLitePrisma(
+  projectPath: string,
+  context: TemplateContext,
+  isMonorepo: boolean = false
+): Promise<void> {
+  const dbPath = isMonorepo
+    ? join(projectPath, 'packages/db')
+    : join(projectPath, 'prisma');
+
+  await ensureDirectory(dbPath);
+
+  // Prisma schema
+  const prismaSchema = `// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+`;
+
+  await writeFile(join(dbPath, 'schema.prisma'), prismaSchema);
+
+  // Prisma client wrapper
+  const clientContent = `import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+`;
+
+  const clientPath = isMonorepo
+    ? join(projectPath, 'packages/db/src')
+    : join(projectPath, 'src/db');
+
+  await ensureDirectory(clientPath);
+  await writeFile(join(clientPath, 'index.ts'), clientContent);
+
+  // .env.example
+  const envExample = `# Database
+DATABASE_URL=file:./local.db
+`;
+
+  await writeFile(join(projectPath, '.env.example'), envExample);
+
+  // .gitignore entry for local.db
+  const gitignoreAddition = `\n# SQLite
+*.db
+*.db-shm
+*.db-wal
+`;
+
+  await writeFile(join(projectPath, '.gitignore.db'), gitignoreAddition);
+}
+
+/**
+ * Setup Redis (using Bun native Redis client)
+ */
+export async function setupRedis(
+  projectPath: string,
+  context: TemplateContext,
+  isMonorepo: boolean = false
+): Promise<void> {
+  const redisPath = isMonorepo
+    ? join(projectPath, 'packages/redis')
+    : join(projectPath, 'src/redis');
+
+  await ensureDirectory(redisPath);
+
+  // Redis client wrapper
+  const clientContent = `import { Redis } from 'bun:redis';
+
+// Redis client configuration
+const redis = new Redis({
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT || '6379'),
+  password: process.env.REDIS_PASSWORD,
+  db: parseInt(process.env.REDIS_DB || '0'),
+});
+
+export default redis;
+
+// Helper functions
+export async function get(key: string): Promise<string | null> {
+  return await redis.get(key);
+}
+
+export async function set(key: string, value: string, ttl?: number): Promise<void> {
+  if (ttl) {
+    await redis.set(key, value, { EX: ttl });
+  } else {
+    await redis.set(key, value);
+  }
+}
+
+export async function del(key: string): Promise<void> {
+  await redis.del(key);
+}
+
+export async function exists(key: string): Promise<boolean> {
+  return (await redis.exists(key)) === 1;
+}
+
+// Cache helper
+export async function cache<T>(
+  key: string,
+  fn: () => Promise<T>,
+  ttl: number = 3600
+): Promise<T> {
+  const cached = await get(key);
+  if (cached) {
+    return JSON.parse(cached) as T;
+  }
+
+  const result = await fn();
+  await set(key, JSON.stringify(result), ttl);
+  return result;
+}
+`;
+
+  await writeFile(join(redisPath, 'index.ts'), clientContent);
+
+  // Example usage
+  const examplesContent = `// Redis usage examples
+import redis, { get, set, del, exists, cache } from './index';
+
+// Basic operations
+export async function exampleBasic() {
+  await set('user:1', JSON.stringify({ name: 'John', email: 'john@example.com' }));
+  const user = await get('user:1');
+  console.log('User:', user);
+}
+
+// With TTL (time to live)
+export async function exampleWithTTL() {
+  await set('session:abc123', 'user-id-123', 3600); // Expires in 1 hour
+}
+
+// Cache pattern
+export async function exampleCache() {
+  const expensiveData = await cache(
+    'expensive:data',
+    async () => {
+      // Expensive operation
+      return { data: 'expensive result' };
+    },
+    3600 // Cache for 1 hour
+  );
+}
+
+// Delete
+export async function exampleDelete() {
+  await del('user:1');
+}
+
+// Check existence
+export async function exampleExists() {
+  const hasKey = await exists('user:1');
+  console.log('Key exists:', hasKey);
+}
+`;
+
+  await writeFile(join(redisPath, 'examples.ts'), examplesContent);
+
+  // .env.example addition
+  const envExample = `# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
+`;
+
+  // Note: In actual implementation, append to existing .env.example
+  await writeFile(join(projectPath, '.env.example.redis'), envExample);
+}
+
+/**
  * Get database-specific package dependencies
  * Returns direct versions - use catalog: only for monorepos
  */
@@ -468,27 +988,54 @@ export function getDatabaseDependencies(databaseType: string): Record<string, st
   switch (databaseType) {
     case 'postgres-drizzle':
       return {
-        'drizzle-orm': '^0.38.0',
-        'drizzle-kit': '^0.30.1',
-        'postgres': '^3.4.5',
+        'drizzle-orm': '^0.44.7',
+        'drizzle-kit': '^0.31.7',
+        'postgres': '^3.4.7',
+      };
+    case 'postgres-prisma':
+      return {
+        '@prisma/client': '^6.0.0',
+        'prisma': '^6.0.0',
+      };
+    case 'mysql-drizzle':
+      return {
+        'drizzle-orm': '^0.44.7',
+        'drizzle-kit': '^0.31.7',
+      };
+    case 'mysql-prisma':
+      return {
+        '@prisma/client': '^6.0.0',
+        'prisma': '^6.0.0',
       };
     case 'supabase':
       // Supabase only (without Drizzle)
       return {
-        '@supabase/supabase-js': '^2.48.1',
+        '@supabase/supabase-js': '^2.81.1',
       };
     case 'supabase-drizzle':
       // Supabase with Drizzle ORM
       return {
-        '@supabase/supabase-js': '^2.48.1',
-        'drizzle-orm': '^0.38.0',
-        'drizzle-kit': '^0.30.1',
-        'postgres': '^3.4.5',
+        '@supabase/supabase-js': '^2.81.1',
+        'drizzle-orm': '^0.44.7',
+        'drizzle-kit': '^0.31.7',
+        'postgres': '^3.4.7',
+      };
+    case 'supabase-prisma':
+      // Supabase with Prisma ORM
+      return {
+        '@supabase/supabase-js': '^2.81.1',
+        '@prisma/client': '^6.0.0',
+        'prisma': '^6.0.0',
       };
     case 'sqlite-drizzle':
       return {
-        'drizzle-orm': '^0.38.0',
-        'drizzle-kit': '^0.30.1',
+        'drizzle-orm': '^0.44.7',
+        'drizzle-kit': '^0.31.7',
+      };
+    case 'sqlite-prisma':
+      return {
+        '@prisma/client': '^6.0.0',
+        'prisma': '^6.0.0',
       };
     default:
       return {};

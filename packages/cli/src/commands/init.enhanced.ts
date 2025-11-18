@@ -202,9 +202,24 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
             hint: 'Production-ready PostgreSQL with type-safe Drizzle ORM queries',
           },
           {
+            value: 'postgres-prisma',
+            label: 'PostgreSQL + Prisma ORM',
+            hint: 'PostgreSQL with Prisma - popular ORM with great DX and migrations',
+          },
+          {
+            value: 'mysql-drizzle',
+            label: 'MySQL + Drizzle ORM',
+            hint: 'MySQL with Drizzle ORM using Bun native MySQL client',
+          },
+          {
+            value: 'mysql-prisma',
+            label: 'MySQL + Prisma ORM',
+            hint: 'MySQL with Prisma - popular ORM with great DX and migrations',
+          },
+          {
             value: 'supabase',
             label: 'Supabase (Client Only)',
-            hint: 'Supabase JS client only - Auth, Storage, Realtime without Drizzle ORM',
+            hint: 'Supabase JS client only - Auth, Storage, Realtime without ORM',
           },
           {
             value: 'supabase-drizzle',
@@ -212,9 +227,19 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
             hint: 'Full Supabase stack with Drizzle ORM for type-safe database queries',
           },
           {
+            value: 'supabase-prisma',
+            label: 'Supabase + Prisma ORM',
+            hint: 'Full Supabase stack with Prisma ORM for type-safe database queries',
+          },
+          {
             value: 'sqlite-drizzle',
             label: 'SQLite + Drizzle ORM',
             hint: 'Local-first embedded database - perfect for prototypes and local development',
+          },
+          {
+            value: 'sqlite-prisma',
+            label: 'SQLite + Prisma ORM',
+            hint: 'SQLite with Prisma - great for local development and prototyping',
           },
           {
             value: 'none',
@@ -838,6 +863,8 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       git: shouldInitGit as boolean,
       install: shouldInstall as boolean,
       database,
+      redis: false, // TODO: Add Redis prompt in v0.9.0
+      useBunSecrets: false, // TODO: Add Bun.secrets prompt in v0.9.0
       codeQuality: codeQuality as CodeQualityType,
       tsStrictness: tsStrictness as TypeScriptStrictness,
       uiLibrary,

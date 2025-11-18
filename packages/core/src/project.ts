@@ -81,6 +81,9 @@ function getScriptsForPreset(preset: string): Record<string, string> {
       return {
         dev: 'bun run --hot src/index.ts',
         start: 'bun run src/index.ts',
+        debug: 'bun --inspect src/index.ts',
+        'debug:brk': 'bun --inspect-brk src/index.ts',
+        'debug:wait': 'bun --inspect-wait src/index.ts',
       };
     case 'web':
       return {
@@ -89,12 +92,16 @@ function getScriptsForPreset(preset: string): Record<string, string> {
         start: 'next start',
         lint: 'biome check .',
         format: 'biome check --write .',
+        debug: 'bun --inspect node_modules/.bin/next dev --turbopack',
       };
     case 'api':
       return {
         dev: 'bun run --hot src/index.ts',
         start: 'bun run src/index.ts',
         test: 'bun test',
+        debug: 'bun --inspect src/index.ts',
+        'debug:brk': 'bun --inspect-brk src/index.ts',
+        'debug:wait': 'bun --inspect-wait src/index.ts',
       };
     case 'full':
       return {
@@ -103,6 +110,9 @@ function getScriptsForPreset(preset: string): Record<string, string> {
         lint: 'biome check .',
         format: 'biome check --write .',
         test: 'bun test',
+        debug: 'bun --inspect apps/api/src/index.ts',
+        'debug:brk': 'bun --inspect-brk apps/api/src/index.ts',
+        'debug:wait': 'bun --inspect-wait apps/api/src/index.ts',
       };
     default:
       return {};

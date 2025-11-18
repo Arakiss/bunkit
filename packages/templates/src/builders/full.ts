@@ -1,15 +1,36 @@
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
+import { writeFile, ensureDirectory, type TemplateContext, type DatabaseType } from '@bunkit/core';
 import {
   setupPostgresDrizzle,
+  setupPostgresPrisma,
+  setupMySQLDrizzle,
+  setupMySQLPrisma,
   setupSupabaseOnly,
   setupSupabaseDrizzle,
+  setupSupabasePrisma,
   setupSQLiteDrizzle,
+  setupSQLitePrisma,
+  setupRedis,
 } from '../generators/database';
+
+// Database setup function map
+const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
+  'postgres-drizzle': setupPostgresDrizzle,
+  'postgres-prisma': setupPostgresPrisma,
+  'mysql-drizzle': setupMySQLDrizzle,
+  'mysql-prisma': setupMySQLPrisma,
+  'supabase': setupSupabaseOnly,
+  'supabase-drizzle': setupSupabaseDrizzle,
+  'supabase-prisma': setupSupabasePrisma,
+  'sqlite-drizzle': setupSQLiteDrizzle,
+  'sqlite-prisma': setupSQLitePrisma,
+  'none': async () => {}, // No-op
+};
 import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
 import { setupShadcnMonorepo } from '../generators/shadcn';
+import { setupVSCodeDebug } from '../generators/debug';
 
 /**
  * Build full-stack monorepo preset files
@@ -42,6 +63,9 @@ export async function buildFullPreset(
       lint: 'biome check .',
       format: 'biome check --write .',
       test: 'bun test',
+      debug: 'bun --inspect apps/api/src/index.ts',
+      'debug:brk': 'bun --inspect-brk apps/api/src/index.ts',
+      'debug:wait': 'bun --inspect-wait apps/api/src/index.ts',
     },
     devDependencies: {
       '@biomejs/biome': 'catalog:',
@@ -100,10 +124,16 @@ export async function buildFullPreset(
 
   // bunfig.toml
   const bunfigContent = `[install]
+# Fast installs - don't freeze lockfile during development
 frozenLockfile = false
 
 [test]
+# Enable test coverage
 coverage = true
+
+# Development settings
+# Set BUN_CONFIG_VERBOSE_FETCH=true to debug network requests
+# Set BUN_CONFIG_VERBOSE_FETCH=curl to see requests as curl commands
 `;
 
   await writeFile(join(projectPath, 'bunfig.toml'), bunfigContent);
@@ -117,6 +147,7 @@ coverage = true
       dev: 'next dev',
       build: 'next build',
       start: 'next start',
+      debug: 'bun --inspect node_modules/.bin/next dev',
     },
     dependencies: {
       react: 'catalog:',
@@ -147,6 +178,7 @@ coverage = true
       dev: 'next dev --port 3001',
       build: 'next build',
       start: 'next start --port 3001',
+      debug: 'bun --inspect node_modules/.bin/next dev --port 3001',
     },
     dependencies: {
       react: 'catalog:',
@@ -177,6 +209,10 @@ coverage = true
       dev: 'bun run --hot src/index.ts',
       start: 'bun run src/index.ts',
       typecheck: 'tsc --noEmit',
+      test: 'bun test',
+      debug: 'bun --inspect src/index.ts',
+      'debug:brk': 'bun --inspect-brk src/index.ts',
+      'debug:wait': 'bun --inspect-wait src/index.ts',
     },
     dependencies: {
       hono: 'catalog:',
@@ -762,14 +798,16 @@ Built with ❤️ using Bun monorepo features
     );
 
     // Setup database files
-    if (context.database === 'postgres-drizzle') {
-      await setupPostgresDrizzle(dbPackagePath, context, true);
-    } else if (context.database === 'supabase') {
-      await setupSupabaseOnly(dbPackagePath, context, true);
-    } else if (context.database === 'supabase-drizzle') {
-      await setupSupabaseDrizzle(dbPackagePath, context, true);
-    } else if (context.database === 'sqlite-drizzle') {
-      await setupSQLiteDrizzle(dbPackagePath, context, true);
+    if (context.database) {
+      const setupFn = databaseSetupMap[context.database];
+      if (setupFn) {
+        await setupFn(dbPackagePath, context, true);
+      }
+    }
+
+    // Setup Redis if configured
+    if (context.redis) {
+      await setupRedis(projectPath, context, true);
     }
 
     // Update apps/api to use database
@@ -860,4 +898,7 @@ ${context.database && context.database !== 'none' && context.database !== 'supab
   if (context.uiLibrary === 'shadcn' && context.cssFramework === 'tailwind') {
     await setupShadcnMonorepo(projectPath, context);
   }
+
+  // Setup VSCode debugging configuration
+  await setupVSCodeDebug(projectPath, context, 'full');
 }

@@ -4,6 +4,7 @@ import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
 import { setupShadcnWeb } from '../generators/shadcn';
+import { setupVSCodeDebug } from '../generators/debug';
 
 /**
  * Build web (Next.js) preset files
@@ -180,4 +181,7 @@ export default config;
   if (context.uiLibrary === 'shadcn' && context.cssFramework === 'tailwind') {
     await setupShadcnWeb(projectPath, context);
   }
+
+  // Setup VSCode debugging configuration
+  await setupVSCodeDebug(projectPath, context, 'web');
 }

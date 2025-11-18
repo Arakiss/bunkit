@@ -54,6 +54,8 @@ export async function createCommand(
       git: options.git !== false, // Default: true
       install: options.install !== false, // Default: true
       database: 'none', // Default: no database
+      redis: false, // Default: no Redis
+      useBunSecrets: false, // Default: use .env
       codeQuality: 'biome', // Default: biome
       tsStrictness: 'strict', // Default: strict TypeScript
       testing: 'bun-test', // Default: bun's built-in test

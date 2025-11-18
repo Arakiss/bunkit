@@ -85,12 +85,16 @@ function getWorkspaceScripts(preset: WorkspacePreset): Record<string, string> {
         start: 'next start',
         lint: 'biome check .',
         format: 'biome check --write .',
+        debug: 'bun --inspect node_modules/.bin/next dev',
       };
     case 'hono':
       return {
         dev: 'bun run --hot src/index.ts',
         start: 'bun run src/index.ts',
         test: 'bun test',
+        debug: 'bun --inspect src/index.ts',
+        'debug:brk': 'bun --inspect-brk src/index.ts',
+        'debug:wait': 'bun --inspect-wait src/index.ts',
       };
     case 'library':
       return {

@@ -1,14 +1,35 @@
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
+import { writeFile, ensureDirectory, type TemplateContext, type DatabaseType } from '@bunkit/core';
 import {
   setupPostgresDrizzle,
+  setupPostgresPrisma,
+  setupMySQLDrizzle,
+  setupMySQLPrisma,
   setupSupabaseOnly,
   setupSupabaseDrizzle,
+  setupSupabasePrisma,
   setupSQLiteDrizzle,
+  setupSQLitePrisma,
+  setupRedis,
 } from '../generators/database';
 import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
+import { setupVSCodeDebug } from '../generators/debug';
+
+// Database setup function map
+const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
+  'postgres-drizzle': setupPostgresDrizzle,
+  'postgres-prisma': setupPostgresPrisma,
+  'mysql-drizzle': setupMySQLDrizzle,
+  'mysql-prisma': setupMySQLPrisma,
+  'supabase': setupSupabaseOnly,
+  'supabase-drizzle': setupSupabaseDrizzle,
+  'supabase-prisma': setupSupabasePrisma,
+  'sqlite-drizzle': setupSQLiteDrizzle,
+  'sqlite-prisma': setupSQLitePrisma,
+  'none': async () => {}, // No-op
+};
 
 /**
  * Build API (Hono) preset files
@@ -193,23 +214,31 @@ export default users;
 
   // bunfig.toml
   const bunfigContent = `[install]
+# Fast installs - don't freeze lockfile during development
 frozenLockfile = false
 
-${context.testing !== 'none' ? '[test]\ncoverage = true\n' : ''}`;
+${context.testing !== 'none' ? `[test]
+# Enable test coverage
+coverage = true
+` : ''}
+# Development settings
+# Set BUN_CONFIG_VERBOSE_FETCH=true to debug network requests
+# Set BUN_CONFIG_VERBOSE_FETCH=curl to see requests as curl commands
+`;
 
   await writeFile(join(projectPath, 'bunfig.toml'), bunfigContent);
 
   // Setup database if configured
-  if (context.database && context.database !== 'none') {
-    if (context.database === 'postgres-drizzle') {
-      await setupPostgresDrizzle(projectPath, context, false);
-    } else if (context.database === 'supabase') {
-      await setupSupabaseOnly(projectPath, context, false);
-    } else if (context.database === 'supabase-drizzle') {
-      await setupSupabaseDrizzle(projectPath, context, false);
-    } else if (context.database === 'sqlite-drizzle') {
-      await setupSQLiteDrizzle(projectPath, context, false);
+  if (context.database) {
+    const setupFn = databaseSetupMap[context.database];
+    if (setupFn) {
+      await setupFn(projectPath, context, false);
     }
+  }
+
+  // Setup Redis if configured
+  if (context.redis) {
+    await setupRedis(projectPath, context, false);
   }
 
   // Setup code quality tools
@@ -228,4 +257,7 @@ ${context.testing !== 'none' ? '[test]\ncoverage = true\n' : ''}`;
   if (context.cicd) {
     await setupGitHubActions(projectPath, context);
   }
+
+  // Setup VSCode debugging configuration
+  await setupVSCodeDebug(projectPath, context, 'api');
 }

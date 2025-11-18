@@ -234,6 +234,9 @@ export async function initCommand(options: InitOptions = {}) {
       install: shouldInstall as boolean,
 
       // Default values for new options (backward compatibility)
+      database: 'none',
+      redis: false,
+      useBunSecrets: false,
       codeQuality: 'biome',
       tsStrictness: 'strict',
       testing: 'bun-test',
