@@ -1,17 +1,21 @@
 # bunkit 🍞
 
-> Bake production-ready apps in seconds
+> Bake production-ready apps in seconds | Modern CLI tool for Bun monorepo scaffolding
 
-**bunkit** is a modern, opinionated CLI for scaffolding Bun-powered projects with enterprise-grade patterns built-in.
+**bunkit** is a modern, opinionated CLI tool for scaffolding Bun-powered projects with enterprise-grade patterns built-in. Create production-ready full-stack applications, APIs, monorepos, and web apps with Next.js, Hono, TypeScript, Tailwind CSS, shadcn/ui, Drizzle ORM, and Supabase in seconds.
 
 [![npm version](https://img.shields.io/npm/v/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
 [![npm downloads](https://img.shields.io/npm/dm/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
 [![License](https://img.shields.io/npm/l/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
 [![Bun](https://img.shields.io/badge/bun-1.3+-orange.svg)](https://bun.sh)
-[![Status](https://img.shields.io/badge/status-beta-blue.svg)](./CHANGELOG.md)
+[![Status](https://img.shields.io/badge/status-beta-blue.svg)](./packages/cli/CHANGELOG.md)
 [![CI/CD](https://github.com/Arakiss/bunkit/actions/workflows/release.yml/badge.svg)](https://github.com/Arakiss/bunkit/actions/workflows/release.yml)
+[![GitHub stars](https://img.shields.io/github/stars/Arakiss/bunkit?style=social)](https://github.com/Arakiss/bunkit)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
 
 > **🚀 Beta Release**: bunkit is in active development. Production-ready for early adopters. See [CHANGELOG](./packages/cli/CHANGELOG.md) for latest updates.
+
+**Keywords**: Bun CLI, Bun scaffold, Bun monorepo, Next.js starter, Hono API template, TypeScript boilerplate, Tailwind CSS starter, shadcn/ui setup, Drizzle ORM template, Supabase starter, full-stack template, project generator, developer tools, Bun runtime, Bun workspaces
 
 ## ✨ Features
 
