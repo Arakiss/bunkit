@@ -585,9 +585,9 @@ This will:
 
 ### Roadmap
 
-**Current (v0.8.0)**
+**Current (v0.9.0)**
 - ✅ Core CLI functionality
-- ✅ All 4 presets working (minimal, web, api, full)
+- ✅ All 7 presets working (minimal, web, api, bun-api, bun-fullstack, full, monorepo-bun)
 - ✅ Beautiful interactive experience
 - ✅ Automated CI/CD with GitHub Actions
 - ✅ Semantic versioning with Changesets
