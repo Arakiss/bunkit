@@ -1,5 +1,199 @@
 # @bunkit/core
 
+## 1.0.0
+
+### Major Changes
+
+- ef9b673: # v1.0.0 - Major Release: Enterprise-Grade Monorepo Improvements
+
+  ## 🎯 Overview
+
+  This major release introduces significant improvements to bunkit's monorepo capabilities, focusing on enterprise-grade architecture patterns, better developer experience, and improved TypeScript configuration management.
+
+  ## ✨ New Features
+
+  ### Shared TypeScript Tooling
+
+  - **New `tooling/typescript/` directory** in all monorepos
+    - `base.json` - Base TypeScript configuration
+    - `nextjs.json` - Configuration for Next.js applications
+    - `api.json` - Configuration for API/Hono services
+    - `library.json` - Configuration for shared packages/libraries
+    - All workspace `tsconfig.json` files now extend from these shared configs
+    - Centralized TypeScript configuration management
+
+  ### Enhanced Enterprise Monorepo
+
+  - **Improved `enterprise-monorepo` preset** with clearer separation:
+    - `apps/web` (port 3000) - Marketing/Landing site
+    - `apps/app` (port 3002) - Main SaaS product application
+    - `apps/platform` (port 3001) - Admin/Dashboard
+    - `apps/service-identity` (port 3003) - Identity service API
+    - Better separation of concerns for enterprise SaaS platforms
+
+  ### Improved Scripts
+
+  - **Individual app scripts** in all monorepos:
+    - `bun run dev:web` - Start web app only
+    - `bun run dev:app` - Start app only
+    - `bun run dev:platform` - Start platform only
+    - `bun run dev:api` - Start API only
+    - `bun run dev:identity` - Start identity service only
+    - Easier development workflow for large monorepos
+
+  ## 🔧 Improvements
+
+  ### Monorepo Architecture
+
+  - All monorepo presets now include `tooling/typescript/` directory
+  - Root `tsconfig.json` files extend from `tooling/typescript/base.json`
+  - Workspace `tsconfig.json` files extend from appropriate tooling configs
+  - Consistent TypeScript configuration across all workspaces
+
+  ### Documentation
+
+  - Updated README files in all monorepo presets
+  - Clearer documentation for individual app scripts
+  - Better structure documentation showing `tooling/` directory
+  - Improved examples and usage instructions
+
+  ### Developer Experience
+
+  - Faster development workflow with individual app scripts
+  - Better TypeScript IntelliSense with shared configurations
+  - Consistent code style across all workspaces
+  - Easier to maintain and extend monorepo configurations
+
+  ## 📦 Presets Updated
+
+  - `nextjs-monorepo` - Now includes tooling and improved scripts
+  - `bun-monorepo` - Now includes tooling and improved scripts
+  - `enterprise-monorepo` - Enhanced with `apps/web` separation and improved structure
+
+  ## 🔄 Migration Notes
+
+  ### For Existing Projects
+
+  If you have an existing monorepo created with bunkit, you can manually add the tooling directory:
+
+  1. Create `tooling/typescript/` directory
+  2. Copy the base configs from a new bunkit project
+  3. Update your workspace `tsconfig.json` files to extend from tooling configs
+  4. Add individual app scripts to your root `package.json`
+
+  ### Breaking Changes
+
+  - None - all changes are additive and backwards compatible
+  - Existing projects continue to work without modifications
+
+  ## 🚀 Next Steps
+
+  - Consider adding functional packages (email, logger, kv) using `bunkit add package`
+  - Explore the new `tooling/typescript/` configurations
+  - Use individual app scripts for faster development
+
+  ***
+
+  **Full Changelog**: See individual commit messages for detailed changes.
+
+### Minor Changes
+
+- 8ed1dd6: # v0.9.0 - Bun 1.3 Integration, Database Expansion & Auth Systems 🚀
+
+  ## Major Features
+
+  ### 🗄️ Database Expansion
+
+  - **Prisma ORM support** - Full Prisma integration as alternative to Drizzle
+    - PostgreSQL + Prisma
+    - MySQL + Prisma
+    - SQLite + Prisma
+    - Supabase + Prisma
+  - **MySQL support** - Native Bun 1.3 MySQL client
+    - MySQL + Drizzle ORM
+    - MySQL + Prisma ORM
+  - **Redis support** - Native Bun 1.3 Redis client for caching and session storage
+
+  ### 🔐 Authentication Systems
+
+  - **better-auth** - Modern, flexible authentication library
+    - Database adapters for Drizzle and Prisma
+    - Hono integration helpers
+    - Client-side React hooks
+  - **NextAuth.js** - Popular Next.js authentication solution
+    - Database adapters for Drizzle and Prisma
+    - Next.js App Router integration
+    - JWT and database session strategies
+
+  ### ⚡ New Presets
+
+  - **`bun-api`** - Bun.serve() native routing (zero dependencies)
+  - **`bun-fullstack`** - Bun.serve() + HTML imports (React without Next.js)
+  - **`bun-monorepo`** - Monorepo with Bun.serve() (no Next.js)
+  - **`enterprise-monorepo`** - Enterprise monorepo with multiple Next.js apps and microservices
+    - Multiple Next.js apps (platform, app)
+    - Microservices architecture (service-identity)
+    - Ready for complex SaaS platforms
+
+  ### 🎯 Improved Preset Naming
+
+  - **Clear, descriptive names** following `{framework}-{architecture}` pattern
+    - `nextjs` (was `web`) - Next.js single repo
+    - `hono-api` (was `api`) - Hono API single repo
+    - `nextjs-monorepo` (was `full`) - Next.js + Hono monorepo
+    - `bun-monorepo` (was `monorepo-bun`) - Bun.serve() monorepo
+  - **Backwards compatible** - All old names work as aliases
+
+  ### 🍽️ À la carte CLI Experience
+
+  - **Fully interactive `bunkit init`** - 21+ configuration prompts
+  - **Custom presets** - Save and reuse project configurations
+    - `bunkit preset save <name>` - Save current configuration
+    - `bunkit preset load <name>` - Load saved configuration
+    - `bunkit preset list` - List all saved presets
+    - `bunkit preset delete <name>` - Delete a preset
+  - **Step-by-step configuration** - Choose exactly what you need
+
+  ### 🛠️ Developer Experience
+
+  - **VSCode debugging** - Complete debugging configuration
+    - `launch.json` with Bun debug configurations
+    - `settings.json` with recommended settings
+    - `extensions.json` with recommended extensions
+  - **bunfig.toml defaults** - Comprehensive Bun configuration
+    - Customizable defaults with explanatory comments
+    - Debugging settings
+    - Performance optimizations
+  - **Enhanced Hono defaults** - More middleware and utilities
+    - Security middleware (CORS, rate limiting, helmet)
+    - Request validation
+    - Error handling patterns
+    - Performance utilities
+
+  ### 🔑 Bun.secrets Integration
+
+  - **Secure credential management** - Use Bun.secrets API instead of .env files
+  - Type-safe helpers with fallback to environment variables
+  - Integration examples and documentation
+
+  ### 📦 Dependency Management
+
+  - **`bunkit catalog add`** - Add packages to dependency catalog
+  - **`bunkit catalog sync`** - Sync catalog versions across workspaces
+  - **`bunkit catalog list`** - List all packages in catalog
+
+  ## Breaking Changes
+
+  - None - All changes are additive and backwards compatible
+
+  ## Migration Guide
+
+  No migration needed - all existing projects continue to work. New features are opt-in via interactive prompts or CLI flags.
+
+### Patch Changes
+
+- ef9b673: Fix Ultracite integration to follow official documentation structure. Updated preset selection logic to dynamically apply ultracite/core, ultracite/react, and ultracite/next based on project type. Fixed file paths for AI editor rules (.cursor/rules/, .windsurf/rules/, .claude/). Updated Ultracite version to 6.3.4. Corrected package.json scripts to use ultracite check and ultracite fix commands. Added preset to TemplateContext for proper configuration.
+
 ## 0.7.0
 
 ### Minor Changes
