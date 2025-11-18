@@ -15,28 +15,53 @@ const program = new Command();
 
 program
   .name('bunkit')
-  .description('Bake production-ready apps in seconds')
-  .version(VERSION);
+  .description('Bake production-ready apps in seconds | Modern CLI for Bun-powered projects')
+  .version(VERSION)
+  .usage('<command> [options]')
+  .addHelpText('after', `
+Examples:
+  $ bunkit init                    Create a new project interactively
+  $ bunkit create web my-app       Create a Next.js web application
+  $ bunkit add workspace           Add a new workspace to monorepo
+  $ bunkit add component --all     Browse and add shadcn/ui components
+
+For more information, visit: https://github.com/Arakiss/bunkit
+  `);
 
 program
   .command('init')
-  .description('Create a new project with full customization')
-  .option('--name <name>', 'Project name')
-  .option('--preset <preset>', 'Preset type (minimal, web, api, full)')
-  .option('--database <database>', 'Database (postgres-drizzle, supabase, sqlite-drizzle, none)')
-  .option('--code-quality <quality>', 'Code quality (ultracite, biome)')
-  .option('--ts-strictness <strictness>', 'TypeScript strictness (strict, moderate, loose)')
-  .option('--ui-library <library>', 'UI library (shadcn, none)')
-  .option('--css-framework <framework>', 'CSS framework (tailwind, vanilla, css-modules)')
-  .option('--shadcn-style <style>', 'shadcn/ui style (new-york, default)')
-  .option('--shadcn-base-color <color>', 'shadcn/ui base color (neutral, gray, zinc, stone, slate)')
-  .option('--shadcn-radius <radius>', 'shadcn/ui border radius (e.g., 0.5rem, 8px)')
-  .option('--testing <framework>', 'Testing framework (bun-test, vitest, none)')
-  .option('--docker', 'Add Docker configuration')
-  .option('--cicd', 'Add GitHub Actions CI/CD')
-  .option('--no-git', 'Skip git initialization')
-  .option('--no-install', 'Skip dependency installation')
-  .option('--non-interactive', 'Run without prompts (requires all options)')
+  .description('Create a new project with full customization options')
+  .alias('i')
+  .option('--name <name>', 'Project name (kebab-case recommended, e.g., my-awesome-app)')
+  .option('--preset <preset>', 'Project preset: minimal | web | api | full')
+  .option('--database <database>', 'Database option: postgres-drizzle | supabase | supabase-drizzle | sqlite-drizzle | none')
+  .option('--supabase-preset <preset>', 'Supabase configuration preset: full-stack | auth-only | database-only | custom')
+  .option('--supabase-features <features>', 'Comma-separated Supabase features: auth,storage,realtime,edge-functions,database')
+  .option('--code-quality <tool>', 'Code quality tool: ultracite | biome')
+  .option('--ts-strictness <level>', 'TypeScript strictness level: strict | moderate | loose')
+  .option('--ui-library <library>', 'UI component library: shadcn | none')
+  .option('--css-framework <framework>', 'CSS framework: tailwind | vanilla | css-modules')
+  .option('--shadcn-style <style>', 'shadcn/ui component style: new-york | default')
+  .option('--shadcn-base-color <color>', 'shadcn/ui base color theme: neutral | gray | zinc | stone | slate')
+  .option('--shadcn-radius <radius>', 'shadcn/ui border radius (CSS value, e.g., 0.5rem, 8px)')
+  .option('--testing <framework>', 'Testing framework: bun-test | vitest | none')
+  .option('--docker', 'Include Docker configuration files')
+  .option('--cicd', 'Include GitHub Actions CI/CD workflow')
+  .option('--no-git', 'Skip Git repository initialization')
+  .option('--no-install', 'Skip dependency installation after project creation')
+  .option('--non-interactive', 'Run in non-interactive mode (requires all options via flags)')
+  .addHelpText('after', `
+Examples:
+  $ bunkit init                                    Interactive project creation
+  $ bunkit init --name my-app --preset web        Quick web app creation
+  $ bunkit init --preset full --database supabase Full-stack with Supabase
+  
+Presets:
+  minimal  Single-file project, clean start
+  web      Next.js 16 + React 19 web application
+  api      Hono API server with Bun.serve()
+  full     Full-stack monorepo (web + api + packages)
+  `)
   .action(async (options) => {
     showBanner(VERSION);
     try {
@@ -51,11 +76,21 @@ program
 
 program
   .command('create')
-  .argument('<preset>', 'Preset type (minimal, web, api, full)')
-  .argument('<name>', 'Project name')
-  .option('--no-git', 'Skip git initialization')
-  .option('--no-install', 'Skip dependency installation')
-  .description('Create a new project quickly')
+  .alias('c')
+  .argument('<preset>', 'Project preset: minimal | web | api | full')
+  .argument('<name>', 'Project name (kebab-case recommended)')
+  .option('--no-git', 'Skip Git repository initialization')
+  .option('--no-install', 'Skip dependency installation after project creation')
+  .description('Quick project creation with sensible defaults (non-interactive)')
+  .addHelpText('after', `
+Examples:
+  $ bunkit create web my-app          Create Next.js web application
+  $ bunkit create api my-api          Create Hono API server
+  $ bunkit create full my-saas        Create full-stack monorepo
+  $ bunkit create minimal my-tool      Create minimal Bun project
+  
+Note: This command uses sensible defaults. Use 'bunkit init' for full customization.
+  `)
   .action(async (preset, name, options) => {
     showBanner(VERSION);
     try {
@@ -70,13 +105,26 @@ program
 
 program
   .command('add')
-  .argument('<feature>', 'Feature to add (workspace, package, component)')
-  .option('--name <name>', 'Name for the feature')
-  .option('--preset <preset>', 'Preset for workspace (nextjs, hono, library)')
-  .option('--type <type>', 'Type for package (library, utils, types, config)')
-  .option('--components <components>', 'Component names (comma-separated) for component feature')
-  .option('--all', 'Show all available components (for component feature)')
-  .description('Add workspace, package, or shadcn/ui component to project')
+  .alias('a')
+  .argument('<feature>', 'Feature type: workspace | package | component')
+  .option('--name <name>', 'Feature name (e.g., apps/admin, @myapp/utils, button)')
+  .option('--preset <preset>', 'Workspace preset: nextjs | hono | library')
+  .option('--type <type>', 'Package type: library | utils | types | config')
+  .option('--components <components>', 'Comma-separated component names (e.g., button,card,input)')
+  .option('--all', 'Show interactive component browser (for component feature)')
+  .description('Add workspace, shared package, or shadcn/ui component to existing project')
+  .addHelpText('after', `
+Examples:
+  $ bunkit add workspace --name apps/admin --preset nextjs
+  $ bunkit add package --name @myapp/utils --type utils
+  $ bunkit add component --components button,card,input
+  $ bunkit add component --all
+  
+Features:
+  workspace   Add a new workspace to monorepo (app or package)
+  package     Add a shared package to monorepo
+  component   Add shadcn/ui components (requires shadcn/ui setup)
+  `)
   .action(async (feature, options) => {
     showBanner(VERSION);
     try {
@@ -89,7 +137,7 @@ program
             : options.components,
       };
       await addCommand(feature, parsedOptions);
-      outro(pc.green('✨ Feature added successfully! 🍞'));
+      // Success message is handled in the command itself
     } catch (error) {
       log.error((error as Error).message);
       outro(pc.red('❌ Feature installation failed'));

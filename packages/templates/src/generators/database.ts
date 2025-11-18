@@ -70,9 +70,140 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/${context.projectName
 }
 
 /**
- * Setup Supabase (PostgreSQL + Auth + Storage + Realtime)
+ * Setup Supabase only (without Drizzle ORM)
+ * Includes client setup for selected features (auth, storage, realtime, etc.)
  */
-export async function setupSupabase(
+export async function setupSupabaseOnly(
+  projectPath: string,
+  context: TemplateContext,
+  isMonorepo: boolean = false
+): Promise<void> {
+  const dbPath = isMonorepo
+    ? join(projectPath, 'packages/db')
+    : join(projectPath, 'src/db');
+
+  await ensureDirectory(dbPath);
+
+  const features = context.supabaseFeatures || ['auth', 'storage', 'realtime', 'database'];
+  const hasAuth = features.includes('auth');
+  const hasStorage = features.includes('storage');
+  const hasRealtime = features.includes('realtime');
+  const hasEdgeFunctions = features.includes('edge-functions');
+  const hasDatabase = features.includes('database');
+
+  // Supabase client with selected features
+  const clientContent = `import { createClient } from '@supabase/supabase-js';
+
+// Supabase client
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+    },
+  }
+);
+
+${hasAuth ? `// Auth helpers
+export const auth = supabase.auth;` : ''}
+
+${hasStorage ? `// Storage helpers
+export const storage = supabase.storage;` : ''}
+
+${hasRealtime ? `// Realtime helpers
+export const realtime = supabase.realtime;` : ''}
+
+${hasEdgeFunctions ? `// Edge Functions helpers
+export const functions = supabase.functions;` : ''}
+
+${hasDatabase ? `// Database helpers (using Supabase client directly)
+export const db = supabase.from;` : ''}
+`;
+
+  await writeFile(join(dbPath, 'index.ts'), clientContent);
+
+  // Example usage file
+  const examplesContent = `// Supabase usage examples
+import { supabase${hasAuth ? ', auth' : ''}${hasStorage ? ', storage' : ''}${hasRealtime ? ', realtime' : ''}${hasEdgeFunctions ? ', functions' : ''}${hasDatabase ? ', db' : ''} } from './index';
+
+${hasAuth ? `// Auth example
+export async function signUp(email: string, password: string) {
+  const { data, error } = await auth.signUp({
+    email,
+    password,
+  });
+  return { data, error };
+}
+
+export async function signIn(email: string, password: string) {
+  const { data, error } = await auth.signInWithPassword({
+    email,
+    password,
+  });
+  return { data, error };
+}
+
+export async function signOut() {
+  const { error } = await auth.signOut();
+  return { error };
+}` : ''}
+
+${hasStorage ? `// Storage example
+export async function uploadFile(bucket: string, path: string, file: File) {
+  const { data, error } = await storage.from(bucket).upload(path, file);
+  return { data, error };
+}
+
+export function getPublicUrl(bucket: string, path: string) {
+  const { data } = storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+}` : ''}
+
+${hasRealtime ? `// Realtime example
+export function subscribeToChannel(channel: string, callback: (payload: any) => void) {
+  const channelInstance = realtime.channel(channel);
+  channelInstance.on('postgres_changes', { event: '*', schema: 'public', table: '*' }, callback);
+  channelInstance.subscribe();
+  return channelInstance;
+}` : ''}
+
+${hasEdgeFunctions ? `// Edge Functions example
+export async function invokeFunction(functionName: string, body?: any) {
+  const { data, error } = await functions.invoke(functionName, { body });
+  return { data, error };
+}` : ''}
+
+${hasDatabase ? `// Database example (using Supabase client directly)
+export async function getUsers() {
+  const { data, error } = await supabase.from('users').select('*');
+  return { data, error };
+}` : ''}
+`;
+
+  await writeFile(join(dbPath, 'examples.ts'), examplesContent);
+
+  // Supabase directory structure
+  if (hasEdgeFunctions) {
+    await ensureDirectory(join(projectPath, 'supabase/functions'));
+  }
+
+  // .env.example
+  const envExample = `# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+${hasDatabase ? 'DATABASE_URL=postgresql://postgres:[password]@db.your-project.supabase.co:5432/postgres' : ''}
+`;
+
+  await writeFile(join(projectPath, '.env.example'), envExample);
+}
+
+/**
+ * Setup Supabase with Drizzle ORM (PostgreSQL + Auth + Storage + Realtime + Drizzle)
+ */
+export async function setupSupabaseDrizzle(
   projectPath: string,
   context: TemplateContext,
   isMonorepo: boolean = false
@@ -101,7 +232,14 @@ export default defineConfig({
     drizzleConfig
   );
 
-  // Supabase client
+  const features = context.supabaseFeatures || ['auth', 'storage', 'realtime', 'database'];
+  const hasAuth = features.includes('auth');
+  const hasStorage = features.includes('storage');
+  const hasRealtime = features.includes('realtime');
+  const hasEdgeFunctions = features.includes('edge-functions');
+  const hasDatabase = features.includes('database');
+
+  // Supabase client with Drizzle
   const clientContent = `import { createClient } from '@supabase/supabase-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -110,15 +248,99 @@ import * as schema from './schema';
 // Supabase client for auth, storage, realtime
 export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+    },
+  }
 );
 
+${hasAuth ? `// Auth helpers
+export const auth = supabase.auth;` : ''}
+
+${hasStorage ? `// Storage helpers
+export const storage = supabase.storage;` : ''}
+
+${hasRealtime ? `// Realtime helpers
+export const realtime = supabase.realtime;` : ''}
+
+${hasEdgeFunctions ? `// Edge Functions helpers
+export const functions = supabase.functions;` : ''}
+
 // Drizzle client for type-safe database queries
-const queryClient = postgres(process.env.DATABASE_URL!);
-export const db = drizzle(queryClient, { schema });
+${hasDatabase ? `const queryClient = postgres(process.env.DATABASE_URL!);
+export const db = drizzle(queryClient, { schema });` : '// Database queries via Drizzle ORM'}
 `;
 
   await writeFile(join(dbPath, 'index.ts'), clientContent);
+
+  // Example usage file (similar to setupSupabaseOnly but with Drizzle)
+  const examplesContent = `// Supabase + Drizzle usage examples
+import { supabase${hasAuth ? ', auth' : ''}${hasStorage ? ', storage' : ''}${hasRealtime ? ', realtime' : ''}${hasEdgeFunctions ? ', functions' : ''}, db } from './index';
+import { users } from './schema';
+import { eq } from 'drizzle-orm';
+
+${hasAuth ? `// Auth example
+export async function signUp(email: string, password: string) {
+  const { data, error } = await auth.signUp({
+    email,
+    password,
+  });
+  return { data, error };
+}
+
+export async function signIn(email: string, password: string) {
+  const { data, error } = await auth.signInWithPassword({
+    email,
+    password,
+  });
+  return { data, error };
+}
+
+export async function signOut() {
+  const { error } = await auth.signOut();
+  return { error };
+}` : ''}
+
+${hasStorage ? `// Storage example
+export async function uploadFile(bucket: string, path: string, file: File) {
+  const { data, error } = await storage.from(bucket).upload(path, file);
+  return { data, error };
+}
+
+export function getPublicUrl(bucket: string, path: string) {
+  const { data } = storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+}` : ''}
+
+${hasRealtime ? `// Realtime example
+export function subscribeToChannel(channel: string, callback: (payload: any) => void) {
+  const channelInstance = realtime.channel(channel);
+  channelInstance.on('postgres_changes', { event: '*', schema: 'public', table: '*' }, callback);
+  channelInstance.subscribe();
+  return channelInstance;
+}` : ''}
+
+${hasEdgeFunctions ? `// Edge Functions example
+export async function invokeFunction(functionName: string, body?: any) {
+  const { data, error } = await functions.invoke(functionName, { body });
+  return { data, error };
+}` : ''}
+
+${hasDatabase ? `// Database example (using Drizzle ORM)
+export async function getUsers() {
+  return await db.select().from(users);
+}
+
+export async function getUserById(id: string) {
+  return await db.select().from(users).where(eq(users.id, id));
+}` : ''}
+`;
+
+  await writeFile(join(dbPath, 'examples.ts'), examplesContent);
 
   // Example schema with RLS
   const schemaContent = `import { pgTable, text, timestamp, uuid, boolean } from 'drizzle-orm/pg-core';
@@ -148,11 +370,15 @@ export const profiles = pgTable('profiles', {
   // Supabase directory structure
   await ensureDirectory(join(projectPath, 'supabase/migrations'));
 
+  if (hasEdgeFunctions) {
+    await ensureDirectory(join(projectPath, 'supabase/functions'));
+  }
+
   // .env.example
   const envExample = `# Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-DATABASE_URL=postgresql://postgres:[password]@db.your-project.supabase.co:5432/postgres
+${hasDatabase ? 'DATABASE_URL=postgresql://postgres:[password]@db.your-project.supabase.co:5432/postgres' : ''}
 `;
 
   await writeFile(join(projectPath, '.env.example'), envExample);
@@ -247,6 +473,12 @@ export function getDatabaseDependencies(databaseType: string): Record<string, st
         'postgres': '^3.4.5',
       };
     case 'supabase':
+      // Supabase only (without Drizzle)
+      return {
+        '@supabase/supabase-js': '^2.48.1',
+      };
+    case 'supabase-drizzle':
+      // Supabase with Drizzle ORM
       return {
         '@supabase/supabase-js': '^2.48.1',
         'drizzle-orm': '^0.38.0',

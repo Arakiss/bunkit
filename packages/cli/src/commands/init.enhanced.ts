@@ -18,6 +18,8 @@ import {
   type TestingFramework,
   type ShadcnStyle,
   type ShadcnBaseColor,
+  type SupabasePreset,
+  type SupabaseFeature,
 } from '@bunkit/core';
 import {
   buildMinimalPreset,
@@ -62,6 +64,11 @@ export interface EnhancedInitOptions {
   shadcnStyle?: ShadcnStyle;
   shadcnBaseColor?: ShadcnBaseColor;
   shadcnRadius?: string;
+
+  // Supabase specific options
+  supabasePreset?: SupabasePreset;
+  supabaseFeatures?: SupabaseFeature[];
+  supabaseWithDrizzle?: boolean;
 }
 
 /**
@@ -109,7 +116,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     }
 
     projectName = await p.text({
-      message: '📦 What is your project named?',
+      message: '📦 Project name',
       placeholder: 'my-awesome-project',
       validate: (value) => {
         const result = validateProjectName(value);
@@ -145,27 +152,27 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     }
 
     preset = await p.select({
-      message: '🎨 Which preset would you like?',
+      message: '🎨 Select project preset',
       options: [
         {
           value: 'minimal',
           label: '⚡ Minimal',
-          hint: 'Single file, clean start - perfect for learning Bun',
+          hint: 'Single-file project, clean start - perfect for CLIs and scripts',
         },
         {
           value: 'web',
-          label: '🌐 Web App',
-          hint: 'Next.js 16 + React 19 - full-stack web application',
+          label: '🌐 Web Application',
+          hint: 'Next.js 16 + React 19 + Tailwind CSS 4 - production-ready web app',
         },
         {
           value: 'api',
           label: '🚀 API Server',
-          hint: 'Hono + Bun.serve() - ultra-fast REST API',
+          hint: 'Hono 4 + Bun.serve() - ultra-fast REST API with native HMR',
         },
         {
           value: 'full',
           label: '📦 Full-Stack Monorepo',
-          hint: 'Web + Platform + API - enterprise SaaS setup',
+          hint: 'Web + API + shared packages - enterprise-grade SaaS architecture',
         },
       ],
     }) as PresetType;
@@ -187,27 +194,32 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (!database && (preset === 'api' || preset === 'full')) {
     if (!isNonInteractive) {
       database = await p.select({
-        message: '🗄️  Database setup?',
+        message: '🗄️  Database configuration',
         options: [
           {
             value: 'postgres-drizzle',
             label: 'PostgreSQL + Drizzle ORM',
-            hint: 'Production-ready, type-safe SQL database',
+            hint: 'Production-ready PostgreSQL with type-safe Drizzle ORM queries',
           },
           {
             value: 'supabase',
-            label: 'Supabase',
-            hint: 'PostgreSQL + Auth + Storage + Realtime - all-in-one',
+            label: 'Supabase (Client Only)',
+            hint: 'Supabase JS client only - Auth, Storage, Realtime without Drizzle ORM',
+          },
+          {
+            value: 'supabase-drizzle',
+            label: 'Supabase + Drizzle ORM',
+            hint: 'Full Supabase stack with Drizzle ORM for type-safe database queries',
           },
           {
             value: 'sqlite-drizzle',
             label: 'SQLite + Drizzle ORM',
-            hint: 'Local-first, embedded database - perfect for prototypes',
+            hint: 'Local-first embedded database - perfect for prototypes and local development',
           },
           {
             value: 'none',
             label: 'None',
-            hint: "I'll add it later",
+            hint: 'Skip database setup - add later if needed',
           },
         ],
       }) as DatabaseType;
@@ -218,6 +230,120 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       }
     } else {
       database = 'none';
+    }
+  }
+
+  // ====================
+  // SUPABASE CONFIGURATION (if Supabase selected)
+  // ====================
+  let supabasePreset: SupabasePreset | undefined;
+  let supabaseFeatures: SupabaseFeature[] | undefined;
+  let supabaseWithDrizzle: boolean | undefined;
+
+  if (database === 'supabase' || database === 'supabase-drizzle') {
+    // Determine if using Drizzle based on database selection
+    supabaseWithDrizzle = database === 'supabase-drizzle';
+
+    // Get preset selection
+    const presetEnv = process.env.BUNKIT_SUPABASE_PRESET;
+    supabasePreset = (presetEnv || options.supabasePreset) as SupabasePreset | undefined;
+
+    if (!supabasePreset && !isNonInteractive) {
+      supabasePreset = await p.select({
+        message: '🎯 Supabase configuration preset',
+        options: [
+          {
+            value: 'full-stack',
+            label: 'Full Stack (Recommended)',
+            hint: 'Complete Supabase setup - Auth, Storage, Realtime, and Database',
+          },
+          {
+            value: 'auth-only',
+            label: 'Auth Only',
+            hint: 'Authentication only - perfect for simple apps with external data',
+          },
+          {
+            value: 'database-only',
+            label: 'Database Only',
+            hint: 'PostgreSQL database access only - no Auth, Storage, or Realtime',
+          },
+          {
+            value: 'custom',
+            label: 'Custom',
+            hint: 'Manually select Supabase features to include',
+          },
+        ],
+      }) as SupabasePreset;
+
+      if (p.isCancel(supabasePreset)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    } else if (!supabasePreset) {
+      supabasePreset = 'full-stack';
+    }
+
+    // Map preset to features
+    if (supabasePreset === 'full-stack') {
+      supabaseFeatures = ['auth', 'storage', 'realtime', 'database'];
+    } else if (supabasePreset === 'auth-only') {
+      supabaseFeatures = ['auth'];
+    } else if (supabasePreset === 'database-only') {
+      supabaseFeatures = ['database'];
+    } else {
+      // Custom - let user select features
+      const availableFeaturesEnv = process.env.BUNKIT_SUPABASE_FEATURES;
+      let availableFeatures: SupabaseFeature[] | undefined;
+      
+      if (availableFeaturesEnv) {
+        availableFeatures = availableFeaturesEnv.split(',').map(f => f.trim()) as SupabaseFeature[];
+      } else if (options.supabaseFeatures) {
+        availableFeatures = Array.isArray(options.supabaseFeatures) 
+          ? options.supabaseFeatures 
+          : String(options.supabaseFeatures).split(',').map(f => f.trim()) as SupabaseFeature[];
+      }
+
+      if (!availableFeatures && !isNonInteractive) {
+        const selectedFeatures = await p.multiselect({
+          message: '✨ Select Supabase features to include',
+          options: [
+            {
+              value: 'auth',
+              label: 'Authentication',
+              hint: 'User authentication and authorization (sign up, sign in, sessions)',
+            },
+            {
+              value: 'storage',
+              label: 'Storage',
+              hint: 'File storage and CDN for images, documents, and media',
+            },
+            {
+              value: 'realtime',
+              label: 'Realtime',
+              hint: 'Real-time subscriptions and live updates via WebSockets',
+            },
+            {
+              value: 'edge-functions',
+              label: 'Edge Functions',
+              hint: 'Serverless functions deployed at the edge for low latency',
+            },
+            {
+              value: 'database',
+              label: 'Database',
+              hint: 'PostgreSQL database access via Supabase client',
+            },
+          ],
+        }) as SupabaseFeature[];
+
+        if (p.isCancel(selectedFeatures)) {
+          p.cancel('Operation cancelled.');
+          process.exit(0);
+        }
+
+        supabaseFeatures = selectedFeatures.length > 0 ? selectedFeatures : ['auth', 'database'];
+      } else {
+        supabaseFeatures = availableFeatures || ['auth', 'database'];
+      }
     }
   }
 
@@ -233,17 +359,17 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (!codeQuality) {
     if (!isNonInteractive) {
       codeQuality = await p.select({
-        message: '🤖 Code quality setup?',
+        message: '🤖 Code quality tool',
         options: [
           {
             value: 'ultracite',
             label: 'Ultracite (Recommended)',
-            hint: 'AI-optimized Biome preset - syncs rules for Cursor, Claude, Windsurf',
+            hint: 'AI-optimized Biome preset - syncs rules for Cursor, Claude Code, Windsurf, Zed',
           },
           {
             value: 'biome',
             label: 'Biome',
-            hint: 'Standard Biome with good defaults - fast and reliable',
+            hint: 'Standard Biome configuration - fast, reliable, zero-config linting and formatting',
           },
         ],
       }) as CodeQualityType;
@@ -269,22 +395,22 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (!tsStrictness) {
     if (!isNonInteractive) {
       tsStrictness = await p.select({
-        message: '🔒 TypeScript strictness?',
+        message: '🔒 TypeScript strictness level',
         options: [
           {
             value: 'strict',
             label: 'Strict (Recommended)',
-            hint: 'Maximum type safety - catches bugs early, prevents headaches',
+            hint: 'Maximum type safety - catches bugs early, prevents runtime errors',
           },
           {
             value: 'moderate',
             label: 'Moderate',
-            hint: 'Balanced - good safety without being too rigid',
+            hint: 'Balanced type checking - good safety without excessive strictness',
           },
           {
             value: 'loose',
             label: 'Loose',
-            hint: 'Minimal checks - quick prototyping, migrate from JavaScript',
+            hint: 'Minimal type checking - quick prototyping, easier migration from JavaScript',
           },
         ],
       }) as TypeScriptStrictness;
@@ -309,22 +435,22 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (!cssFramework && (preset === 'web' || preset === 'full')) {
     if (!isNonInteractive) {
       cssFramework = await p.select({
-        message: '🎨 CSS framework?',
+        message: '🎨 CSS framework',
         options: [
           {
             value: 'tailwind',
             label: 'Tailwind CSS 4 (Recommended)',
-            hint: 'Utility-first, fast, modern - with OKLCH colors and @theme',
+            hint: 'Utility-first CSS framework - fast, modern, with OKLCH colors and @theme',
           },
           {
             value: 'vanilla',
             label: 'Vanilla CSS',
-            hint: 'Plain CSS files - full control, no framework',
+            hint: 'Plain CSS files - full control, no framework dependencies',
           },
           {
             value: 'css-modules',
             label: 'CSS Modules',
-            hint: 'Scoped CSS - automatic class name generation',
+            hint: 'Scoped CSS with automatic class name generation - prevents style conflicts',
           },
         ],
       }) as CSSFramework;
@@ -349,17 +475,17 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (!uiLibrary && (preset === 'web' || preset === 'full') && cssFramework === 'tailwind') {
     if (!isNonInteractive) {
       uiLibrary = await p.select({
-        message: '🧩 UI component library?',
+        message: '🧩 UI component library',
         options: [
           {
             value: 'shadcn',
             label: 'shadcn/ui (Recommended)',
-            hint: '64+ components, accessible, customizable - production-ready',
+            hint: '64+ accessible components, fully customizable, production-ready',
           },
           {
             value: 'none',
             label: 'None',
-            hint: "I'll build my own components",
+            hint: 'Skip UI library - build custom components or add later',
           },
         ],
       }) as UILibrary;
@@ -384,17 +510,17 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (!shadcnStyle && uiLibrary === 'shadcn') {
     if (!isNonInteractive) {
       shadcnStyle = await p.select({
-        message: '🎨 shadcn/ui style?',
+        message: '🎨 shadcn/ui component style',
         options: [
           {
             value: 'new-york',
             label: 'New York (Recommended)',
-            hint: 'Modern, clean design with rounded corners and subtle shadows',
+            hint: 'Modern design aesthetic - rounded corners, subtle shadows, clean look',
           },
           {
             value: 'default',
             label: 'Default',
-            hint: 'Classic design with sharper edges and more contrast',
+            hint: 'Classic design aesthetic - sharper edges, higher contrast, traditional look',
           },
         ],
       }) as ShadcnStyle;
@@ -419,32 +545,32 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (!shadcnBaseColor && uiLibrary === 'shadcn') {
     if (!isNonInteractive) {
       shadcnBaseColor = await p.select({
-        message: '🎨 shadcn/ui base color?',
+        message: '🎨 shadcn/ui base color theme',
         options: [
           {
             value: 'zinc',
             label: 'Zinc (Recommended)',
-            hint: 'Neutral gray - versatile and modern',
+            hint: 'Neutral gray palette - versatile, modern, works with any accent color',
           },
           {
             value: 'neutral',
             label: 'Neutral',
-            hint: 'Pure neutral - no color cast',
+            hint: 'Pure neutral palette - no color cast, perfect grayscale',
           },
           {
             value: 'gray',
             label: 'Gray',
-            hint: 'Warm gray - slightly warmer than zinc',
+            hint: 'Warm gray palette - slightly warmer tone than zinc',
           },
           {
             value: 'slate',
             label: 'Slate',
-            hint: 'Cool gray - slightly bluer tone',
+            hint: 'Cool gray palette - slightly bluer tone, modern and crisp',
           },
           {
             value: 'stone',
             label: 'Stone',
-            hint: 'Warm beige-gray - earthy and natural',
+            hint: 'Warm beige-gray palette - earthy, natural, organic feel',
           },
         ],
       }) as ShadcnBaseColor;
@@ -469,8 +595,8 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (!shadcnRadius && uiLibrary === 'shadcn') {
     if (!isNonInteractive) {
       const radiusInput = await p.text({
-        message: '📐 Border radius?',
-        placeholder: '0.625rem',
+        message: '📐 Component border radius',
+        placeholder: '0.625rem (default)',
         initialValue: '0.625rem',
         validate: (value) => {
           if (!value.trim()) {
@@ -506,22 +632,22 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (!testing) {
     if (!isNonInteractive) {
       testing = await p.select({
-        message: '🧪 Testing framework?',
+        message: '🧪 Testing framework',
         options: [
           {
             value: 'bun-test',
             label: 'Bun Test (Recommended)',
-            hint: 'Built-in, fast, Jest-compatible - no extra dependencies',
+            hint: 'Built-in testing framework - fast, Jest-compatible, zero configuration',
           },
           {
             value: 'vitest',
             label: 'Vitest',
-            hint: 'Vite-powered, fast, ESM-first - popular in ecosystem',
+            hint: 'Vite-powered testing framework - fast, ESM-first, popular ecosystem choice',
           },
           {
             value: 'none',
             label: 'None',
-            hint: "I'll add testing later",
+            hint: 'Skip testing setup - add testing framework later if needed',
           },
         ],
       }) as TestingFramework;
@@ -547,7 +673,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (docker === undefined) {
     if (!isNonInteractive) {
       docker = await p.confirm({
-        message: '🐳 Add Docker configuration?',
+        message: '🐳 Include Docker configuration',
         initialValue: false,
       }) as boolean;
 
@@ -572,7 +698,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (cicd === undefined) {
     if (!isNonInteractive) {
       cicd = await p.confirm({
-        message: '⚙️  Add GitHub Actions CI/CD?',
+        message: '⚙️  Include GitHub Actions CI/CD workflow',
         initialValue: false,
       }) as boolean;
 
@@ -597,7 +723,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (shouldInstall === undefined) {
     if (!isNonInteractive) {
       shouldInstall = await p.confirm({
-        message: '📥 Install dependencies?',
+        message: '📥 Install dependencies after project creation',
         initialValue: true,
       }) as boolean;
 
@@ -622,7 +748,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (shouldInitGit === undefined) {
     if (!isNonInteractive) {
       shouldInitGit = await p.confirm({
-        message: '🔧 Initialize git repository?',
+        message: '🔧 Initialize Git repository',
         initialValue: true,
       }) as boolean;
 
@@ -639,36 +765,54 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   // SHOW CONFIGURATION SUMMARY
   // ====================
   if (!isNonInteractive) {
-    const summaryLines = [
-      `${chalk.bold('Project:')} ${chalk.cyan(projectName)}`,
+    // Build configuration summary with better formatting
+    const configSummary = [
+      '',
+      `${chalk.bold.cyan('📦 Project Configuration')}`,
+      `${chalk.dim('─'.repeat(40))}`,
+      `${chalk.bold('Project Name:')} ${chalk.cyan(projectName)}`,
       `${chalk.bold('Preset:')} ${chalk.cyan(preset)}`,
-      database ? `${chalk.bold('Database:')} ${chalk.cyan(database)}` : '',
-      `${chalk.bold('Code Quality:')} ${chalk.cyan(codeQuality)}`,
-      `${chalk.bold('TypeScript:')} ${chalk.cyan(tsStrictness)}`,
-      cssFramework ? `${chalk.bold('CSS:')} ${chalk.cyan(cssFramework)}` : '',
-      uiLibrary ? `${chalk.bold('UI Library:')} ${chalk.cyan(uiLibrary)}` : '',
-      // shadcn/ui specific options
-      uiLibrary === 'shadcn' && shadcnStyle ? `${chalk.bold('shadcn Style:')} ${chalk.cyan(shadcnStyle)}` : '',
-      uiLibrary === 'shadcn' && shadcnBaseColor ? `${chalk.bold('shadcn Base Color:')} ${chalk.cyan(shadcnBaseColor)}` : '',
-      uiLibrary === 'shadcn' && shadcnRadius ? `${chalk.bold('shadcn Radius:')} ${chalk.cyan(shadcnRadius)}` : '',
-      `${chalk.bold('Testing:')} ${chalk.cyan(testing)}`,
-      docker ? `${chalk.bold('Docker:')} ${chalk.green('✓')}` : '',
-      cicd ? `${chalk.bold('CI/CD:')} ${chalk.green('✓')}` : '',
-    ].filter(Boolean);
+      '',
+      database && database !== 'none' ? [
+        `${chalk.bold.yellow('🗄️  Database')}`,
+        `  ${chalk.bold('Type:')} ${chalk.cyan(database)}`,
+        (database === 'supabase' || database === 'supabase-drizzle') && supabasePreset ? `  ${chalk.bold('Preset:')} ${chalk.cyan(supabasePreset)}` : '',
+        (database === 'supabase' || database === 'supabase-drizzle') && supabaseFeatures ? `  ${chalk.bold('Features:')} ${chalk.cyan(supabaseFeatures.join(', '))}` : '',
+      ].filter(Boolean).join('\n') : '',
+      '',
+      `${chalk.bold.yellow('🛠️  Development Tools')}`,
+      `  ${chalk.bold('Code Quality:')} ${chalk.cyan(codeQuality)}`,
+      `  ${chalk.bold('TypeScript:')} ${chalk.cyan(tsStrictness)}`,
+      `  ${chalk.bold('Testing:')} ${chalk.cyan(testing)}`,
+      '',
+      cssFramework ? [
+        `${chalk.bold.yellow('🎨 Styling')}`,
+        `  ${chalk.bold('CSS Framework:')} ${chalk.cyan(cssFramework)}`,
+        uiLibrary ? `  ${chalk.bold('UI Library:')} ${chalk.cyan(uiLibrary)}` : '',
+        uiLibrary === 'shadcn' && shadcnStyle ? `  ${chalk.bold('  Style:')} ${chalk.cyan(shadcnStyle)}` : '',
+        uiLibrary === 'shadcn' && shadcnBaseColor ? `  ${chalk.bold('  Base Color:')} ${chalk.cyan(shadcnBaseColor)}` : '',
+        uiLibrary === 'shadcn' && shadcnRadius ? `  ${chalk.bold('  Radius:')} ${chalk.cyan(shadcnRadius)}` : '',
+      ].filter(Boolean).join('\n') : '',
+      '',
+      docker || cicd ? [
+        `${chalk.bold.yellow('🚀 Deployment')}`,
+        docker ? `  ${chalk.bold('Docker:')} ${chalk.green('✓ Enabled')}` : '',
+        cicd ? `  ${chalk.bold('CI/CD:')} ${chalk.green('✓ Enabled')}` : '',
+      ].filter(Boolean).join('\n') : '',
+      '',
+    ].filter(Boolean).join('\n');
 
-    console.log('\n' + boxen(
-      summaryLines.join('\n'),
-      {
-        padding: 1,
-        title: '📋 Configuration',
-        titleAlignment: 'left',
-        borderColor: 'cyan',
-        borderStyle: 'round',
-      }
-    ));
+    console.log('\n' + boxen(configSummary, {
+      padding: { top: 1, bottom: 1, left: 2, right: 2 },
+      title: '📋 Configuration Summary',
+      titleAlignment: 'left',
+      borderColor: 'cyan',
+      borderStyle: 'round',
+      dimBorder: false,
+    }));
 
     const confirm = await p.confirm({
-      message: 'Proceed with this configuration?',
+      message: 'Confirm project configuration',
       initialValue: true,
     });
 
@@ -681,8 +825,10 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   // ====================
   // CREATE PROJECT
   // ====================
+  console.log(''); // Add spacing before creation starts
+  
   const s = p.spinner();
-  s.start('🔨 Creating project structure...');
+  s.start(`${chalk.cyan('🔨')} Creating project structure...`);
 
   try {
     const config: ProjectConfig = {
@@ -705,6 +851,11 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       shadcnStyle,
       shadcnBaseColor,
       shadcnRadius,
+
+      // Supabase specific options
+      supabasePreset,
+      supabaseFeatures,
+      supabaseWithDrizzle,
     };
 
     await createProject(config);
@@ -712,7 +863,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     const projectPath = join(process.cwd(), config.path);
     const context = createTemplateContext(config);
 
-    s.message('📝 Generating files...');
+    s.message(`${chalk.cyan('📝')} Generating project files...`);
 
     switch (preset) {
       case 'minimal':
@@ -731,26 +882,34 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
 
     // Additional setup based on options
     if (database && database !== 'none') {
-      s.message(`🗄️  Setting up ${database}...`);
+      const dbName = database === 'postgres-drizzle' ? 'PostgreSQL + Drizzle ORM' :
+                     database === 'supabase' ? 'Supabase (Client Only)' :
+                     database === 'supabase-drizzle' ? 'Supabase + Drizzle ORM' :
+                     database === 'sqlite-drizzle' ? 'SQLite + Drizzle ORM' : database;
+      s.message(`${chalk.cyan('🗄️')}  Configuring ${dbName}...`);
       // Database setup will be handled in template builders
     }
 
+    if (uiLibrary === 'shadcn') {
+      s.message(`${chalk.cyan('🎨')}  Setting up shadcn/ui components...`);
+    }
+
     if (codeQuality === 'ultracite') {
-      s.message('🤖 Configuring Ultracite for AI editors...');
+      s.message(`${chalk.cyan('🤖')}  Configuring Ultracite for AI editors...`);
       // Ultracite setup will be handled in template builders
     }
 
     if (docker) {
-      s.message('🐳 Adding Docker configuration...');
+      s.message(`${chalk.cyan('🐳')}  Adding Docker configuration...`);
       // Docker setup will be handled in template builders
     }
 
     if (cicd) {
-      s.message('⚙️  Adding GitHub Actions...');
+      s.message(`${chalk.cyan('⚙️')}  Adding GitHub Actions CI/CD workflow...`);
       // CI/CD setup will be handled in template builders
     }
 
-    s.stop('✅ Project created!');
+    s.stop(`${chalk.green('✅')} Project structure created successfully!`);
 
     // Calculate additional dependencies based on configuration
     // NOTE: For 'full' preset (monorepo), dependencies are handled by workspace catalog
@@ -794,7 +953,8 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
 
     // Install default shadcn/ui components if shadcn/ui is configured
     if (shouldInstall && uiLibrary === 'shadcn' && (preset === 'web' || preset === 'full')) {
-      s.message('🧩 Installing default shadcn/ui components...');
+      const componentSpinner = p.spinner();
+      componentSpinner.start(`${chalk.cyan('🧩')} Installing default shadcn/ui components (button, card)...`);
       try {
         if (preset === 'full') {
           // For monorepos, install components in packages/ui
@@ -807,11 +967,11 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
             silent: true,
           });
         }
-        s.message('✅ Default components (button, card) installed');
+        componentSpinner.stop(`${chalk.green('✅')} Default components installed`);
       } catch (error) {
         // Non-critical - user can install manually
-        s.message('⚠️  Could not install default components automatically');
-        s.message('   Install them manually: bunx shadcn@latest add button card');
+        componentSpinner.stop(`${chalk.yellow('⚠️')}  Could not install automatically`);
+        p.note('Install manually: bunx shadcn@latest add button card', 'Component Installation');
       }
     }
 
@@ -820,22 +980,94 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       return 'bun run dev';
     };
 
-    const nextSteps = [
-      `${chalk.cyan('cd')} ${projectName}`,
-      shouldInstall ? '' : `${chalk.cyan('bun install')}`,
-      `${chalk.cyan(getDevCommand())} ${chalk.dim('# Start development')}`,
+    const getPresetEmoji = () => {
+      switch (preset) {
+        case 'minimal': return '⚡';
+        case 'web': return '🌐';
+        case 'api': return '🚀';
+        case 'full': return '📦';
+        default: return '✨';
+      }
+    };
+
+    // Build comprehensive next steps with tips
+    const nextStepsContent = [
+      `${chalk.bold.cyan('📁 Navigate to your project')}`,
+      `${chalk.cyan('cd')} ${chalk.bold(projectName)}`,
+      '',
+      shouldInstall ? '' : [
+        `${chalk.bold.cyan('📦 Install dependencies')}`,
+        `${chalk.cyan('bun install')}`,
+        '',
+      ].join('\n'),
+      `${chalk.bold.cyan('🚀 Start development')}`,
+      `${chalk.cyan(getDevCommand())} ${chalk.dim('# Start development server')}`,
+      '',
+      `${chalk.dim('─'.repeat(40))}`,
+      `${chalk.bold.yellow('💡 Quick Tips')}`,
+      '',
+      database && database !== 'none' ? `  ${chalk.dim('•')} Configure your database connection in ${chalk.cyan('.env')}` : '',
+      uiLibrary === 'shadcn' ? `  ${chalk.dim('•')} Add more components: ${chalk.cyan('bunkit add component --all')}` : '',
+      preset === 'full' ? `  ${chalk.dim('•')} Add workspaces: ${chalk.cyan('bunkit add workspace')}` : '',
+      preset === 'full' ? `  ${chalk.dim('•')} Add packages: ${chalk.cyan('bunkit add package')}` : '',
+      `  ${chalk.dim('•')} Read the ${chalk.cyan('README.md')} for project-specific documentation`,
+      database === 'supabase' || database === 'supabase-drizzle' ? `  ${chalk.dim('•')} Check ${chalk.cyan('SHADCN.md')} for shadcn/ui usage guide` : '',
     ].filter(Boolean).join('\n');
 
-    console.log('\n' + boxen(nextSteps, {
-      padding: 1,
-      title: '🚀 Next steps',
+    console.log('\n' + boxen(nextStepsContent, {
+      padding: { top: 1, bottom: 1, left: 2, right: 2 },
+      title: `${getPresetEmoji()} Next Steps`,
       titleAlignment: 'left',
       borderColor: 'green',
       borderStyle: 'round',
+      dimBorder: false,
+    }));
+
+    // Show project summary
+    const projectSummary = [
+      `${chalk.bold.green('✨ Project created successfully!')}`,
+      '',
+      `${chalk.dim('Project location:')} ${chalk.cyan(join(process.cwd(), projectName))}`,
+      `${chalk.dim('Preset:')} ${chalk.cyan(preset)}`,
+      database && database !== 'none' ? `${chalk.dim('Database:')} ${chalk.cyan(database)}` : '',
+      uiLibrary ? `${chalk.dim('UI Library:')} ${chalk.cyan(uiLibrary)}` : '',
+      '',
+      `${chalk.dim('Happy coding! 🎉')}`,
+    ].filter(Boolean).join('\n');
+
+    console.log('\n' + boxen(projectSummary, {
+      padding: { top: 1, bottom: 1, left: 2, right: 2 },
+      borderColor: 'green',
+      borderStyle: 'round',
+      dimBorder: true,
     }));
   } catch (error) {
-    s.stop('❌ Failed to create project');
-    p.cancel(`${pc.red('Error:')} ${(error as Error).message}`);
+    s.stop(`${chalk.red('❌')} Failed to create project`);
+    
+    const errorMessage = (error as Error).message;
+    const errorBox = [
+      `${chalk.bold.red('Error occurred during project creation')}`,
+      '',
+      chalk.red(errorMessage),
+      '',
+      `${chalk.dim('─'.repeat(40))}`,
+      `${chalk.bold.yellow('💡 Troubleshooting Tips')}`,
+      '',
+      `  ${chalk.dim('•')} Check if the directory already exists`,
+      `  ${chalk.dim('•')} Ensure you have write permissions`,
+      `  ${chalk.dim('•')} Verify your internet connection (for dependency installation)`,
+      `  ${chalk.dim('•')} Try running with ${chalk.cyan('--no-install')} to skip dependency installation`,
+      '',
+      `${chalk.dim('Need help?')} ${chalk.cyan('https://github.com/Arakiss/bunkit/issues')}`,
+    ].join('\n');
+
+    console.log('\n' + boxen(errorBox, {
+      padding: { top: 1, bottom: 1, left: 2, right: 2 },
+      borderColor: 'red',
+      borderStyle: 'round',
+    }));
+
+    p.cancel('Operation cancelled due to error');
     process.exit(1);
   }
 }

@@ -40,8 +40,10 @@ export async function createCommand(
     throw new Error(`Invalid project name: ${validation.error}`);
   }
 
+  console.log(''); // Add spacing
+  
   const s = p.spinner();
-  s.start(`Creating ${preset} project: ${name}`);
+  s.start(`${chalk.cyan('🔨')} Creating ${preset} project: ${chalk.bold(name)}`);
 
   try {
     // Create project with sensible defaults
@@ -61,13 +63,13 @@ export async function createCommand(
       pathAliases: true,
     };
 
-    s.message('🔨 Creating project structure...');
+    s.message(`${chalk.cyan('📁')} Creating project structure...`);
     await createProject(config);
 
     const projectPath = join(process.cwd(), config.path);
     const context = createTemplateContext(config);
 
-    s.message('📝 Generating files...');
+    s.message(`${chalk.cyan('📝')} Generating project files...`);
 
     // Build preset-specific files
     switch (preset) {
@@ -85,23 +87,62 @@ export async function createCommand(
         break;
     }
 
-    s.stop(`Project ${name} created!`);
+    s.message(`${chalk.cyan('✨')} Finalizing setup...`);
+    s.stop(`${chalk.green('✅')} Project ${chalk.bold(name)} created successfully!`);
 
-    // Show next steps
-    const nextSteps = [
-      `${chalk.cyan('cd')} ${name}`,
-      chalk.cyan(preset === 'web' ? 'bun dev' : 'bun run dev'),
-    ].join('\n');
+    const getPresetEmoji = () => {
+      switch (preset) {
+        case 'minimal': return '⚡';
+        case 'web': return '🌐';
+        case 'api': return '🚀';
+        case 'full': return '📦';
+        default: return '✨';
+      }
+    };
 
-    console.log('\n' + boxen(nextSteps, {
-      padding: 1,
-      title: '📋 Next steps',
+    // Show next steps with better formatting
+    const nextStepsContent = [
+      `${chalk.bold.cyan('📁 Navigate to your project')}`,
+      `${chalk.cyan('cd')} ${chalk.bold(name)}`,
+      '',
+      options.install === false ? [
+        `${chalk.bold.cyan('📦 Install dependencies')}`,
+        `${chalk.cyan('bun install')}`,
+        '',
+      ].join('\n') : '',
+      `${chalk.bold.cyan('🚀 Start development')}`,
+      `${chalk.cyan(preset === 'web' ? 'bun dev' : 'bun run dev')} ${chalk.dim('# Start development server')}`,
+      '',
+      `${chalk.dim('─'.repeat(40))}`,
+      `${chalk.bold.yellow('💡 Tip')}`,
+      `  Use ${chalk.cyan('bunkit init')} for full customization options`,
+    ].filter(Boolean).join('\n');
+
+    console.log('\n' + boxen(nextStepsContent, {
+      padding: { top: 1, bottom: 1, left: 2, right: 2 },
+      title: `${getPresetEmoji()} Next Steps`,
       titleAlignment: 'left',
-      borderColor: 'cyan',
+      borderColor: 'green',
       borderStyle: 'round',
+      dimBorder: false,
     }));
   } catch (error) {
-    s.stop('❌ Project creation failed');
+    s.stop(`${chalk.red('❌')} Project creation failed`);
+    
+    const errorBox = [
+      `${chalk.bold.red('Error occurred')}`,
+      '',
+      chalk.red((error as Error).message),
+      '',
+      `${chalk.dim('Need help?')} ${chalk.cyan('https://github.com/Arakiss/bunkit/issues')}`,
+    ].join('\n');
+
+    console.log('\n' + boxen(errorBox, {
+      padding: { top: 1, bottom: 1, left: 2, right: 2 },
+      borderColor: 'red',
+      borderStyle: 'round',
+    }));
+
     throw error;
   }
 }

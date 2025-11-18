@@ -65,11 +65,11 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      ${context.database && context.database !== 'none' && context.database !== 'supabase' ? '- DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@db:5432/${context.projectName}}' : ''}
-    ${context.database && context.database !== 'none' && context.database !== 'supabase' ? 'depends_on:\n      - db' : ''}
+      ${context.database && context.database !== 'none' && context.database !== 'supabase' && context.database !== 'supabase-drizzle' ? '- DATABASE_URL=${DATABASE_URL:-postgres://postgres:postgres@db:5432/${context.projectName}}' : ''}
+    ${context.database && context.database !== 'none' && context.database !== 'supabase' && context.database !== 'supabase-drizzle' ? 'depends_on:\n      - db' : ''}
     restart: unless-stopped
 
-  ${context.database && context.database !== 'none' && context.database !== 'supabase' ? `db:
+  ${context.database && context.database !== 'none' && context.database !== 'supabase' && context.database !== 'supabase-drizzle' ? `db:
     image: ${context.database === 'sqlite-drizzle' ? 'alpine:latest' : 'postgres:16-alpine'}
     ${context.database !== 'sqlite-drizzle' ? `environment:
       - POSTGRES_USER=postgres

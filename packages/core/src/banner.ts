@@ -44,22 +44,23 @@ export const createBanner = (version: string = '0.3.1') => {
   const quote = getRandomQuote();
 
   const content = [
-    chalk.yellow(logo.trim()),
+    chalk.yellowBright(logo.trim()),
     '',
-    chalk.cyan('🍞 Bake production-ready apps in seconds'),
-    chalk.dim('Modern • Fast • Opinionated'),
+    chalk.bold.cyan('🍞 Bake production-ready apps in seconds'),
+    chalk.dim('Modern • Fast • Opinionated • Type-Safe'),
     '',
-    chalk.cyan(quote),
+    chalk.italic.cyan(quote),
     '',
-    chalk.dim(`v${version}`),
+    chalk.dim(`Version ${version}`),
   ].join('\n');
 
   return boxen(content, {
-    padding: 1,
+    padding: { top: 1, bottom: 1, left: 2, right: 2 },
     margin: { top: 1, bottom: 1 },
-    borderColor: 'gray',
+    borderColor: 'cyan',
     borderStyle: 'round',
-    dimBorder: true,
+    title: 'bunkit',
+    titleAlignment: 'center',
   });
 };
 

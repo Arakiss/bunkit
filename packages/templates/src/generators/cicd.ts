@@ -99,7 +99,7 @@ jobs:
       ${context.preset === 'web' || context.preset === 'full' ? `- name: Build application
         run: bun run build
         env:
-          ${context.database === 'supabase' ? `NEXT_PUBLIC_SUPABASE_URL: \${{ secrets.SUPABASE_URL }}
+          ${(context.database === 'supabase' || context.database === 'supabase-drizzle') ? `NEXT_PUBLIC_SUPABASE_URL: \${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: \${{ secrets.SUPABASE_ANON_KEY }}
           ` : ''}NODE_ENV: production` : ''}
 

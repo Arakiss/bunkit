@@ -197,9 +197,14 @@ export function createTemplateContext(config: ProjectConfig): TemplateContext {
     envExample: config.envExample,
     pathAliases: config.pathAliases,
     
-    // shadcn/ui specific options
-    shadcnStyle: config.shadcnStyle,
-    shadcnBaseColor: config.shadcnBaseColor,
-    shadcnRadius: config.shadcnRadius,
-  };
-}
+        // shadcn/ui specific options
+        shadcnStyle: config.shadcnStyle,
+        shadcnBaseColor: config.shadcnBaseColor,
+        shadcnRadius: config.shadcnRadius,
+
+        // Supabase specific options
+        supabasePreset: config.supabasePreset,
+        supabaseFeatures: config.supabaseFeatures,
+        supabaseWithDrizzle: config.supabaseWithDrizzle,
+      };
+    }

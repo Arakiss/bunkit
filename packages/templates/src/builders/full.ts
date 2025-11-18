@@ -2,7 +2,8 @@ import { join } from 'pathe';
 import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 import {
   setupPostgresDrizzle,
-  setupSupabase,
+  setupSupabaseOnly,
+  setupSupabaseDrizzle,
   setupSQLiteDrizzle,
 } from '../generators/database';
 import { setupUltracite, setupBiome } from '../generators/ultracite';
@@ -729,14 +730,27 @@ Built with ❤️ using Bun monorepo features
       dependencies: context.database === 'supabase'
         ? {
             '@supabase/supabase-js': 'catalog:',
+          }
+        : context.database === 'supabase-drizzle'
+        ? {
+            '@supabase/supabase-js': 'catalog:',
             'drizzle-orm': 'catalog:',
             'postgres': 'catalog:',
           }
-        : {
+        : context.database === 'postgres-drizzle'
+        ? {
             'drizzle-orm': 'catalog:',
-          },
+            'postgres': 'catalog:',
+          }
+        : context.database === 'sqlite-drizzle'
+        ? {
+            'drizzle-orm': 'catalog:',
+          }
+        : {},
       devDependencies: {
-        'drizzle-kit': 'catalog:',
+        ...(context.database === 'postgres-drizzle' || context.database === 'supabase-drizzle' || context.database === 'sqlite-drizzle' ? {
+          'drizzle-kit': 'catalog:',
+        } : {}),
         '@types/bun': 'latest',
         'typescript': 'catalog:',
       },
@@ -751,7 +765,9 @@ Built with ❤️ using Bun monorepo features
     if (context.database === 'postgres-drizzle') {
       await setupPostgresDrizzle(dbPackagePath, context, true);
     } else if (context.database === 'supabase') {
-      await setupSupabase(dbPackagePath, context, true);
+      await setupSupabaseOnly(dbPackagePath, context, true);
+    } else if (context.database === 'supabase-drizzle') {
+      await setupSupabaseDrizzle(dbPackagePath, context, true);
     } else if (context.database === 'sqlite-drizzle') {
       await setupSQLiteDrizzle(dbPackagePath, context, true);
     }
@@ -790,7 +806,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      ${context.database === 'supabase' ? '- NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\n      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}' : ''}
+      ${(context.database === 'supabase' || context.database === 'supabase-drizzle') ? '- NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\n      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}' : ''}
     restart: unless-stopped
 
   platform:
@@ -801,7 +817,7 @@ services:
       - "3001:3000"
     environment:
       - NODE_ENV=production
-      ${context.database === 'supabase' ? '- NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\n      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}' : ''}
+      ${(context.database === 'supabase' || context.database === 'supabase-drizzle') ? '- NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}\n      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}' : ''}
     restart: unless-stopped
 
   api:

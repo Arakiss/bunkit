@@ -179,8 +179,8 @@ export async function addPackageCommand(options: PackageOptions = {}) {
 
     if (!packageName) {
       const nameInput = await p.text({
-        message: 'Package name (e.g., @myapp/email or utils):',
-        placeholder: '@myapp/email',
+        message: 'Package name',
+        placeholder: '@myapp/email or utils',
         validate: (value) => {
           if (!value) return 'Package name is required';
           // Extract name from scope if provided
@@ -228,12 +228,12 @@ export async function addPackageCommand(options: PackageOptions = {}) {
 
     if (!type) {
       const typeChoice = await p.select({
-        message: 'Choose package type:',
+        message: 'Select package type',
         options: [
-          { value: 'library', label: 'Library', hint: 'Shared code/components' },
-          { value: 'utils', label: 'Utils', hint: 'Utility functions' },
-          { value: 'types', label: 'Types', hint: 'TypeScript types' },
-          { value: 'config', label: 'Config', hint: 'Configuration' },
+          { value: 'library', label: 'Library', hint: 'Shared code and components - reusable across workspaces' },
+          { value: 'utils', label: 'Utilities', hint: 'Utility functions and helpers - common operations' },
+          { value: 'types', label: 'Type Definitions', hint: 'Shared TypeScript types and interfaces' },
+          { value: 'config', label: 'Configuration', hint: 'Shared configuration files and settings' },
         ],
       });
 

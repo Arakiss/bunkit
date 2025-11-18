@@ -291,16 +291,16 @@ my-saas/
 | Category | Technology | Version |
 |----------|------------|---------|
 | Runtime | Bun | 1.3+ |
-| Frontend | Next.js | 16.0+ |
-| React | React | 19.1+ |
-| Backend | Hono | 4.7+ |
-| Database | Drizzle ORM | 0.38+ |
-| Database | Supabase JS | 2.48+ |
-| Styling | Tailwind CSS | 4.1+ |
+| Frontend | Next.js | 16.0.3+ |
+| React | React | 19.2.0+ |
+| Backend | Hono | 4.10.6+ |
+| Database | Drizzle ORM | 0.44.7+ |
+| Database | Supabase JS | 2.81.1+ |
+| Styling | Tailwind CSS | 4.1.17+ |
 | UI Components | shadcn/ui | Latest |
-| Language | TypeScript | 5.9+ |
-| Code Quality | Biome / Ultracite | 2.3+ / 1.0+ |
-| Testing | Bun Test / Vitest | Built-in / 2.0+ |
+| Language | TypeScript | 5.9.3+ |
+| Code Quality | Biome / Ultracite | 2.3.6+ / 6.0.1+ |
+| Testing | Bun Test / Vitest | Built-in / 2.0.0+ |
 
 ## 💡 Philosophy
 
@@ -403,6 +403,27 @@ bunkit uses **GitHub Actions + Changesets** for automated releases:
 - Token permissions: "Read and write"
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for full setup guide.
+
+### Keeping Dependencies Updated
+
+bunkit maintains all dependencies at their latest stable versions. To keep your project dependencies up to date:
+
+**Check for outdated dependencies:**
+```bash
+bun run check-deps
+```
+
+**Update all dependencies to latest versions:**
+```bash
+bun run update-deps
+```
+
+This will:
+- Update all dependencies to their latest compatible versions
+- Update the lockfile (`bun.lock`)
+- Verify everything still builds correctly
+
+**Note:** Major version updates (e.g., Zod 3 → 4, Vitest 2 → 4) are kept at stable versions to avoid breaking changes. These are updated manually after thorough testing.
 
 ### Roadmap
 

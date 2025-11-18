@@ -13,7 +13,17 @@ export type FeatureType = 'auth' | 'database' | 'ui' | 'payments' | 'email' | 's
 /**
  * Database options
  */
-export type DatabaseType = 'postgres-drizzle' | 'supabase' | 'sqlite-drizzle' | 'none';
+export type DatabaseType = 'postgres-drizzle' | 'supabase' | 'supabase-drizzle' | 'sqlite-drizzle' | 'none';
+
+/**
+ * Supabase feature options
+ */
+export type SupabaseFeature = 'auth' | 'storage' | 'realtime' | 'edge-functions' | 'database';
+
+/**
+ * Supabase preset options
+ */
+export type SupabasePreset = 'full-stack' | 'auth-only' | 'database-only' | 'custom';
 
 /**
  * Code quality options
@@ -62,7 +72,12 @@ export const ProjectConfigSchema = z.object({
   install: z.boolean().default(true),
 
   // Database configuration
-  database: z.enum(['postgres-drizzle', 'supabase', 'sqlite-drizzle', 'none']).optional(),
+  database: z.enum(['postgres-drizzle', 'supabase', 'supabase-drizzle', 'sqlite-drizzle', 'none']).optional(),
+
+  // Supabase configuration (only if database is supabase or supabase-drizzle)
+  supabasePreset: z.enum(['full-stack', 'auth-only', 'database-only', 'custom']).optional(),
+  supabaseFeatures: z.array(z.enum(['auth', 'storage', 'realtime', 'edge-functions', 'database'])).optional(),
+  supabaseWithDrizzle: z.boolean().optional(), // For supabase preset, whether to include Drizzle
 
   // Code quality
   codeQuality: z.enum(['ultracite', 'biome']).default('ultracite'),
@@ -114,22 +129,27 @@ export interface TemplateContext {
   features: string[];
   supportsTypeScript: boolean;
 
-  // Configuration options
-  database?: DatabaseType;
-  codeQuality?: CodeQualityType;
-  tsStrictness?: TypeScriptStrictness;
-  uiLibrary?: UILibrary;
-  cssFramework?: CSSFramework;
-  testing?: TestingFramework;
-  docker?: boolean;
-  cicd?: boolean;
-  envExample?: boolean;
-  pathAliases?: boolean;
-  
-  // shadcn/ui specific options
-  shadcnStyle?: ShadcnStyle;
-  shadcnBaseColor?: ShadcnBaseColor;
-  shadcnRadius?: string;
+      // Configuration options
+      database?: DatabaseType;
+      codeQuality?: CodeQualityType;
+      tsStrictness?: TypeScriptStrictness;
+      uiLibrary?: UILibrary;
+      cssFramework?: CSSFramework;
+      testing?: TestingFramework;
+      docker?: boolean;
+      cicd?: boolean;
+      envExample?: boolean;
+      pathAliases?: boolean;
+
+      // shadcn/ui specific options
+      shadcnStyle?: ShadcnStyle;
+      shadcnBaseColor?: ShadcnBaseColor;
+      shadcnRadius?: string;
+
+      // Supabase specific options
+      supabasePreset?: SupabasePreset;
+      supabaseFeatures?: SupabaseFeature[];
+      supabaseWithDrizzle?: boolean;
 
   [key: string]: unknown;
 }

@@ -85,7 +85,7 @@ export async function addComponentCommand(
     ];
 
     const selected = await p.multiselect({
-      message: 'Select components to install:',
+      message: 'Select shadcn/ui components to install',
       options: popularComponents.map((comp) => ({
         value: comp,
         label: comp,
@@ -104,8 +104,8 @@ export async function addComponentCommand(
   } else {
     // Interactive: ask for component name(s)
     const componentInput = await p.text({
-      message: 'Component name(s) to install?',
-      placeholder: 'button, card, input',
+      message: 'Component name(s)',
+      placeholder: 'button,card,input (comma-separated)',
       validate: (value) => {
         if (!value.trim()) {
           return 'Please enter at least one component name';

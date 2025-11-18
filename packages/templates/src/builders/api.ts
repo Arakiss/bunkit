@@ -2,7 +2,8 @@ import { join } from 'pathe';
 import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 import {
   setupPostgresDrizzle,
-  setupSupabase,
+  setupSupabaseOnly,
+  setupSupabaseDrizzle,
   setupSQLiteDrizzle,
 } from '../generators/database';
 import { setupUltracite, setupBiome } from '../generators/ultracite';
@@ -203,7 +204,9 @@ ${context.testing !== 'none' ? '[test]\ncoverage = true\n' : ''}`;
     if (context.database === 'postgres-drizzle') {
       await setupPostgresDrizzle(projectPath, context, false);
     } else if (context.database === 'supabase') {
-      await setupSupabase(projectPath, context, false);
+      await setupSupabaseOnly(projectPath, context, false);
+    } else if (context.database === 'supabase-drizzle') {
+      await setupSupabaseDrizzle(projectPath, context, false);
     } else if (context.database === 'sqlite-drizzle') {
       await setupSQLiteDrizzle(projectPath, context, false);
     }

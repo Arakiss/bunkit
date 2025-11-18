@@ -125,8 +125,8 @@ export async function addWorkspaceCommand(options: WorkspaceOptions = {}) {
 
     if (!workspaceName) {
       const nameInput = await p.text({
-        message: 'Workspace name (e.g., apps/admin or packages/email):',
-        placeholder: 'apps/dashboard',
+        message: 'Workspace name',
+        placeholder: 'apps/admin or packages/email',
         validate: (value) => {
           if (!value) return 'Workspace name is required';
           // Validate format (must be path/name)
@@ -160,15 +160,15 @@ export async function addWorkspaceCommand(options: WorkspaceOptions = {}) {
 
     if (!preset) {
       const presetChoice = await p.select({
-        message: 'Choose workspace preset:',
+        message: 'Select workspace preset',
         options: [
           {
             value: 'nextjs',
-            label: 'Next.js',
-            hint: 'Next.js 16 + React 19 + Tailwind',
+            label: 'Next.js Application',
+            hint: 'Next.js 16 + React 19 + Tailwind CSS 4 - production-ready web app',
           },
-          { value: 'hono', label: 'Hono API', hint: 'Fast API with Bun.serve()' },
-          { value: 'library', label: 'Library', hint: 'Shared package' },
+          { value: 'hono', label: 'Hono API Server', hint: 'Hono 4 + Bun.serve() - ultra-fast REST API' },
+          { value: 'library', label: 'Shared Library', hint: 'Reusable package for shared code and components' },
         ],
       });
 

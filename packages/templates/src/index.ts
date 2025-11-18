@@ -13,7 +13,8 @@ export type { PresetConfig } from './types';
 // Generators
 export {
   setupPostgresDrizzle,
-  setupSupabase,
+  setupSupabaseOnly,
+  setupSupabaseDrizzle,
   setupSQLiteDrizzle,
   getDatabaseDependencies,
 } from './generators/database';
