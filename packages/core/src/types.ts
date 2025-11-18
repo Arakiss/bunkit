@@ -13,7 +13,27 @@ export type FeatureType = 'auth' | 'database' | 'ui' | 'payments' | 'email' | 's
 /**
  * Database options
  */
-export type DatabaseType = 'postgres-drizzle' | 'supabase' | 'supabase-drizzle' | 'sqlite-drizzle' | 'none';
+export type DatabaseType = 
+  | 'postgres-drizzle' 
+  | 'postgres-prisma'
+  | 'mysql-drizzle'
+  | 'mysql-prisma'
+  | 'supabase' 
+  | 'supabase-drizzle' 
+  | 'supabase-prisma'
+  | 'sqlite-drizzle' 
+  | 'sqlite-prisma'
+  | 'none';
+
+/**
+ * ORM options
+ */
+export type ORMType = 'drizzle' | 'prisma';
+
+/**
+ * Authentication provider options
+ */
+export type AuthProvider = 'supabase' | 'better-auth' | 'nextauth' | 'none';
 
 /**
  * Supabase feature options
@@ -72,7 +92,27 @@ export const ProjectConfigSchema = z.object({
   install: z.boolean().default(true),
 
   // Database configuration
-  database: z.enum(['postgres-drizzle', 'supabase', 'supabase-drizzle', 'sqlite-drizzle', 'none']).optional(),
+  database: z.enum([
+    'postgres-drizzle', 
+    'postgres-prisma',
+    'mysql-drizzle',
+    'mysql-prisma',
+    'supabase', 
+    'supabase-drizzle',
+    'supabase-prisma',
+    'sqlite-drizzle',
+    'sqlite-prisma',
+    'none'
+  ]).optional(),
+
+  // Authentication configuration
+  auth: z.enum(['supabase', 'better-auth', 'nextauth', 'none']).optional(),
+  
+  // Redis configuration (optional, for caching)
+  redis: z.boolean().default(false),
+  
+  // Use Bun.secrets for credentials
+  useBunSecrets: z.boolean().default(false),
 
   // Supabase configuration (only if database is supabase or supabase-drizzle)
   supabasePreset: z.enum(['full-stack', 'auth-only', 'database-only', 'custom']).optional(),
@@ -131,6 +171,9 @@ export interface TemplateContext {
 
       // Configuration options
       database?: DatabaseType;
+      auth?: AuthProvider;
+      redis?: boolean;
+      useBunSecrets?: boolean;
       codeQuality?: CodeQualityType;
       tsStrictness?: TypeScriptStrictness;
       uiLibrary?: UILibrary;

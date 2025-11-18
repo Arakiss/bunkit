@@ -514,12 +514,17 @@ This will:
 - ✅ Dependency management scripts (`update-deps`, `check-deps`)
 - ✅ Enhanced CLI developer experience with improved visuals and messaging
 
-**v0.9.0 - Monorepo Tools & Database**
-- `bunkit catalog add` - Manage catalog dependencies
-- `bunkit catalog sync` - Sync versions across workspaces
-- `bunkit generate migration` - Database migration generator
-- `bunkit add middleware` - API middleware patterns
-- Tests and test coverage
+**v0.9.0 - Bun 1.3 Integration, Database Expansion & Auth Systems** 🚀
+- ✅ **Prisma ORM support** - Add Prisma as alternative to Drizzle (PostgreSQL, MySQL, SQLite)
+- ✅ **MySQL & Redis support** - Native Bun 1.3 clients (MySQL + Drizzle/Prisma, Redis for caching)
+- ✅ **Authentication systems** - better-auth and NextAuth integration
+- ✅ **Enhanced Hono defaults** - More middleware, utilities, and patterns for faster iteration
+- ✅ **Bun.secrets integration** - Secure credential management using Bun.secrets API
+- ✅ `bunkit catalog add` - Manage catalog dependencies
+- ✅ `bunkit catalog sync` - Sync versions across workspaces
+- ✅ `bunkit generate migration` - Database migration generator (Drizzle & Prisma)
+- ✅ `bunkit add middleware` - API middleware patterns
+- ✅ Improved Bun.serve() configuration with full-stack dev server features
 
 **v1.0.0 - Type Safety & Advanced Features**
 - `bunkit add trpc` - tRPC setup for type-safe APIs
