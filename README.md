@@ -20,7 +20,7 @@
 - 📦 **Modern Stack** - Next.js 16, React 19, Hono, Tailwind CSS 4
 - 🎭 **shadcn/ui Integration** - Complete UI component system with themes, customization, and auto-installation
 - ⚡ **Bun-Native** - Leverages Bun 1.3+ features (catalogs, isolated installs, HMR)
-- 🗄️ **Database Patterns** - PostgreSQL/Drizzle, Supabase, SQLite setup (structure, not models)
+- 🗄️ **Database Patterns** - PostgreSQL/Drizzle, Supabase (with presets and feature selection), SQLite setup (structure, not models)
 - 🤖 **AI-Optimized** - Ultracite integration (Cursor, Windsurf, Claude Code, Zed)
 - 🐳 **Docker Ready** - Multi-stage Dockerfiles with Bun official images
 - 🔄 **CI/CD Built-in** - GitHub Actions workflows with lint/test/build/docker
@@ -157,11 +157,22 @@ Interactive project creation with beautiful prompts.
 bunkit init
 ```
 
-You'll be asked:
+You'll be guided through:
 1. Project name
 2. Preset type (minimal/web/api/full)
-3. Install dependencies? (default: yes)
-4. Initialize git? (default: yes)
+3. Database configuration (PostgreSQL/Drizzle, Supabase with presets, SQLite, none)
+4. Supabase configuration (if selected):
+   - Preset: full-stack, auth-only, database-only, or custom
+   - Features: auth, storage, realtime, edge-functions, database
+5. Code quality tool (Ultracite, Biome)
+6. TypeScript strictness level
+7. CSS framework (Tailwind, Vanilla, CSS Modules)
+8. UI library (shadcn/ui with full customization)
+9. Testing framework (Bun Test, Vitest, none)
+10. Docker configuration
+11. CI/CD setup
+12. Install dependencies? (default: yes)
+13. Initialize git? (default: yes)
 
 ### `bunkit create <preset> <name>`
 
@@ -174,30 +185,61 @@ bunkit create full my-saas --no-install
 ```
 
 **Options:**
+- `--name <name>` - Project name
+- `--preset <preset>` - Preset type (minimal, web, api, full)
+- `--database <database>` - Database option (postgres-drizzle, supabase, supabase-drizzle, sqlite-drizzle, none)
+- `--supabase-preset <preset>` - Supabase preset (full-stack, auth-only, database-only, custom)
+- `--supabase-features <features>` - Comma-separated Supabase features (auth,storage,realtime,edge-functions,database)
+- `--code-quality <tool>` - Code quality tool (ultracite, biome)
+- `--ts-strictness <level>` - TypeScript strictness (strict, moderate, loose)
+- `--ui-library <library>` - UI library (shadcn, none)
+- `--css-framework <framework>` - CSS framework (tailwind, vanilla, css-modules)
+- `--shadcn-style <style>` - shadcn/ui style (new-york, default)
+- `--shadcn-base-color <color>` - shadcn/ui base color (neutral, gray, zinc, stone, slate)
+- `--shadcn-radius <radius>` - shadcn/ui border radius (e.g., 0.5rem, 8px)
+- `--testing <framework>` - Testing framework (bun-test, vitest, none)
+- `--docker` - Include Docker configuration
+- `--cicd` - Include GitHub Actions CI/CD
 - `--no-git` - Skip git initialization
 - `--no-install` - Skip dependency installation
+- `--non-interactive` - Run without prompts (requires all options)
 
-### `bunkit add <feature>`
+### `bunkit add <feature>` (or `bunkit a`)
 
-Extend your monorepo with new workspaces and shared packages.
+Extend your monorepo with new workspaces, shared packages, or shadcn/ui components.
 
-**Available now:**
 ```bash
-# Add a new workspace
+# Use the alias
+bunkit a workspace
+bunkit a package
+bunkit a component
+```
+
+**Available features:**
+
+**1. Workspace** - Add a new workspace to monorepo
+```bash
 bunkit add workspace              # Interactive mode
 bunkit add workspace --name apps/admin --preset nextjs
 bunkit add workspace --name apps/docs --preset nextjs
 bunkit add workspace --name apps/api --preset hono
+```
 
-# Add a shared package
+**2. Package** - Add a shared package to monorepo
+```bash
 bunkit add package                # Interactive mode
 bunkit add package --name @myapp/email --type library
 bunkit add package --name utils --type utils
 bunkit add package --name types --type types
+```
 
-# Add shadcn/ui components (when shadcn/ui is configured)
+**3. Component** - Add shadcn/ui components (requires shadcn/ui setup)
+```bash
+# Add specific components
 bunkit add component --components button,card,input
-bunkit add component --all  # Browse all available components
+
+# Browse all available components interactively
+bunkit add component --all
 ```
 
 **Examples:**
@@ -334,7 +376,19 @@ bunkit uses [Changesets](https://github.com/changesets/changesets) for semantic 
 
 ### Version History
 
-- **v0.5.1** (Current) - Bun dependency catalog implementation
+- **v0.7.x** (Current) - Major release with Supabase integration and CLI improvements
+  - Complete Supabase integration with presets and granular feature selection
+  - New database options: `supabase` (client-only) and `supabase-drizzle` (with Drizzle ORM)
+  - Supabase presets: full-stack, auth-only, database-only, and custom
+  - Configurable Supabase features: auth, storage, realtime, edge-functions, database
+  - All major dependencies updated to latest stable versions
+  - Dependency management scripts (`update-deps`, `check-deps`)
+  - Significantly improved CLI developer experience and visual polish
+  - Enhanced banner, progress messages, and configuration summaries
+  - Professional nomenclature improvements across all commands
+  - Command aliases (init|i, create|c, add|a)
+
+- **v0.5.1** - Bun dependency catalog implementation
   - Centralized dependency management with catalog: references
   - Updated all dependencies to latest versions
   - TypeScript 5.9.3 across all presets
@@ -433,6 +487,7 @@ This will:
 - ✅ Beautiful interactive experience
 - ✅ Automated CI/CD with GitHub Actions
 - ✅ Semantic versioning with Changesets
+- ✅ **Complete Supabase integration** - Full-stack, auth-only, database-only, and custom presets with granular feature selection
 - ✅ Database setup (PostgreSQL, Supabase, SQLite) - structure only
 - ✅ AI-optimized code quality (Ultracite)
 - ✅ Docker support (multi-stage builds)

@@ -65,7 +65,15 @@ bunkit init
 You'll be guided through:
 - Project name selection
 - Preset choice (minimal, web, api, full)
-- Database configuration (PostgreSQL, Supabase, SQLite, none)
+- Database configuration:
+  - PostgreSQL + Drizzle ORM
+  - Supabase (Client Only) - with presets and feature selection
+  - Supabase + Drizzle ORM - with presets and feature selection
+  - SQLite + Drizzle ORM
+  - None
+- Supabase configuration (if Supabase selected):
+  - Preset: full-stack, auth-only, database-only, or custom
+  - Features: auth, storage, realtime, edge-functions, database
 - Code quality tools (Ultracite, Biome)
 - TypeScript strictness level
 - CSS framework (Tailwind, Vanilla, CSS Modules)
@@ -111,6 +119,19 @@ bunkit init --name my-app --preset web --no-git --no-install --non-interactive
 **Available CLI Flags:**
 - `--name <name>` - Project name
 - `--preset <preset>` - Preset type (minimal, web, api, full)
+- `--database <database>` - Database option (postgres-drizzle, supabase, supabase-drizzle, sqlite-drizzle, none)
+- `--supabase-preset <preset>` - Supabase preset (full-stack, auth-only, database-only, custom)
+- `--supabase-features <features>` - Comma-separated Supabase features (auth,storage,realtime,edge-functions,database)
+- `--code-quality <tool>` - Code quality tool (ultracite, biome)
+- `--ts-strictness <level>` - TypeScript strictness (strict, moderate, loose)
+- `--ui-library <library>` - UI library (shadcn, none)
+- `--css-framework <framework>` - CSS framework (tailwind, vanilla, css-modules)
+- `--shadcn-style <style>` - shadcn/ui style (new-york, default)
+- `--shadcn-base-color <color>` - shadcn/ui base color (neutral, gray, zinc, stone, slate)
+- `--shadcn-radius <radius>` - shadcn/ui border radius (e.g., 0.5rem, 8px)
+- `--testing <framework>` - Testing framework (bun-test, vitest, none)
+- `--docker` - Include Docker configuration
+- `--cicd` - Include GitHub Actions CI/CD
 - `--no-git` - Skip git initialization
 - `--no-install` - Skip dependency installation
 - `--non-interactive` - Run without prompts (requires all options)
