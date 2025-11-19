@@ -1,4 +1,4 @@
-import { join } from 'pathe';
+import { join, basename, resolve } from 'pathe';
 import fs from 'fs-extra';
 import type { ProjectConfig, TemplateContext } from './types';
 import {
@@ -15,13 +15,35 @@ import { logger } from './logger';
  */
 export async function createProject(config: ProjectConfig): Promise<void> {
   const projectPath = join(process.cwd(), config.path);
+  const currentDirName = basename(resolve(process.cwd()));
 
-  // Validate directory
-  if (!(await isDirectoryEmpty(projectPath))) {
-    const exists = await fs.pathExists(projectPath);
-    if (exists) {
-      throw new Error(`Directory "${config.path}" already exists and is not empty`);
+  // Detect if user is trying to create a project with the same name as current directory
+  // This prevents creating mycelio/mycelio when already in mycelio/
+  // This check MUST happen before checking if projectPath exists
+  if (currentDirName === config.name && config.path === config.name) {
+    const isEmpty = await isDirectoryEmpty(process.cwd());
+    if (isEmpty) {
+      // If current directory is empty, use it directly instead of creating a subdirectory
+      // This provides a better UX when user is already in the target directory
+      throw new Error(
+        `You are already in a directory named "${config.name}". ` +
+        `Since this directory is empty, you can initialize the project here directly. ` +
+        `Please run "bunkit init" instead, or navigate to the parent directory first.`
+      );
+    } else {
+      // If current directory is not empty, warn about creating nested directory
+      throw new Error(
+        `You are already in a directory named "${config.name}" which is not empty. ` +
+        `Creating the project here would result in "${config.name}/${config.name}". ` +
+        `Please navigate to the parent directory first, or use a different project name.`
+      );
     }
+  }
+
+  // Validate directory - check if target directory already exists
+  const targetExists = await fs.pathExists(projectPath);
+  if (targetExists && !(await isDirectoryEmpty(projectPath))) {
+    throw new Error(`Directory "${config.path}" already exists and is not empty`);
   }
 
   // Create project directory
