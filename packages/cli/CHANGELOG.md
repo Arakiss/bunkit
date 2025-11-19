@@ -1,5 +1,12 @@
 # @bunkit/cli
 
+## 1.1.4
+
+### Patch Changes
+
+- 34e6c27: Fix critical issue where packages/ui package was missing tailwindcss and @tailwindcss/postcss dependencies. The UI package imports tailwindcss in its CSS file and uses @tailwindcss/postcss in postcss.config.mjs, but these dependencies were not declared, causing resolution errors when PostCSS processes the CSS. This fix ensures all monorepo presets (enterprise, full) that use shadcn/ui have the correct dependencies declared.
+- 1662afc: Fix Next.js path alias resolution for packages/ui workspace package. Added baseUrl to packages/ui/tsconfig.json which is REQUIRED for Next.js to resolve @ path aliases (like '@/lib/utils') when transpiling workspace packages. Without baseUrl, Next.js cannot resolve imports in shadcn/ui components, causing "Module not found: Can't resolve '@/lib/utils'" errors.
+
 ## 1.1.3
 
 ### Patch Changes
