@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { join } from 'pathe';
 import { mkdtemp, rm, mkdir } from 'fs/promises';
 import { tmpdir } from 'os';
-import { createProject, createTemplateContext, type ProjectConfig } from './project';
+import { createProject, createTemplateContext } from './project';
+import type { ProjectConfig } from './types';
 
 describe('createProject', () => {
   let testDir: string;
