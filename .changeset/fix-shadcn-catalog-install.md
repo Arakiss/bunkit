@@ -1,5 +1,5 @@
 ---
-"@bunkit/cli": patch
+"bunkit-cli": patch
 "@bunkit/templates": patch
 ---
 
