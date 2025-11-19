@@ -1,5 +1,5 @@
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, directoryExists, type TemplateContext } from '@bunkit/core';
+import { writeFile, ensureDirectory, directoryExists, fileExists, type TemplateContext } from '@bunkit/core';
 import { themes, generateThemeCSS } from './shadcn-themes';
 import type { ShadcnBaseColor } from '@bunkit/core';
 import {
@@ -180,7 +180,8 @@ export async function setupShadcnMonorepo(
       './components/*': './src/components/ui/*/index.ts',
       './lib/utils': './src/lib/utils.ts',
       './hooks': './src/hooks/index.ts',
-      './styles': './src/styles/globals.css',
+      './globals.css': './src/styles/globals.css',
+      './postcss.config': './postcss.config.mjs',
       // Direct component imports (e.g., @workspace/ui/components/ui/button)
       './components/ui/*': './src/components/ui/*/index.ts',
     },
@@ -284,6 +285,18 @@ export * from './hooks';
 
   await writeFile(join(projectPath, 'packages/ui/src/styles/globals.css'), uiGlobalsCss);
 
+  // packages/ui/postcss.config.mjs - Tailwind CSS v4 PostCSS config
+  const uiPostcssConfig = `/** @type {import('postcss-load-config').Config} */
+const config = {
+  plugins: {
+    '@tailwindcss/postcss': {},
+  },
+};
+
+export default config;
+`;
+  await writeFile(join(projectPath, 'packages/ui/postcss.config.mjs'), uiPostcssConfig);
+
   // packages/ui/tsconfig.json
   // Configure path aliases so @ points to src/ directory
   const uiTsconfig = {
@@ -359,11 +372,104 @@ export * from './hooks';
       JSON.stringify(appComponentsJson, null, 2)
     );
 
-    // Update globals.css to import from packages/ui
-    const globalsCssPath = join(appPath, 'src/app/globals.css');
-    const globalsCss = `@import "../../../packages/ui/src/styles/globals.css";
+    // Update layout.tsx to import UI package CSS directly (like mycelio does)
+    // No local globals.css needed - import directly from workspace package
+    const layoutPath = join(appPath, 'src/app/layout.tsx');
+    
+    if (await fileExists(layoutPath)) {
+      let layoutContent = await Bun.file(layoutPath).text();
+      
+      // Remove any local globals.css import and add UI package import
+      // Pattern: import './globals.css' or import "./globals.css"
+      layoutContent = layoutContent.replace(/import\s+['"]\.\/globals\.css['"];?\s*\n?/g, '');
+      
+      // Add UI package CSS import if not already present
+      if (!layoutContent.includes(`${uiPackageName}/globals.css`) && !layoutContent.includes('@workspace/ui/globals.css')) {
+        // Find the first import statement and add after it
+        const importMatch = layoutContent.match(/^(import\s+.*?from\s+['"].*?['"];?\s*\n)/m);
+        if (importMatch) {
+          layoutContent = layoutContent.replace(
+            /^(import\s+.*?from\s+['"].*?['"];?\s*\n)/m,
+            `$1import '${uiPackageName}/globals.css'\n`
+          );
+        } else {
+          // Add at the very beginning
+          layoutContent = `import '${uiPackageName}/globals.css'\n${layoutContent}`;
+        }
+        await writeFile(layoutPath, layoutContent);
+      }
+    } else {
+      // Create layout.tsx if it doesn't exist
+      const layoutContent = `import type { Metadata } from 'next'
+import '${uiPackageName}/globals.css'
+
+export const metadata: Metadata = {
+  title: '${appName}',
+  description: 'Built with bunkit',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  )
+}
 `;
-    await writeFile(globalsCssPath, globalsCss);
+      await writeFile(layoutPath, layoutContent);
+    }
+    
+    // Create postcss.config.mjs that re-exports from UI package (like mycelio does)
+    const postcssConfigPath = join(appPath, 'postcss.config.mjs');
+    const postcssConfig = `export { default } from '${uiPackageName}/postcss.config';
+`;
+    await writeFile(postcssConfigPath, postcssConfig);
+    
+    // Update next.config.ts to include transpilePackages (required for workspace packages)
+    const nextConfigPath = join(appPath, 'next.config.ts');
+    let nextConfigContent = '';
+    if (await fileExists(nextConfigPath)) {
+      nextConfigContent = await Bun.file(nextConfigPath).text();
+    } else {
+      nextConfigContent = `import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+`;
+    }
+    
+    // Add transpilePackages if not present
+    if (!nextConfigContent.includes('transpilePackages')) {
+      // Check if it's a TypeScript or JavaScript config
+      if (nextConfigPath.endsWith('.ts')) {
+        // TypeScript config
+        nextConfigContent = nextConfigContent.replace(
+          /(const nextConfig: NextConfig = \{)/,
+          `$1\n  transpilePackages: ['${uiPackageName}'],`
+        );
+      } else {
+        // JavaScript config
+        nextConfigContent = nextConfigContent.replace(
+          /(const nextConfig = \{)/,
+          `$1\n  transpilePackages: ['${uiPackageName}'],`
+        );
+      }
+      await writeFile(nextConfigPath, nextConfigContent);
+    }
+    
+    // Remove local globals.css if it exists (we import from UI package instead)
+    const localGlobalsCssPath = join(appPath, 'src/app/globals.css');
+    if (await fileExists(localGlobalsCssPath)) {
+      const { unlink } = await import('fs/promises');
+      await unlink(localGlobalsCssPath);
+    }
 
     // Update package.json to include ui package dependency
     const packageJsonPath = join(appPath, 'package.json');

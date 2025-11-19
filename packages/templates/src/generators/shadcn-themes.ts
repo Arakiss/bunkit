@@ -482,7 +482,9 @@ export function generateThemeCSS(
   // but referenced directly in @theme inline
 
   return `@import "tailwindcss";
-@import "tw-animate-css";
+@source "../../../apps/**/*.{ts,tsx}";
+@source "../../../components/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
 
 :root {
   --radius: ${radius};
