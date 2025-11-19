@@ -217,12 +217,21 @@ export async function createCommand(
 
     s.message(`${chalk.cyan('✨')} Finalizing setup...`);
     
+    // Install dependencies first (critical for monorepos with catalog: references)
+    // This ensures Bun resolves all catalog: dependencies before shadcn CLI runs
+    if (config.install !== false) {
+      s.message(`${chalk.cyan('📦')} Installing dependencies...`);
+      try {
+        await installDependencies(projectPath);
+      } catch (error) {
+        s.message(`${chalk.yellow('⚠️')} Dependency installation had issues, but continuing...`);
+      }
+    }
+    
     // Install default shadcn/ui components for enterprise preset with shadcn/ui
-    // Wait a bit for dependencies to be fully installed before installing components
+    // Dependencies must be installed first so Bun resolves catalog: references
+    // shadcn CLI internally uses npm which doesn't understand catalog: protocol
     if (isEnterprise && config.uiLibrary === 'shadcn' && config.install !== false) {
-      // Small delay to ensure dependencies are installed
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       s.message(`${chalk.cyan('🧩')} Installing default shadcn/ui components...`);
       try {
         await installDefaultShadcnComponents(projectPath, {
@@ -232,7 +241,7 @@ export async function createCommand(
       } catch (error) {
         // Non-critical - components can be installed manually
         s.message(`${chalk.yellow('⚠️')} Could not install default components automatically`);
-        s.message(`${chalk.dim('   You can install them manually:')} ${chalk.cyan('cd packages/ui && bunx shadcn@latest add button card')}`);
+        s.message(`${chalk.dim('   You can install them manually:')} ${chalk.cyan('cd packages/ui && bun install && bunx shadcn@latest add button card')}`);
       }
     }
     
