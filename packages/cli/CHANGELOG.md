@@ -1,5 +1,12 @@
 # @bunkit/cli
 
+## 1.1.3
+
+### Patch Changes
+
+- 20f046d: Fix CSS import paths in Next.js apps for workspace packages. Now imports CSS directly from workspace UI package in layout.tsx (like mycelio pattern), removes local globals.css files, configures postcss.config.mjs to re-export from UI package, and adds transpilePackages to next.config.ts. This ensures Tailwind CSS v4 works correctly with Bun 1.3 workspaces and isolated installs.
+- 34e6c27: Fix critical issue where packages/ui package was missing tailwindcss and @tailwindcss/postcss dependencies. The UI package imports tailwindcss in its CSS file and uses @tailwindcss/postcss in postcss.config.mjs, but these dependencies were not declared, causing resolution errors when PostCSS processes the CSS. This fix ensures all monorepo presets (enterprise, full) that use shadcn/ui have the correct dependencies declared.
+
 ## 1.1.2
 
 ### Patch Changes
