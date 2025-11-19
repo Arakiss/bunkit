@@ -18,11 +18,16 @@ export async function isGitAvailable(): Promise<boolean> {
 export async function initGit(cwd: string): Promise<void> {
   await execa('git', ['init'], { cwd });
   await execa('git', ['add', '-A'], { cwd });
-  await execa(
-    'git',
-    ['commit', '-m', 'Initial commit from bunkit', '--no-verify'],
-    { cwd }
-  );
+  try {
+    await execa(
+      'git',
+      ['commit', '-m', 'Initial commit from bunkit', '--no-verify'],
+      { cwd }
+    );
+  } catch {
+    // If there are no files to commit, that's okay
+    // The repository is still initialized
+  }
 }
 
 /**

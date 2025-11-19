@@ -10,16 +10,22 @@ export interface CustomPreset {
   updatedAt: string;
 }
 
-const PRESETS_DIR = join(process.env.HOME || process.env.USERPROFILE || '.', '.bunkit');
-const PRESETS_FILE = join(PRESETS_DIR, 'presets.json');
+function getPresetsDir(): string {
+  return join(process.env.HOME || process.env.USERPROFILE || '.', '.bunkit');
+}
+
+function getPresetsFile(): string {
+  return join(getPresetsDir(), 'presets.json');
+}
 
 /**
  * Load all custom presets from disk
  */
 export async function loadCustomPresets(): Promise<Record<string, CustomPreset>> {
   try {
-    await ensureDirectory(PRESETS_DIR);
-    const content = await readFile(PRESETS_FILE);
+    const presetsDir = getPresetsDir();
+    await ensureDirectory(presetsDir);
+    const content = await readFile(getPresetsFile());
     return JSON.parse(content);
   } catch (error) {
     // File doesn't exist or is invalid - return empty object
@@ -31,7 +37,7 @@ export async function loadCustomPresets(): Promise<Record<string, CustomPreset>>
  * Save a custom preset
  */
 export async function saveCustomPreset(preset: CustomPreset): Promise<void> {
-  await ensureDirectory(PRESETS_DIR);
+  await ensureDirectory(getPresetsDir());
   const presets = await loadCustomPresets();
   
   const existing = presets[preset.name];
@@ -41,7 +47,7 @@ export async function saveCustomPreset(preset: CustomPreset): Promise<void> {
     updatedAt: new Date().toISOString(),
   };
   
-  await writeFile(PRESETS_FILE, JSON.stringify(presets, null, 2));
+  await writeFile(getPresetsFile(), JSON.stringify(presets, null, 2));
 }
 
 /**
@@ -54,7 +60,7 @@ export async function deleteCustomPreset(name: string): Promise<boolean> {
   }
   
   delete presets[name];
-  await writeFile(PRESETS_FILE, JSON.stringify(presets, null, 2));
+  await writeFile(getPresetsFile(), JSON.stringify(presets, null, 2));
   return true;
 }
 
