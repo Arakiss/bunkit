@@ -13,7 +13,7 @@ dir = "~/.bun/install/cache"
 
 [test]
 # Test configuration
-preload = []
+# preload = []  # Commented out - empty arrays not supported
 coverage = true
 coverageDir = "./coverage"
 
