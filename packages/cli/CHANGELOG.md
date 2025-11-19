@@ -1,5 +1,12 @@
 # @bunkit/cli
 
+## 1.1.5
+
+### Patch Changes
+
+- 85369bc: Fix shadcn CLI component installation paths in monorepo. shadcn CLI interprets aliases in components.json as literal file paths for installation locations. Using @ aliases (like '@/components') caused shadcn CLI to create literal @ directories (e.g., packages/ui/@/components/ui/). Changed to use relative paths (./src/components, ./src/components/ui) for installation paths while keeping @ aliases for import paths (utils, lib, hooks) which are resolved by tsconfig.json.
+- 1662afc: Fix Next.js path alias resolution for packages/ui workspace package. Added baseUrl to packages/ui/tsconfig.json which is REQUIRED for Next.js to resolve @ path aliases (like '@/lib/utils') when transpiling workspace packages. Without baseUrl, Next.js cannot resolve imports in shadcn/ui components, causing "Module not found: Can't resolve '@/lib/utils'" errors.
+
 ## 1.1.4
 
 ### Patch Changes
