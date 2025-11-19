@@ -191,6 +191,8 @@ export async function setupShadcnMonorepo(
       clsx: 'catalog:',
       'tailwind-merge': 'catalog:',
       'lucide-react': 'catalog:',
+      tailwindcss: 'catalog:',
+      '@tailwindcss/postcss': 'catalog:',
     },
     devDependencies: {
       '@types/react': 'catalog:',
