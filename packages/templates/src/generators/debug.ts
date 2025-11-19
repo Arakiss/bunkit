@@ -137,7 +137,6 @@ export async function setupVSCodeDebug(
     recommendations: [
       'oven.bun-vscode',
       'biomejs.biome',
-      'dbaeumer.vscode-eslint',
     ],
   };
 
