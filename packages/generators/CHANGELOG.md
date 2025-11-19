@@ -1,5 +1,13 @@
 # @bunkit/generators
 
+## 0.1.15
+
+### Patch Changes
+
+- Updated dependencies [4baae94]
+  - @bunkit/core@0.8.2
+  - @bunkit/templates@0.8.2
+
 ## 0.1.14
 
 ### Patch Changes
