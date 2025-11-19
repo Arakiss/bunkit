@@ -37,11 +37,15 @@
 
 ### UI & Styling
 - 🎭 **shadcn/ui Integration** - Complete UI component system with themes, customization, and auto-installation
-  - 5 base color themes (neutral, gray, zinc, stone, slate) with OKLCH color values
-  - Style options (new-york, default)
-  - Customizable border radius
-  - Auto-installed default components
-  - `bunkit add component` command for adding components
+  - **Monorepo Support** - Full integration in `packages/ui` workspace for enterprise and full-stack presets
+  - **5 base color themes** - Neutral, gray, zinc, stone, slate with OKLCH color values
+  - **Style options** - new-york (modern, rounded) or default (classic, sharper)
+  - **Customizable border radius** - Per-project customization via CLI
+  - **Auto-installed default components** - Button and card components installed automatically
+  - **Bun catalog: compatibility** - Properly handles Bun's catalog: protocol for dependency resolution
+  - **Component management** - `bunkit add component` command for adding components interactively
+  - **Tailwind CSS v4** - CSS-first configuration using `@theme inline` directive (no config file needed)
+  - **Workspace imports** - Components use `@workspace/ui` imports with proper exports configuration
 - 🎨 **CSS Frameworks** - Tailwind CSS 4, Vanilla CSS, CSS Modules
 
 ### Developer Experience
@@ -239,21 +243,22 @@ bun run dev
 Enterprise-grade monorepo with Next.js frontend, Hono backend, and shared packages.
 
 **What you get:**
-- Bun workspaces configured
-- Dependency catalogs (centralized versions)
-- Isolated installs (no phantom deps)
-- Apps:
+- **Bun workspaces** - Configured with dependency catalogs
+- **Dependency catalogs** - Centralized version management
+- **Isolated installs** - No phantom dependencies
+- **Apps:**
   - `apps/web/` - Next.js frontend (customer-facing)
   - `apps/platform/` - Next.js admin dashboard (port 3001)
   - `apps/api/` - Hono backend API
-- Packages:
+- **Packages:**
   - `packages/types/` - Shared TypeScript types
   - `packages/utils/` - Shared utilities
+  - `packages/ui/` - Shared UI components (shadcn/ui, optional)
 - **Shared tooling:**
   - `tooling/typescript/` - Shared TypeScript configurations
-- Biome for code quality
-- Proper TypeScript project references
-- Individual dev commands per app
+- **Code quality** - Biome for linting and formatting
+- **TypeScript** - Proper project references across workspaces
+- **Individual dev commands** - Run specific apps independently
 
 ```bash
 bunkit create nextjs-monorepo my-saas
@@ -320,26 +325,36 @@ Enterprise-grade monorepo with multiple Next.js applications and microservices -
 - **Shared packages:**
   - `packages/types/` - Shared TypeScript types
   - `packages/utils/` - Shared utilities
-  - `packages/ui/` - Shared UI components (shadcn/ui)
+  - `packages/ui/` - **Shared UI components (shadcn/ui)**
+    - Full shadcn/ui integration with Tailwind CSS v4
+    - Interactive theme customization during project creation
+    - Default components (button, card) auto-installed
+    - Workspace imports (`@workspace/ui`) configured
   - `packages/db/` - Shared database schema (if configured)
 - **Shared tooling:**
   - `tooling/typescript/` - Shared TypeScript configurations
-- Bun workspaces configured
-- Dependency catalogs (centralized versions)
-- Individual dev commands per app/service
+- **Bun workspaces** - Configured with dependency catalogs
+- **Dependency catalogs** - Centralized version management
+- **Individual dev commands** - Run specific apps/services independently
+- **Port management** - All scripts support `PORT` environment variable override
 - Ready for microservices architecture
 
 ```bash
 bunkit create enterprise-monorepo my-platform
+# Interactive theme customization:
+# - Component style (new-york/default)
+# - Base color (neutral/gray/zinc/stone/slate)
+# - Border radius (customizable)
+
 cd my-platform
 bun install
 bun dev  # Starts all apps and services
 
 # Or start individually:
-bun run dev:web         # Start marketing site
-bun run dev:app         # Start main product app
-bun run dev:platform    # Start admin dashboard
-bun run dev:identity    # Start identity service
+bun run dev:web         # Start marketing site (port 3000)
+bun run dev:app         # Start main product app (port 3002)
+bun run dev:platform    # Start admin dashboard (port 3001)
+bun run dev:identity    # Start identity service (port 3003)
 ```
 
 **Use cases:** Enterprise SaaS platforms, multi-tenant applications, complex architectures with multiple apps and services
@@ -793,7 +808,17 @@ bunkit uses [Changesets](https://github.com/changesets/changesets) for semantic 
 
 ### Recent Releases
 
-- **v1.0.0** (Current) - Enterprise-grade monorepo improvements, shared TypeScript tooling, enhanced scripts
+- **v1.1.1** (Current) - Fix shadcn/ui component installation with catalog: dependencies
+  - Fixed critical bug where shadcn CLI failed with npm "Unsupported URL Type catalog:" error
+  - Dependencies now install with Bun before shadcn CLI runs, ensuring catalog: references are resolved
+  - Updated catalog versions and added lucide-react to root catalog
+- **v1.1.0** - Major shadcn/ui monorepo improvements and enterprise preset enhancements
+  - Full monorepo support for shadcn/ui in `packages/ui` workspace
+  - Interactive theme customization for enterprise-monorepo preset
+  - Automatic component installation and Tailwind CSS v4 support
+- **v1.0.2** - Comprehensive test suite with 98%+ code coverage
+- **v1.0.1** - Fix nested directory creation bug
+- **v1.0.0** - Enterprise-grade monorepo improvements, shared TypeScript tooling, enhanced scripts
 - **v0.9.0** - Bun 1.3 integration, database expansion (Prisma, MySQL, Redis), auth systems, à la carte CLI
 - **v0.8.0** - Complete Supabase integration with presets and granular feature selection
 
