@@ -410,15 +410,16 @@ export * from './hooks';
 
   // Add shadcn/ui dependencies to catalog for centralized version management
   // These versions are referenced in packages/ui/package.json with catalog:
+  // IMPORTANT: Keep these versions in sync with root package.json catalog
   const shadcnDependencies = {
-    '@radix-ui/react-slot': '^1.1.0',
+    '@radix-ui/react-slot': '^1.2.3',
     'class-variance-authority': '^0.7.1',
     clsx: '^2.1.1',
-    'tailwind-merge': '^2.5.5',
-    'lucide-react': '^0.468.0',
-    '@types/react': '^18.3.18',
-    '@types/react-dom': '^18.3.5',
-    typescript: '^5.7.2',
+    'tailwind-merge': '^3.3.1',
+    'lucide-react': '^0.468.0', // Note: lucide-react is used by shadcn/ui components
+    '@types/react': '^19.2.2',
+    '@types/react-dom': '^19.2.2',
+    typescript: '^5.9.3',
   };
 
   // Merge catalog entries (don't overwrite existing)

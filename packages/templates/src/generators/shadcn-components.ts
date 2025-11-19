@@ -32,6 +32,24 @@ export async function installShadcnComponents(
     ? join(projectPath, 'packages/ui')
     : cwd;
 
+  // CRITICAL: Install dependencies with Bun first to resolve catalog: references
+  // shadcn CLI internally uses npm which doesn't understand Bun's catalog: protocol
+  // By installing with Bun first, all catalog: dependencies are resolved to actual versions
+  try {
+    logger.debug('Installing dependencies with Bun before running shadcn CLI...');
+    await execa('bun', ['install'], {
+      cwd: options.isMonorepo ? projectPath : targetCwd,
+      stdio: options.silent ? 'pipe' : 'inherit',
+      env: {
+        ...process.env,
+        BUN_INSTALL_LINKER: 'isolated',
+      },
+    });
+  } catch (installError) {
+    logger.warn(`Failed to install dependencies with Bun: ${(installError as Error).message}`);
+    // Continue anyway - shadcn might still work if dependencies are already installed
+  }
+
   try {
     // Use bunx to run shadcn CLI (works with Bun)
     // Bun 1.3 supports bunx natively and works perfectly with shadcn CLI
@@ -42,6 +60,8 @@ export async function installShadcnComponents(
         ...process.env,
         // Ensure Bun workspace resolution works correctly
         BUN_INSTALL_LINKER: 'isolated',
+        // Force npm to use Bun's node_modules resolution
+        npm_config_force: 'true',
       },
     });
 
@@ -51,6 +71,7 @@ export async function installShadcnComponents(
     }
   } catch (error) {
     // If bunx fails, try with npx as fallback
+    // But note: npx will fail if catalog: dependencies aren't resolved
     try {
       await execa('npx', ['shadcn@latest', 'add', ...components], {
         cwd: targetCwd,
@@ -62,7 +83,7 @@ export async function installShadcnComponents(
       }
     } catch (fallbackError) {
       logger.warn(
-        `Could not install shadcn components automatically. You can install them manually with: cd ${targetCwd} && bunx shadcn@latest add ${components.join(' ')}`
+        `Could not install shadcn components automatically. You can install them manually with: cd ${targetCwd} && bun install && bunx shadcn@latest add ${components.join(' ')}`
       );
       throw fallbackError; // Re-throw so caller knows it failed
     }
