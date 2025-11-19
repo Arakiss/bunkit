@@ -1,5 +1,12 @@
 # @bunkit/generators
 
+## 0.1.17
+
+### Patch Changes
+
+- Updated dependencies [4f0684e]
+  - @bunkit/templates@0.9.1
+
 ## 0.1.16
 
 ### Patch Changes
