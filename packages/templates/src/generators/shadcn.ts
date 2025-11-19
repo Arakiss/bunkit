@@ -301,6 +301,7 @@ export default config;
 
   // packages/ui/tsconfig.json
   // Configure path aliases so @ points to src/ directory
+  // CRITICAL: baseUrl must be set for Next.js to resolve @ aliases when transpiling
   const uiTsconfig = {
     compilerOptions: {
       target: 'ES2017',
@@ -316,6 +317,8 @@ export default config;
       isolatedModules: true,
       jsx: 'react-jsx',
       types: ['react', 'react-dom'],
+      // baseUrl is REQUIRED for Next.js to resolve @ aliases when transpiling workspace packages
+      baseUrl: '.',
       // Path aliases for shadcn CLI compatibility
       paths: {
         '@/*': ['./src/*'],
