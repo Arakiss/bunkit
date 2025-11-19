@@ -207,8 +207,11 @@ export async function setupShadcnMonorepo(
   );
 
   // packages/ui/components.json (for the UI package itself)
-  // Note: shadcn CLI uses these aliases to determine where to install components
-  // We use relative paths here, not workspace aliases, because shadcn needs actual file paths
+  // CRITICAL: shadcn CLI uses aliases for TWO purposes:
+  // 1. Installation paths (components, ui) - MUST be relative paths, NOT @ aliases
+  //    Using @ aliases causes shadcn CLI to create literal @ directories (e.g., packages/ui/@/components)
+  // 2. Import paths in generated components (utils, lib, hooks) - CAN use @ aliases
+  //    These are resolved by tsconfig.json which has baseUrl and paths configured
   const uiComponentsJson = {
     $schema: 'https://ui.shadcn.com/schema.json',
     style,
@@ -222,11 +225,13 @@ export async function setupShadcnMonorepo(
     },
     iconLibrary: 'lucide', // Official docs use "lucide" not "lucide-react"
     aliases: {
-      components: '@/components',
+      // Installation paths: Use relative paths (shadcn CLI interprets these as file paths)
+      components: './src/components',
+      ui: './src/components/ui',
+      // Import paths: Can use @ aliases (resolved by tsconfig.json)
       utils: '@/lib/utils',
       hooks: '@/hooks',
       lib: '@/lib',
-      ui: '@/components/ui',
     },
   };
 
