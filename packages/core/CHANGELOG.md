@@ -4,6 +4,10 @@
 
 ### Patch Changes
 
+- d08dc76: Fix issue where creating a project with the same name as the current directory would result in nested directories (e.g., `mycelio/mycelio`). Now detects this scenario and provides clear error messages guiding users to use `bunkit init` or navigate to the parent directory first.
+
+  This fix applies to version 1.0.0 to create version 1.0.1.
+
 - 4a9a8e8: Fix issue where creating a project with the same name as the current directory would result in nested directories (e.g., `mycelio/mycelio`). Now detects this scenario and provides clear error messages guiding users to use `bunkit init` or navigate to the parent directory first.
 
 ## 0.8.0
