@@ -5,6 +5,27 @@ import { existsSync } from 'fs';
 import { installShadcnComponents } from '@bunkit/templates';
 
 /**
+ * Get package name from root package.json (for monorepo)
+ */
+async function getPackageName(cwd: string): Promise<string | null> {
+  try {
+    const packageJsonPath = join(cwd, 'package.json');
+    if (existsSync(packageJsonPath)) {
+      const packageJson = JSON.parse(await Bun.file(packageJsonPath).text());
+      // Extract package name from monorepo name (e.g., "myapp-monorepo" -> "myapp")
+      const name = packageJson.name;
+      if (name && name.endsWith('-monorepo')) {
+        return name.replace('-monorepo', '');
+      }
+      return name || null;
+    }
+  } catch {
+    // Ignore errors
+  }
+  return null;
+}
+
+/**
  * Options for adding shadcn/ui components
  */
 export interface AddComponentOptions {
@@ -33,7 +54,17 @@ export async function addComponentCommand(
   }
 
   // Determine where to install components
+  // For monorepo: install in packages/ui (shared package)
+  // For standalone: install in project root
   const targetPath = isMonorepo ? join(cwd, 'packages/ui') : cwd;
+
+  // Verify components.json exists in target path
+  const targetComponentsJson = join(targetPath, 'components.json');
+  if (!existsSync(targetComponentsJson)) {
+    p.log.error(`shadcn/ui is not configured in ${isMonorepo ? 'packages/ui' : 'this project'}.`);
+    p.log.info('Run `bunkit init` with --ui-library shadcn to set up shadcn/ui first.');
+    process.exit(1);
+  }
 
   let components: string[] = [];
 
@@ -135,15 +166,20 @@ export async function addComponentCommand(
   try {
     await installShadcnComponents(targetPath, components, {
       silent: false,
-      cwd: targetPath,
+      cwd: cwd, // Use root cwd, function will handle monorepo path
+      isMonorepo,
     });
 
     spinner.stop(`✅ Installed: ${components.join(', ')}`);
 
-    // Show usage hint
+    // Show usage hint with correct import paths for Bun monorepo
     if (isMonorepo) {
+      const packageName = await getPackageName(cwd);
       p.note(
-        `Components installed in packages/ui. Import them using:\nimport { Button } from "@workspace/ui/components/ui/button"`,
+        `Components installed in packages/ui. Import them using:\n` +
+        `import { Button } from "@workspace/ui/components/ui/button"\n` +
+        `// Or using workspace alias:\n` +
+        `import { Button } from "${packageName ? `@${packageName}/ui` : '@workspace/ui'}/components/ui/button"`,
         'Usage'
       );
     } else {

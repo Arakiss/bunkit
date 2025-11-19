@@ -14,9 +14,78 @@ export async function createShadcnDocs(
     ? join(projectPath, 'packages/ui/SHADCN.md')
     : join(projectPath, 'SHADCN.md');
 
+  const monorepoSection = isMonorepo ? `
+## 🏗️ Bun Monorepo Setup
+
+This is a **Bun monorepo** with shared UI components in \`packages/ui\`. All shadcn/ui components are installed here and shared across all apps in the monorepo.
+
+### Monorepo Structure
+
+\`\`\`
+packages/
+  ui/                    # Shared UI package
+    src/
+      components/ui/     # shadcn/ui components
+      styles/            # Tailwind CSS v4 configuration
+      lib/utils.ts       # Utility functions (cn helper)
+    components.json      # shadcn/ui configuration
+\`\`\`
+
+### Adding Components (Monorepo)
+
+Components are installed in \`packages/ui\` and automatically shared:
+
+\`\`\`bash
+# From project root - bunkit handles monorepo detection
+bunkit add component --components button
+
+# Or directly in packages/ui directory
+cd packages/ui
+bunx shadcn@latest add button
+\`\`\`
+
+### Using Components (Monorepo)
+
+Import components using Bun workspace aliases:
+
+\`\`\`tsx
+// Recommended: Use @workspace/ui alias (Bun workspace resolution)
+import { Button } from "@workspace/ui/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/ui/card"
+
+// Or use the package name directly
+import { Button } from "@${context?.packageName || 'workspace'}/ui/components/ui/button"
+\`\`\`
+
+### Tailwind CSS v4 Configuration
+
+Tailwind CSS v4 is configured in \`packages/ui/src/styles/globals.css\` using CSS-first configuration:
+- ✅ No \`tailwind.config.ts\` needed (Tailwind v4 feature)
+- ✅ Uses \`@theme inline\` directive for design tokens
+- ✅ OKLCH color space (modern color format)
+- ✅ Shared across all apps via workspace imports
+
+All apps import the CSS from the UI package:
+\`\`\`css
+/* In apps/web/src/app/globals.css */
+@import "../../../packages/ui/src/styles/globals.css";
+\`\`\`
+
+### Bun Workspace Features
+
+This setup leverages Bun 1.3 workspace features:
+- **Catalogs**: Dependency versions managed in root \`package.json\` catalog
+- **Isolated Installs**: Each package only sees its declared dependencies
+- **Workspace Aliases**: Use \`@workspace/ui\` for internal imports
+- **Fast Resolution**: Bun's native workspace resolution
+
+` : '';
+
   const docsContent = `# shadcn/ui Guide
 
-This project uses [shadcn/ui](https://ui.shadcn.com) - a collection of re-usable components built with Radix UI and Tailwind CSS.
+This project uses [shadcn/ui](https://ui.shadcn.com) - a collection of re-usable components built with Radix UI and Tailwind CSS v4.
+
+${monorepoSection}
 
 ## 🚀 Quick Start
 
@@ -38,14 +107,42 @@ bunkit add component --all
 Or use the official shadcn CLI directly:
 
 \`\`\`bash
-bunx shadcn@latest add button
-bunx shadcn@latest add card
-bunx shadcn@latest add input
+${isMonorepo ? 'cd packages/ui && ' : ''}bunx shadcn@latest add button
+${isMonorepo ? 'cd packages/ui && ' : ''}bunx shadcn@latest add card
+${isMonorepo ? 'cd packages/ui && ' : ''}bunx shadcn@latest add input
 \`\`\`
 
 ### Using Components
 
-Import components from the \`@/components/ui\` path:
+${isMonorepo 
+  ? `Import components from the \`@workspace/ui\` package:
+
+\`\`\`tsx
+import { Button } from "@workspace/ui/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/ui/card"
+
+export function MyComponent() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Hello</CardTitle>
+        <CardDescription>World</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button>Click me</Button>
+      </CardContent>
+    </Card>
+  )
+}
+\`\`\``
+  : `Import components from the \`@/components/ui\` path:
 
 \`\`\`tsx
 import { Button } from "@/components/ui/button"
@@ -71,7 +168,7 @@ export function MyComponent() {
     </Card>
   )
 }
-\`\`\`
+\`\`\``}
 
 ## 📚 Available Components
 
@@ -102,19 +199,33 @@ Your project is configured with:
 Edit the CSS variables in \`${isMonorepo ? 'packages/ui/src/styles/globals.css' : 'src/app/globals.css'}\`:
 
 \`\`\`css
-@layer base {
-  :root {
-    --radius: 0.625rem;
-    --background: oklch(...);
-    --foreground: oklch(...);
-    /* ... */
-  }
+/* Tailwind CSS v4 uses CSS-first configuration */
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(...);
+  --foreground: oklch(...);
+  /* ... */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  /* ... */
 }
 \`\`\`
+
+**Note**: Tailwind CSS v4 uses CSS-first configuration. No \`tailwind.config.ts\` is needed - all configuration is done via CSS using the \`@theme inline\` directive.
 
 ### Component Customization
 
 Components are copied directly into your project at \`${isMonorepo ? 'packages/ui/src/components/ui' : 'src/components/ui'}\`. You can modify them directly - they're YOUR code!
+
+${isMonorepo ? `
+**Monorepo Tip**: Since components are in \`packages/ui\`, changes automatically propagate to all apps that import them. This ensures consistent UI across your entire monorepo.
+` : ''}
 
 ## 📖 Documentation
 

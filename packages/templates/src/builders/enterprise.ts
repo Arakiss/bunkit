@@ -157,14 +157,14 @@ export async function buildEnterprisePreset(
     version: '0.0.0',
     private: true,
     scripts: {
-      dev: 'next dev -p 3000',
+      dev: 'next dev -p ${PORT:-3000}',
       build: 'next build',
-      start: 'next start -p 3000',
+      start: 'next start -p ${PORT:-3000}',
       lint: 'biome check .',
       format: 'biome check --write .',
-      debug: 'bun --inspect node_modules/.bin/next dev -p 3000',
-      'debug:brk': 'bun --inspect-brk node_modules/.bin/next dev -p 3000',
-      'debug:wait': 'bun --inspect-wait node_modules/.bin/next dev -p 3000',
+      debug: 'bun --inspect node_modules/.bin/next dev -p ${PORT:-3000}',
+      'debug:brk': 'bun --inspect-brk node_modules/.bin/next dev -p ${PORT:-3000}',
+      'debug:wait': 'bun --inspect-wait node_modules/.bin/next dev -p ${PORT:-3000}',
     },
     dependencies: {
       react: 'catalog:',
@@ -189,14 +189,14 @@ export async function buildEnterprisePreset(
     version: '0.0.0',
     private: true,
     scripts: {
-      dev: 'next dev -p 3001',
+      dev: 'next dev -p ${PORT:-3001}',
       build: 'next build',
-      start: 'next start -p 3001',
+      start: 'next start -p ${PORT:-3001}',
       lint: 'biome check .',
       format: 'biome check --write .',
-      debug: 'bun --inspect node_modules/.bin/next dev -p 3001',
-      'debug:brk': 'bun --inspect-brk node_modules/.bin/next dev -p 3001',
-      'debug:wait': 'bun --inspect-wait node_modules/.bin/next dev -p 3001',
+      debug: 'bun --inspect node_modules/.bin/next dev -p ${PORT:-3001}',
+      'debug:brk': 'bun --inspect-brk node_modules/.bin/next dev -p ${PORT:-3001}',
+      'debug:wait': 'bun --inspect-wait node_modules/.bin/next dev -p ${PORT:-3001}',
     },
     dependencies: {
       react: 'catalog:',
@@ -222,14 +222,14 @@ export async function buildEnterprisePreset(
     version: '0.0.0',
     private: true,
     scripts: {
-      dev: 'next dev -p 3002',
+      dev: 'next dev -p ${PORT:-3002}',
       build: 'next build',
-      start: 'next start -p 3002',
+      start: 'next start -p ${PORT:-3002}',
       lint: 'biome check .',
       format: 'biome check --write .',
-      debug: 'bun --inspect node_modules/.bin/next dev -p 3002',
-      'debug:brk': 'bun --inspect-brk node_modules/.bin/next dev -p 3002',
-      'debug:wait': 'bun --inspect-wait node_modules/.bin/next dev -p 3002',
+      debug: 'bun --inspect node_modules/.bin/next dev -p ${PORT:-3002}',
+      'debug:brk': 'bun --inspect-brk node_modules/.bin/next dev -p ${PORT:-3002}',
+      'debug:wait': 'bun --inspect-wait node_modules/.bin/next dev -p ${PORT:-3002}',
     },
     dependencies: {
       react: 'catalog:',
@@ -335,9 +335,18 @@ export async function buildEnterprisePreset(
     await setupGitHubActions(projectPath, context);
   }
 
-  // Setup shadcn/ui if configured
-  if (context.uiLibrary === 'shadcn') {
-    await setupShadcnMonorepo(projectPath, context);
+  // Setup shadcn/ui for enterprise preset (always included with Tailwind)
+  // Enterprise presets should always have shadcn/ui configured for shared UI components
+  if (context.cssFramework === 'tailwind' && (context.uiLibrary === 'shadcn' || context.uiLibrary === undefined)) {
+    // Ensure uiLibrary is set to shadcn for enterprise preset
+    const enterpriseContext = {
+      ...context,
+      uiLibrary: 'shadcn' as const,
+      shadcnStyle: context.shadcnStyle || 'new-york',
+      shadcnBaseColor: context.shadcnBaseColor || 'zinc',
+      shadcnRadius: context.shadcnRadius || '0.625rem',
+    };
+    await setupShadcnMonorepo(projectPath, enterpriseContext);
   }
 
   // Setup shared tooling (TypeScript configs)
@@ -345,6 +354,69 @@ export async function buildEnterprisePreset(
 
   // Setup VSCode debugging
   await setupVSCodeDebug(projectPath, context);
+
+  // Create shared types package
+  const typesPackageJson = {
+    name: `@${context.packageName}/types`,
+    version: '0.0.0',
+    private: true,
+    main: './src/index.ts',
+    types: './src/index.ts',
+  };
+
+  await writeFile(
+    join(projectPath, 'packages/types/package.json'),
+    JSON.stringify(typesPackageJson, null, 2)
+  );
+
+  // packages/types/src/index.ts
+  const typesContent = `// Shared types for ${context.projectName}
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+  createdAt: Date;
+}
+
+export interface ApiResponse<T = unknown> {
+  data?: T;
+  error?: string;
+  message?: string;
+}
+`;
+
+  await ensureDirectory(join(projectPath, 'packages/types/src'));
+  await writeFile(join(projectPath, 'packages/types/src/index.ts'), typesContent);
+
+  // Create shared utils package
+  const utilsPackageJson = {
+    name: `@${context.packageName}/utils`,
+    version: '0.0.0',
+    private: true,
+    main: './src/index.ts',
+    types: './src/index.ts',
+  };
+
+  await writeFile(
+    join(projectPath, 'packages/utils/package.json'),
+    JSON.stringify(utilsPackageJson, null, 2)
+  );
+
+  // packages/utils/src/index.ts
+  const utilsContent = `// Shared utilities for ${context.projectName}
+
+export function formatDate(date: Date): string {
+  return date.toISOString();
+}
+
+export function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+`;
+
+  await ensureDirectory(join(projectPath, 'packages/utils/src'));
+  await writeFile(join(projectPath, 'packages/utils/src/index.ts'), utilsContent);
 
   // Create service-identity API structure
   await ensureDirectory(join(projectPath, 'apps/service-identity/src/routes'));
@@ -481,10 +553,14 @@ bun install
 bun dev
 
 # Start individual apps
-bun run dev:web         # Start marketing site
-bun run dev:app         # Start main product app
-bun run dev:platform    # Start admin dashboard
-bun run dev:identity    # Start identity service
+bun run dev:web         # Start marketing site (port 3000)
+bun run dev:app         # Start main product app (port 3002)
+bun run dev:platform    # Start admin dashboard (port 3001)
+bun run dev:identity    # Start identity service (port 3003)
+
+# Use custom ports if defaults are in use
+PORT=3004 bun run dev:app    # Run app on port 3004
+PORT=3005 bun run dev:web    # Run web on port 3005
 
 # Build all apps
 bun build
@@ -492,6 +568,26 @@ bun build
 # Lint and format
 bun lint
 bun format
+\`\`\`
+
+### Port Configuration
+
+All apps support the \`PORT\` environment variable to override the default port:
+
+- **apps/web**: Default port 3000
+- **apps/platform**: Default port 3001  
+- **apps/app**: Default port 3002
+- **apps/service-identity**: Default port 3003
+
+If a port is already in use, you can easily change it:
+
+\`\`\`bash
+# Example: Run app on a different port
+PORT=4000 cd apps/app && bun dev
+
+# Or set it globally for the session
+export PORT=4000
+cd apps/app && bun dev
 \`\`\`
 
 ## Adding More Services

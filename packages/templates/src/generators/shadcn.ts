@@ -1,5 +1,5 @@
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
+import { writeFile, ensureDirectory, directoryExists, type TemplateContext } from '@bunkit/core';
 import { themes, generateThemeCSS } from './shadcn-themes';
 import type { ShadcnBaseColor } from '@bunkit/core';
 import {
@@ -126,138 +126,9 @@ ${shadcnCss}`;
     await writeFile(globalsCssPath, globalsCss);
   }
 
-  // Update tailwind.config.ts to include shadcn/ui theme
-  const tailwindConfigPath = join(projectPath, 'tailwind.config.ts');
-  let tailwindConfig = '';
-  
-  try {
-    tailwindConfig = await Bun.file(tailwindConfigPath).text();
-  } catch {
-    // Will be created by web builder, we'll update it after
-  }
-
-  // Update tailwind config to include shadcn/ui theme
-  // Only update if it doesn't already have shadcn colors
-  if (tailwindConfig && !tailwindConfig.includes('hsl(var(--background))')) {
-    // Replace the theme section with shadcn/ui theme
-    const shadcnTheme = `  theme: {
-    extend: {
-      colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-    },
-  },`;
-
-    // Replace theme section if it exists, otherwise append
-    if (tailwindConfig.includes('theme:')) {
-      const updatedConfig = tailwindConfig.replace(
-        /theme:\s*\{[^}]*\}/s,
-        shadcnTheme.trim()
-      );
-      await writeFile(tailwindConfigPath, updatedConfig);
-    } else {
-      // Append theme before the closing brace
-      const updatedConfig = tailwindConfig.replace(
-        /(\s*)(plugins:.*?)(\n\s*\};)/s,
-        `$1$2$1${shadcnTheme}$3`
-      );
-      await writeFile(tailwindConfigPath, updatedConfig);
-    }
-  } else if (!tailwindConfig) {
-    // Create a new tailwind config with shadcn/ui theme
-    const newTailwindConfig = `import type { Config } from 'tailwindcss';
-
-const config: Config = {
-  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
-  theme: {
-    extend: {
-      colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-    },
-  },
-  plugins: [],
-};
-
-export default config;
-`;
-
-    await writeFile(tailwindConfigPath, newTailwindConfig);
-  }
+  // Tailwind CSS v4 does NOT use tailwind.config.ts
+  // All configuration is done via CSS using @theme inline directive
+  // This is handled in generateThemeCSS function which is called above
 
   // Install default components (button, card) after setup
   // Only if dependencies are being installed
@@ -296,6 +167,7 @@ export async function setupShadcnMonorepo(
   await ensureDirectory(join(projectPath, 'packages/ui/src/styles'));
 
   // packages/ui/package.json
+  // Configured for Bun workspaces with proper exports for monorepo usage
   const uiPackageJson = {
     name: uiPackageName,
     version: '0.0.0',
@@ -303,10 +175,14 @@ export async function setupShadcnMonorepo(
     main: './src/index.ts',
     types: './src/index.ts',
     exports: {
+      '.': './src/index.ts',
       './components': './src/components/index.ts',
+      './components/*': './src/components/ui/*/index.ts',
       './lib/utils': './src/lib/utils.ts',
       './hooks': './src/hooks/index.ts',
       './styles': './src/styles/globals.css',
+      // Direct component imports (e.g., @workspace/ui/components/ui/button)
+      './components/ui/*': './src/components/ui/*/index.ts',
     },
     dependencies: {
       '@radix-ui/react-slot': 'catalog:',
@@ -328,6 +204,8 @@ export async function setupShadcnMonorepo(
   );
 
   // packages/ui/components.json (for the UI package itself)
+  // Note: shadcn CLI uses these aliases to determine where to install components
+  // We use relative paths here, not workspace aliases, because shadcn needs actual file paths
   const uiComponentsJson = {
     $schema: 'https://ui.shadcn.com/schema.json',
     style,
@@ -341,11 +219,11 @@ export async function setupShadcnMonorepo(
     },
     iconLibrary: 'lucide', // Official docs use "lucide" not "lucide-react"
     aliases: {
-      components: '@workspace/ui/components',
-      utils: '@workspace/ui/lib/utils',
-      hooks: '@workspace/ui/hooks',
-      lib: '@workspace/ui/lib',
-      ui: '@workspace/ui/components',
+      components: '@/components',
+      utils: '@/lib/utils',
+      hooks: '@/hooks',
+      lib: '@/lib',
+      ui: '@/components/ui',
     },
   };
 
@@ -366,11 +244,33 @@ export function cn(...inputs: ClassValue[]) {
   await writeFile(join(projectPath, 'packages/ui/src/lib/utils.ts'), uiUtilsContent);
 
   // packages/ui/src/components/index.ts
+  // This file will be auto-updated when components are added via bunkit add component
   const uiComponentsIndex = `// Export shadcn/ui components here
-// Components will be added via: bunx shadcn@latest add [component]
+// Components are installed in src/components/ui/ and exported here
+// Add components using: bunkit add component --components button,card,input
+// Or directly: bunx shadcn@latest add [component] (from packages/ui directory)
+
+// Components will be automatically exported here when added
 `;
 
   await writeFile(join(projectPath, 'packages/ui/src/components/index.ts'), uiComponentsIndex);
+
+  // packages/ui/src/index.ts - Main entry point for the UI package
+  const uiIndexContent = `// Main entry point for @${packageName}/ui package
+// This package provides shared shadcn/ui components and Tailwind CSS v4 configuration
+
+// Export utilities
+export * from './lib/utils';
+
+// Export hooks (if any)
+export * from './hooks';
+
+// Components are exported from individual files
+// Import like: import { Button } from '@${packageName}/ui/components/ui/button'
+// Or use the re-export: import { Button } from '@workspace/ui/components/ui/button'
+`;
+
+  await writeFile(join(projectPath, 'packages/ui/src/index.ts'), uiIndexContent);
 
   // packages/ui/src/hooks/index.ts
   const uiHooksIndex = `// Export custom hooks here
@@ -385,6 +285,7 @@ export function cn(...inputs: ClassValue[]) {
   await writeFile(join(projectPath, 'packages/ui/src/styles/globals.css'), uiGlobalsCss);
 
   // packages/ui/tsconfig.json
+  // Configure path aliases so @ points to src/ directory
   const uiTsconfig = {
     compilerOptions: {
       target: 'ES2017',
@@ -400,6 +301,10 @@ export function cn(...inputs: ClassValue[]) {
       isolatedModules: true,
       jsx: 'react-jsx',
       types: ['react', 'react-dom'],
+      // Path aliases for shadcn CLI compatibility
+      paths: {
+        '@/*': ['./src/*'],
+      },
     },
     include: ['src/**/*'],
     exclude: ['node_modules'],
@@ -410,243 +315,85 @@ export function cn(...inputs: ClassValue[]) {
     JSON.stringify(uiTsconfig, null, 2)
   );
 
-  // Configure apps/web/components.json
-  await ensureDirectory(join(projectPath, 'apps/web/src/components'));
-  await ensureDirectory(join(projectPath, 'apps/web/src/lib'));
+  // Tailwind CSS v4 does NOT use tailwind.config.ts
+  // All configuration is done via CSS using @theme inline directive
+  // This is handled in generateThemeCSS function
 
-  const webComponentsJson = {
-    $schema: 'https://ui.shadcn.com/schema.json',
-    style,
-    rsc: true,
-    tsx: true,
-    tailwind: {
-      config: '', // Empty for Tailwind CSS v4
-      css: '../../packages/ui/src/styles/globals.css',
-      baseColor,
-      cssVariables: true,
-    },
-    iconLibrary: 'lucide', // Official docs use "lucide" not "lucide-react"
+  // Helper function to configure any Next.js app
+  const configureNextJsApp = async (appName: string) => {
+    const appPath = join(projectPath, `apps/${appName}`);
+    
+    // Check if app exists
+    if (!(await directoryExists(appPath))) {
+      return;
+    }
+
+    // Configure components.json
+    await ensureDirectory(join(appPath, 'src/components'));
+    await ensureDirectory(join(appPath, 'src/lib'));
+
+    const appComponentsJson = {
+      $schema: 'https://ui.shadcn.com/schema.json',
+      style,
+      rsc: true,
+      tsx: true,
+      tailwind: {
+        config: '', // Empty for Tailwind CSS v4
+        css: '../../packages/ui/src/styles/globals.css',
+        baseColor,
+        cssVariables: true,
+      },
+      iconLibrary: 'lucide',
     aliases: {
       components: '@/components',
       hooks: '@/hooks',
       lib: '@/lib',
+      // Use Bun workspace alias for monorepo imports
       utils: '@workspace/ui/lib/utils',
-      ui: '@workspace/ui/components',
+      ui: '@workspace/ui/components/ui',
     },
-  };
+    };
 
-  await writeFile(
-    join(projectPath, 'apps/web/components.json'),
-    JSON.stringify(webComponentsJson, null, 2)
-  );
+    await writeFile(
+      join(appPath, 'components.json'),
+      JSON.stringify(appComponentsJson, null, 2)
+    );
 
-  // Update apps/web/src/app/globals.css to import from packages/ui
-  const webGlobalsCssPath = join(projectPath, 'apps/web/src/app/globals.css');
-  const webGlobalsCss = `@import "../../../packages/ui/src/styles/globals.css";
+    // Update globals.css to import from packages/ui
+    const globalsCssPath = join(appPath, 'src/app/globals.css');
+    const globalsCss = `@import "../../../packages/ui/src/styles/globals.css";
 `;
+    await writeFile(globalsCssPath, globalsCss);
 
-  await writeFile(webGlobalsCssPath, webGlobalsCss);
-
-  // Update apps/web/package.json to include ui package dependency
-  const webPackageJsonPath = join(projectPath, 'apps/web/package.json');
-  let webPackageJson: any = {};
-  
-  try {
-    webPackageJson = JSON.parse(await Bun.file(webPackageJsonPath).text());
-  } catch {
-    // Will be created by full builder
-  }
-
-  if (webPackageJson.dependencies) {
-    webPackageJson.dependencies[uiPackageName] = 'workspace:*';
-    await writeFile(webPackageJsonPath, JSON.stringify(webPackageJson, null, 2));
-  }
-
-  // Configure apps/platform/components.json (same as web)
-  await ensureDirectory(join(projectPath, 'apps/platform/src/components'));
-  await ensureDirectory(join(projectPath, 'apps/platform/src/lib'));
-
-  const platformComponentsJson = {
-    $schema: 'https://ui.shadcn.com/schema.json',
-    style,
-    rsc: true,
-    tsx: true,
-    tailwind: {
-      config: '', // Empty for Tailwind CSS v4
-      css: '../../packages/ui/src/styles/globals.css',
-      baseColor,
-      cssVariables: true,
-    },
-    iconLibrary: 'lucide', // Official docs use "lucide" not "lucide-react"
-    aliases: {
-      components: '@/components',
-      hooks: '@/hooks',
-      lib: '@/lib',
-      utils: '@workspace/ui/lib/utils',
-      ui: '@workspace/ui/components',
-    },
-  };
-
-  await writeFile(
-    join(projectPath, 'apps/platform/components.json'),
-    JSON.stringify(platformComponentsJson, null, 2)
-  );
-
-  // Update apps/platform/src/app/globals.css
-  const platformGlobalsCssPath = join(projectPath, 'apps/platform/src/app/globals.css');
-  const platformGlobalsCss = `@import "../../../packages/ui/src/styles/globals.css";
-`;
-
-  await writeFile(platformGlobalsCssPath, platformGlobalsCss);
-
-  // Update apps/platform/package.json
-  const platformPackageJsonPath = join(projectPath, 'apps/platform/package.json');
-  let platformPackageJson: any = {};
-  
-  try {
-    platformPackageJson = JSON.parse(await Bun.file(platformPackageJsonPath).text());
-  } catch {
-    // Will be created by full builder
-  }
-
-  if (platformPackageJson.dependencies) {
-    platformPackageJson.dependencies[uiPackageName] = 'workspace:*';
-    await writeFile(platformPackageJsonPath, JSON.stringify(platformPackageJson, null, 2));
-  }
-
-  // Update tailwind.config.ts for apps/web and apps/platform
-  const updateAppTailwindConfig = async (appPath: string) => {
-    const tailwindConfigPath = join(projectPath, appPath, 'tailwind.config.ts');
-    let tailwindConfig = '';
+    // Update package.json to include ui package dependency
+    const packageJsonPath = join(appPath, 'package.json');
+    let packageJson: any = {};
     
     try {
-      tailwindConfig = await Bun.file(tailwindConfigPath).text();
+      packageJson = JSON.parse(await Bun.file(packageJsonPath).text());
     } catch {
-      // Will be created by full builder
+      // Will be created by builder
     }
 
-    const shadcnTheme = `  theme: {
-    extend: {
-      colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-    },
-  },`;
-
-    if (tailwindConfig && !tailwindConfig.includes('hsl(var(--background))')) {
-      if (tailwindConfig.includes('theme:')) {
-        const updatedConfig = tailwindConfig.replace(
-          /theme:\s*\{[^}]*\}/s,
-          shadcnTheme.trim()
-        );
-        await writeFile(tailwindConfigPath, updatedConfig);
-      } else {
-        const updatedConfig = tailwindConfig.replace(
-          /(\s*)(plugins:.*?)(\n\s*\};)/s,
-          `$1$2$1${shadcnTheme}$3`
-        );
-        await writeFile(tailwindConfigPath, updatedConfig);
-      }
-    } else if (!tailwindConfig) {
-      const newTailwindConfig = `import type { Config } from 'tailwindcss';
-
-const config: Config = {
-  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
-  theme: {
-    extend: {
-      colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-    },
-  },
-  plugins: [],
-};
-
-export default config;
-`;
-
-      await writeFile(tailwindConfigPath, newTailwindConfig);
+    if (packageJson.dependencies) {
+      packageJson.dependencies[uiPackageName] = 'workspace:*';
+      await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
     }
+
+    // Tailwind CSS v4 configuration is done in CSS, not tailwind.config.ts
+    // The @theme inline directive in packages/ui/src/styles/globals.css handles this
+
+    // Create example component files
+    await createShadcnExample(appPath, true, packageName);
   };
 
-  await updateAppTailwindConfig('apps/web');
-  await updateAppTailwindConfig('apps/platform');
+  // Configure all Next.js apps (web, platform, app)
+  await configureNextJsApp('web');
+  await configureNextJsApp('platform');
+  await configureNextJsApp('app'); // For enterprise preset
 
-  // Update root package.json catalog to include lucide-react
+  // Update root package.json catalog to include shadcn/ui dependencies
+  // Bun 1.3 catalogs allow centralized version management across monorepo
   const rootPackageJsonPath = join(projectPath, 'package.json');
   let rootPackageJson: any = {};
   
@@ -656,14 +403,28 @@ export default config;
     // Will be created by full builder
   }
 
-  if (rootPackageJson.catalog) {
-    rootPackageJson.catalog['lucide-react'] = '^0.468.0';
-    await writeFile(rootPackageJsonPath, JSON.stringify(rootPackageJson, null, 2));
+  // Ensure catalog exists
+  if (!rootPackageJson.catalog) {
+    rootPackageJson.catalog = {};
   }
 
-  // Create example component files for both apps
-  await createShadcnExample(join(projectPath, 'apps/web'), true);
-  await createShadcnExample(join(projectPath, 'apps/platform'), true);
+  // Add shadcn/ui dependencies to catalog for centralized version management
+  // These versions are referenced in packages/ui/package.json with catalog:
+  const shadcnDependencies = {
+    '@radix-ui/react-slot': '^1.1.0',
+    'class-variance-authority': '^0.7.1',
+    clsx: '^2.1.1',
+    'tailwind-merge': '^2.5.5',
+    'lucide-react': '^0.468.0',
+    '@types/react': '^18.3.18',
+    '@types/react-dom': '^18.3.5',
+    typescript: '^5.7.2',
+  };
+
+  // Merge catalog entries (don't overwrite existing)
+  Object.assign(rootPackageJson.catalog, shadcnDependencies);
+  
+  await writeFile(rootPackageJsonPath, JSON.stringify(rootPackageJson, null, 2));
 
   // Create documentation in packages/ui
   await createShadcnDocs(join(projectPath, 'packages/ui'), true, context);

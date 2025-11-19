@@ -53,6 +53,7 @@ export async function buildFullPreset(
   await ensureDirectory(join(projectPath, 'apps/api'));      // Backend API
   await ensureDirectory(join(projectPath, 'packages/types'));
   await ensureDirectory(join(projectPath, 'packages/utils'));
+  await ensureDirectory(join(projectPath, 'packages/ui'));    // Shared UI components (shadcn/ui)
 
   // Create database package if database is configured
   if (context.database && context.database !== 'none') {
@@ -155,6 +156,7 @@ export async function buildFullPreset(
       'react-dom': 'catalog:',
       next: 'catalog:',
       [`@${context.packageName}/types`]: 'workspace:*',
+      [`@${context.packageName}/ui`]: 'workspace:*',
     },
     devDependencies: {
       '@types/react': 'catalog:',
@@ -188,6 +190,7 @@ export async function buildFullPreset(
       'react-dom': 'catalog:',
       next: 'catalog:',
       [`@${context.packageName}/types`]: 'workspace:*',
+      [`@${context.packageName}/ui`]: 'workspace:*',
     },
     devDependencies: {
       '@types/react': 'catalog:',
@@ -1125,9 +1128,18 @@ networks:
     await setupGitHubActions(projectPath, context);
   }
 
-  // Setup shadcn/ui if requested (only with Tailwind)
-  if (context.uiLibrary === 'shadcn' && context.cssFramework === 'tailwind') {
-    await setupShadcnMonorepo(projectPath, context);
+  // Setup shadcn/ui for full-stack preset (always included with Tailwind)
+  // Full-stack monorepo presets should always have shadcn/ui configured for shared UI components
+  if (context.cssFramework === 'tailwind' && (context.uiLibrary === 'shadcn' || context.uiLibrary === undefined)) {
+    // Ensure uiLibrary is set to shadcn for full-stack preset
+    const fullContext = {
+      ...context,
+      uiLibrary: 'shadcn' as const,
+      shadcnStyle: context.shadcnStyle || 'new-york',
+      shadcnBaseColor: context.shadcnBaseColor || 'zinc',
+      shadcnRadius: context.shadcnRadius || '0.625rem',
+    };
+    await setupShadcnMonorepo(projectPath, fullContext);
   }
 
   // Setup shared tooling (TypeScript configs)

@@ -13,10 +13,11 @@ export async function isGitAvailable(): Promise<boolean> {
 }
 
 /**
- * Initialize git repository
+ * Initialize git repository with main branch as default
  */
 export async function initGit(cwd: string): Promise<void> {
-  await execa('git', ['init'], { cwd });
+  // Initialize git repository with main as default branch
+  await execa('git', ['init', '--initial-branch=main'], { cwd });
   await execa('git', ['add', '-A'], { cwd });
   try {
     await execa(
