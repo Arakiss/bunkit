@@ -1,5 +1,13 @@
 # @bunkit/templates
 
+## 0.8.1
+
+### Patch Changes
+
+- Updated dependencies [d08dc76]
+- Updated dependencies [4a9a8e8]
+  - @bunkit/core@0.8.1
+
 ## 0.8.0
 
 ### Minor Changes
