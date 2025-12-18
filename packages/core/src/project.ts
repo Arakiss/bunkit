@@ -226,9 +226,13 @@ export function createTemplateContext(config: ProjectConfig): TemplateContext {
     envExample: config.envExample,
     pathAliases: config.pathAliases,
 
-    // shadcn/ui specific options
+    // shadcn/ui specific options (December 2025 - new create feature)
     shadcnStyle: config.shadcnStyle,
+    shadcnBase: config.shadcnBase,
     shadcnBaseColor: config.shadcnBaseColor,
+    shadcnIconLibrary: config.shadcnIconLibrary,
+    shadcnMenuAccent: config.shadcnMenuAccent,
+    shadcnMenuColor: config.shadcnMenuColor,
     shadcnRadius: config.shadcnRadius,
 
     // Supabase specific options

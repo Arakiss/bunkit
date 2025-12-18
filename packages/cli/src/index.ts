@@ -63,12 +63,22 @@ program
   .option('--ts-strictness <level>', 'TypeScript strictness level: strict | moderate | loose')
   .option('--ui-library <library>', 'UI component library: shadcn | none')
   .option('--css-framework <framework>', 'CSS framework: tailwind | vanilla | css-modules')
-  .option('--shadcn-style <style>', 'shadcn/ui component style: new-york | default')
+  .option(
+    '--shadcn-style <style>',
+    'shadcn/ui style: radix-maia | radix-vega | radix-nova | radix-lyra | radix-mira | new-york | default'
+  )
+  .option('--shadcn-base <base>', 'shadcn/ui component foundation: radix | base-ui')
   .option(
     '--shadcn-base-color <color>',
-    'shadcn/ui base color theme: neutral | gray | zinc | stone | slate'
+    'shadcn/ui base color theme: zinc | slate | stone | gray | neutral'
   )
-  .option('--shadcn-radius <radius>', 'shadcn/ui border radius (CSS value, e.g., 0.5rem, 8px)')
+  .option(
+    '--shadcn-icon-library <library>',
+    'shadcn/ui icon library: phosphor | lucide | iconoir'
+  )
+  .option('--shadcn-menu-accent <accent>', 'shadcn/ui menu accent style: subtle | bold')
+  .option('--shadcn-menu-color <color>', 'shadcn/ui menu color: default | muted')
+  .option('--shadcn-radius <radius>', 'shadcn/ui border radius (CSS value, e.g., 0.5rem, 0.625rem)')
   .option('--testing <framework>', 'Testing framework: bun-test | vitest | none')
   .option('--docker', 'Include Docker configuration files')
   .option('--cicd', 'Include GitHub Actions CI/CD workflow')

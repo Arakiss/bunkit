@@ -784,6 +784,120 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   }
 
   // ====================
+  // 7e. SHADCN/UI BASE (component foundation - only for modern styles)
+  // December 2025: Choice between Radix UI and Base UI
+  // ====================
+  let shadcnBase: ShadcnBase | undefined = getOptionValue<ShadcnBase>(
+    'BUNKIT_SHADCN_BASE',
+    options.shadcnBase
+  );
+
+  if (!shadcnBase && uiLibrary === 'shadcn' && isModernShadcnStyle) {
+    if (!isNonInteractive) {
+      shadcnBase = (await p.select({
+        message: '🧱 Component foundation',
+        options: [
+          {
+            value: 'radix',
+            label: 'Radix UI (Recommended)',
+            hint: 'Battle-tested accessibility primitives - industry standard',
+          },
+          {
+            value: 'base-ui',
+            label: 'Base UI',
+            hint: 'Modern alternative with similar API - newer, experimental',
+          },
+        ],
+      })) as ShadcnBase;
+
+      if (p.isCancel(shadcnBase)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    } else {
+      shadcnBase = 'radix';
+    }
+  } else if (!shadcnBase) {
+    shadcnBase = 'radix'; // Default for legacy styles
+  }
+
+  // ====================
+  // 7f. SHADCN/UI MENU ACCENT (only for modern styles)
+  // December 2025: Menu accent style selection
+  // ====================
+  let shadcnMenuAccent: ShadcnMenuAccent | undefined = getOptionValue<ShadcnMenuAccent>(
+    'BUNKIT_SHADCN_MENU_ACCENT',
+    options.shadcnMenuAccent
+  );
+
+  if (!shadcnMenuAccent && uiLibrary === 'shadcn' && isModernShadcnStyle) {
+    if (!isNonInteractive) {
+      shadcnMenuAccent = (await p.select({
+        message: '✨ Menu accent style',
+        options: [
+          {
+            value: 'subtle',
+            label: 'Subtle (Recommended)',
+            hint: 'Soft accent colors - elegant and understated',
+          },
+          {
+            value: 'bold',
+            label: 'Bold',
+            hint: 'Strong accent colors - vibrant and eye-catching',
+          },
+        ],
+      })) as ShadcnMenuAccent;
+
+      if (p.isCancel(shadcnMenuAccent)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    } else {
+      shadcnMenuAccent = 'subtle';
+    }
+  } else if (!shadcnMenuAccent) {
+    shadcnMenuAccent = 'subtle'; // Default for legacy styles
+  }
+
+  // ====================
+  // 7g. SHADCN/UI MENU COLOR (only for modern styles)
+  // December 2025: Menu color selection
+  // ====================
+  let shadcnMenuColor: ShadcnMenuColor | undefined = getOptionValue<ShadcnMenuColor>(
+    'BUNKIT_SHADCN_MENU_COLOR',
+    options.shadcnMenuColor
+  );
+
+  if (!shadcnMenuColor && uiLibrary === 'shadcn' && isModernShadcnStyle) {
+    if (!isNonInteractive) {
+      shadcnMenuColor = (await p.select({
+        message: '🎯 Menu color scheme',
+        options: [
+          {
+            value: 'default',
+            label: 'Default (Recommended)',
+            hint: 'Standard menu colors - balanced and consistent',
+          },
+          {
+            value: 'muted',
+            label: 'Muted',
+            hint: 'Subdued menu colors - softer and more subtle',
+          },
+        ],
+      })) as ShadcnMenuColor;
+
+      if (p.isCancel(shadcnMenuColor)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    } else {
+      shadcnMenuColor = 'default';
+    }
+  } else if (!shadcnMenuColor) {
+    shadcnMenuColor = 'default'; // Default for legacy styles
+  }
+
+  // ====================
   // 8. TESTING FRAMEWORK
   // ====================
   let testing = getOptionValue<TestingFramework>(
@@ -1154,11 +1268,11 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       pathAliases: true,
       // shadcn/ui specific options (December 2025 - new create feature)
       shadcnStyle,
-      shadcnBase: 'radix', // Default to Radix UI
+      shadcnBase,
       shadcnBaseColor,
       shadcnIconLibrary,
-      shadcnMenuAccent: 'subtle', // Default
-      shadcnMenuColor: 'default', // Default
+      shadcnMenuAccent,
+      shadcnMenuColor,
       shadcnRadius,
 
       // Supabase specific options
