@@ -1,6 +1,6 @@
 import { join } from 'pathe';
-import { ensureDirectory, readFile, writeFile } from './fs';
-import type { ProjectConfig } from './types';
+import { ensureDirectory, readFile, writeFile } from '../fs';
+import type { ProjectConfig } from '../types';
 
 export interface CustomPreset {
   name: string;

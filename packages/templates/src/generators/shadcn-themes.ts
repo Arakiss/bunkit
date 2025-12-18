@@ -463,8 +463,8 @@ export const themes: Record<string, ShadcnTheme> = {
 };
 
 /**
- * Generate CSS for a theme (Tailwind CSS v4 format)
- * Based on official Tailwind CSS v4 documentation: https://tailwindcss.com/blog/tailwindcss-v4#css-first-configuration
+ * Generate theme CSS variables only (without imports/sources)
+ * Returns the :root, .dark, @theme inline, and @layer base blocks.
  *
  * Tailwind v4 uses CSS-first configuration with @theme inline directive.
  * Colors are stored in OKLCH format (Tailwind v4's default) and exposed via CSS variables.
@@ -475,15 +475,8 @@ export function generateThemeCSS(theme: ShadcnTheme, customRadius?: string): str
 
   // Tailwind v4 uses OKLCH colors by default (modern color space)
   // We store them in :root/.dark as CSS variables, then expose them via @theme inline
-  // According to shadcn/ui docs for Tailwind v4, colors should be wrapped in hsl() for :root/.dark
-  // but referenced directly in @theme inline
 
-  return `@import "tailwindcss";
-@source "../../../apps/**/*.{ts,tsx}";
-@source "../../../components/**/*.{ts,tsx}";
-@source "../**/*.{ts,tsx}";
-
-:root {
+  return `:root {
   --radius: ${radius};
   --background: ${theme.light.background};
   --foreground: ${theme.light.foreground};
@@ -590,6 +583,146 @@ export function generateThemeCSS(theme: ShadcnTheme, customRadius?: string): str
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+`;
+}
+
+/**
+ * Generate modern theme CSS (December 2025+)
+ *
+ * This is used with the new shadcn/ui visual styles (radix-maia, etc.)
+ * It includes:
+ * - Font variables (--font-sans, --font-mono)
+ * - Extended radius variables (--radius-xl through --radius-4xl)
+ * - Uses @import "shadcn/tailwind.css" for base theming
+ *
+ * Note: The actual theme colors are provided by shadcn/tailwind.css,
+ * but we still generate the @theme inline block for Tailwind integration
+ * and custom :root/.dark variables for any overrides.
+ */
+export function generateModernThemeCSS(baseColor: string, customRadius?: string): string {
+  const theme = themes[baseColor] || themes.zinc;
+  const radius = customRadius || '0.625rem';
+
+  return `@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --background: ${theme.light.background};
+  --foreground: ${theme.light.foreground};
+  --card: ${theme.light.card};
+  --card-foreground: ${theme.light.cardForeground};
+  --popover: ${theme.light.popover};
+  --popover-foreground: ${theme.light.popoverForeground};
+  --primary: ${theme.light.primary};
+  --primary-foreground: ${theme.light.primaryForeground};
+  --secondary: ${theme.light.secondary};
+  --secondary-foreground: ${theme.light.secondaryForeground};
+  --muted: ${theme.light.muted};
+  --muted-foreground: ${theme.light.mutedForeground};
+  --accent: ${theme.light.accent};
+  --accent-foreground: ${theme.light.accentForeground};
+  --destructive: ${theme.light.destructive};
+  --border: ${theme.light.border};
+  --input: ${theme.light.input};
+  --ring: ${theme.light.ring};
+  --chart-1: ${theme.light.chart1};
+  --chart-2: ${theme.light.chart2};
+  --chart-3: ${theme.light.chart3};
+  --chart-4: ${theme.light.chart4};
+  --chart-5: ${theme.light.chart5};
+  --radius: ${radius};
+  --sidebar: ${theme.light.sidebar};
+  --sidebar-foreground: ${theme.light.sidebarForeground};
+  --sidebar-primary: ${theme.light.sidebarPrimary};
+  --sidebar-primary-foreground: ${theme.light.sidebarPrimaryForeground};
+  --sidebar-accent: ${theme.light.sidebarAccent};
+  --sidebar-accent-foreground: ${theme.light.sidebarAccentForeground};
+  --sidebar-border: ${theme.light.sidebarBorder};
+  --sidebar-ring: ${theme.light.sidebarRing};
+}
+
+.dark {
+  --background: ${theme.dark.background};
+  --foreground: ${theme.dark.foreground};
+  --card: ${theme.dark.card};
+  --card-foreground: ${theme.dark.cardForeground};
+  --popover: ${theme.dark.popover};
+  --popover-foreground: ${theme.dark.popoverForeground};
+  --primary: ${theme.dark.primary};
+  --primary-foreground: ${theme.dark.primaryForeground};
+  --secondary: ${theme.dark.secondary};
+  --secondary-foreground: ${theme.dark.secondaryForeground};
+  --muted: ${theme.dark.muted};
+  --muted-foreground: ${theme.dark.mutedForeground};
+  --accent: ${theme.dark.accent};
+  --accent-foreground: ${theme.dark.accentForeground};
+  --destructive: ${theme.dark.destructive};
+  --border: ${theme.dark.border};
+  --input: ${theme.dark.input};
+  --ring: ${theme.dark.ring};
+  --chart-1: ${theme.dark.chart1};
+  --chart-2: ${theme.dark.chart2};
+  --chart-3: ${theme.dark.chart3};
+  --chart-4: ${theme.dark.chart4};
+  --chart-5: ${theme.dark.chart5};
+  --sidebar: ${theme.dark.sidebar};
+  --sidebar-foreground: ${theme.dark.sidebarForeground};
+  --sidebar-primary: ${theme.dark.sidebarPrimary};
+  --sidebar-primary-foreground: ${theme.dark.sidebarPrimaryForeground};
+  --sidebar-accent: ${theme.dark.sidebarAccent};
+  --sidebar-accent-foreground: ${theme.dark.sidebarAccentForeground};
+  --sidebar-border: ${theme.dark.sidebarBorder};
+  --sidebar-ring: ${theme.dark.sidebarRing};
 }
 
 @layer base {

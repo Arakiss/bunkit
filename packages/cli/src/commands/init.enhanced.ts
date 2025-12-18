@@ -8,7 +8,11 @@ import {
   installDependencies,
   type PresetType,
   type ProjectConfig,
+  type ShadcnBase,
   type ShadcnBaseColor,
+  type ShadcnIconLibrary,
+  type ShadcnMenuAccent,
+  type ShadcnMenuColor,
   type ShadcnStyle,
   type SupabaseFeature,
   type SupabasePreset,
@@ -23,6 +27,7 @@ import {
   buildBunFullstackPreset,
   buildEnterprisePreset,
   buildFullPreset,
+  buildFullPresetV2,
   buildMinimalPreset,
   buildMonorepoBunPreset,
   buildWebPreset,
@@ -68,9 +73,13 @@ interface EnhancedInitOptions {
   auth?: AuthProvider;
   redis?: boolean;
   useBunSecrets?: boolean;
-  // shadcn/ui specific options
+  // shadcn/ui specific options (December 2025 - new create feature)
   shadcnStyle?: ShadcnStyle;
+  shadcnBase?: ShadcnBase;
   shadcnBaseColor?: ShadcnBaseColor;
+  shadcnIconLibrary?: ShadcnIconLibrary;
+  shadcnMenuAccent?: ShadcnMenuAccent;
+  shadcnMenuColor?: ShadcnMenuColor;
   shadcnRadius?: string;
 
   // Supabase specific options
@@ -579,6 +588,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
 
   // ====================
   // 7a. SHADCN/UI STYLE (only if shadcn/ui selected)
+  // December 2025: Updated with new visual styles from shadcn/ui "create" feature
   // ====================
   let shadcnStyle: ShadcnStyle | undefined = getOptionValue<ShadcnStyle>(
     'BUNKIT_SHADCN_STYLE',
@@ -588,17 +598,42 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (!shadcnStyle && uiLibrary === 'shadcn') {
     if (!isNonInteractive) {
       shadcnStyle = (await p.select({
-        message: '🎨 shadcn/ui component style',
+        message: '🎨 shadcn/ui visual style',
         options: [
           {
+            value: 'radix-maia',
+            label: 'Maia (Recommended)',
+            hint: 'Modern, clean design with soft shadows and refined aesthetics',
+          },
+          {
+            value: 'radix-vega',
+            label: 'Vega',
+            hint: 'Bold, vibrant design with stronger colors and contrast',
+          },
+          {
+            value: 'radix-nova',
+            label: 'Nova',
+            hint: 'Minimalist design with subtle accents and clean lines',
+          },
+          {
+            value: 'radix-lyra',
+            label: 'Lyra',
+            hint: 'Elegant design with refined typography and spacing',
+          },
+          {
+            value: 'radix-mira',
+            label: 'Mira',
+            hint: 'Playful design with rounded elements and soft colors',
+          },
+          {
             value: 'new-york',
-            label: 'New York (Recommended)',
-            hint: 'Modern design aesthetic - rounded corners, subtle shadows, clean look',
+            label: 'New York (Legacy)',
+            hint: 'Classic modern aesthetic - rounded corners, subtle shadows',
           },
           {
             value: 'default',
-            label: 'Default',
-            hint: 'Classic design aesthetic - sharper edges, higher contrast, traditional look',
+            label: 'Default (Legacy)',
+            hint: 'Classic design - sharper edges, higher contrast',
           },
         ],
       })) as ShadcnStyle;
@@ -608,7 +643,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         process.exit(0);
       }
     } else {
-      shadcnStyle = 'new-york';
+      shadcnStyle = 'radix-maia'; // Modern default
     }
   }
 
@@ -695,6 +730,56 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       shadcnRadius = radiusInput as string;
     } else {
       shadcnRadius = '0.625rem';
+    }
+  }
+
+  // ====================
+  // 7d. SHADCN/UI ICON LIBRARY (only if shadcn/ui selected)
+  // December 2025: Added icon library selection
+  // ====================
+  let shadcnIconLibrary: ShadcnIconLibrary | undefined = getOptionValue<ShadcnIconLibrary>(
+    'BUNKIT_SHADCN_ICON_LIBRARY',
+    options.shadcnIconLibrary
+  );
+
+  // Determine if using modern style
+  const isModernShadcnStyle =
+    shadcnStyle === 'radix-maia' ||
+    shadcnStyle === 'radix-vega' ||
+    shadcnStyle === 'radix-nova' ||
+    shadcnStyle === 'radix-lyra' ||
+    shadcnStyle === 'radix-mira';
+
+  if (!shadcnIconLibrary && uiLibrary === 'shadcn') {
+    if (!isNonInteractive) {
+      shadcnIconLibrary = (await p.select({
+        message: '🔣 Icon library',
+        options: [
+          {
+            value: 'phosphor',
+            label: isModernShadcnStyle ? 'Phosphor Icons (Recommended)' : 'Phosphor Icons',
+            hint: 'Modern icon library with consistent design - default for new shadcn/ui styles',
+          },
+          {
+            value: 'iconoir',
+            label: !isModernShadcnStyle ? 'Iconoir (Recommended)' : 'Iconoir',
+            hint: 'Lightweight icons with great variety - alternative choice',
+          },
+          {
+            value: 'lucide',
+            label: 'Lucide',
+            hint: 'Classic choice - based on Feather icons, widely used',
+          },
+        ],
+      })) as ShadcnIconLibrary;
+
+      if (p.isCancel(shadcnIconLibrary)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    } else {
+      // Default based on style
+      shadcnIconLibrary = isModernShadcnStyle ? 'phosphor' : 'iconoir';
     }
   }
 
@@ -1067,9 +1152,13 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       cicd: cicd as boolean,
       envExample: true,
       pathAliases: true,
-      // shadcn/ui specific options
+      // shadcn/ui specific options (December 2025 - new create feature)
       shadcnStyle,
+      shadcnBase: 'radix', // Default to Radix UI
       shadcnBaseColor,
+      shadcnIconLibrary,
+      shadcnMenuAccent: 'subtle', // Default
+      shadcnMenuColor: 'default', // Default
       shadcnRadius,
 
       // Supabase specific options
@@ -1106,7 +1195,8 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       case 'full':
       case 'monorepo-nextjs':
       case 'nextjs-monorepo':
-        await buildFullPreset(projectPath, context);
+        // Use V2 builder with clean architecture
+        await buildFullPresetV2(projectPath, context);
         break;
       case 'monorepo-bun':
       case 'bun-monorepo':

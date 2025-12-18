@@ -96,13 +96,59 @@ export type UILibrary = 'shadcn' | 'none';
 
 /**
  * shadcn/ui style options
+ *
+ * As of December 2025, shadcn/ui offers 5 visual styles with Radix UI or Base UI:
+ * - radix-maia: Modern, clean design with soft shadows
+ * - radix-vega: Bold, vibrant design with stronger colors
+ * - radix-nova: Minimalist design with subtle accents
+ * - radix-lyra: Elegant design with refined typography
+ * - radix-mira: Playful design with rounded elements
+ *
+ * Legacy styles (still supported):
+ * - new-york: Modern aesthetic with rounded corners
+ * - default: Classic aesthetic with sharper edges
  */
-export type ShadcnStyle = 'new-york' | 'default';
+export type ShadcnStyle =
+  | 'radix-maia'
+  | 'radix-vega'
+  | 'radix-nova'
+  | 'radix-lyra'
+  | 'radix-mira'
+  | 'new-york'
+  | 'default';
+
+/**
+ * shadcn/ui base UI foundation options
+ *
+ * Choose the underlying component library:
+ * - radix: Radix UI primitives (default, most popular)
+ * - base-ui: Base UI from MUI (alternative)
+ */
+export type ShadcnBase = 'radix' | 'base-ui';
+
+/**
+ * shadcn/ui icon library options
+ *
+ * - phosphor: Phosphor Icons (default in new projects)
+ * - lucide: Lucide Icons (classic shadcn/ui)
+ * - iconoir: Iconoir Icons (alternative)
+ */
+export type ShadcnIconLibrary = 'phosphor' | 'lucide' | 'iconoir';
 
 /**
  * shadcn/ui base color options
  */
 export type ShadcnBaseColor = 'neutral' | 'gray' | 'zinc' | 'stone' | 'slate';
+
+/**
+ * shadcn/ui menu accent style
+ */
+export type ShadcnMenuAccent = 'subtle' | 'bold';
+
+/**
+ * shadcn/ui menu color style
+ */
+export type ShadcnMenuColor = 'default' | 'muted';
 
 /**
  * CSS framework options
@@ -181,9 +227,15 @@ export const ProjectConfigSchema = z.object({
   uiLibrary: z.enum(['shadcn', 'none']).optional(),
   cssFramework: z.enum(['tailwind', 'vanilla', 'css-modules']).optional(),
 
-  // shadcn/ui specific options
-  shadcnStyle: z.enum(['new-york', 'default']).optional(),
+  // shadcn/ui specific options (December 2025 - new create feature)
+  shadcnStyle: z
+    .enum(['radix-maia', 'radix-vega', 'radix-nova', 'radix-lyra', 'radix-mira', 'new-york', 'default'])
+    .optional(),
+  shadcnBase: z.enum(['radix', 'base-ui']).optional(),
   shadcnBaseColor: z.enum(['neutral', 'gray', 'zinc', 'stone', 'slate']).optional(),
+  shadcnIconLibrary: z.enum(['phosphor', 'lucide', 'iconoir']).optional(),
+  shadcnMenuAccent: z.enum(['subtle', 'bold']).optional(),
+  shadcnMenuColor: z.enum(['default', 'muted']).optional(),
   shadcnRadius: z.string().optional(), // e.g., "0.5rem", "0.625rem"
 
   // Testing
@@ -236,9 +288,13 @@ export interface TemplateContext {
   envExample?: boolean;
   pathAliases?: boolean;
 
-  // shadcn/ui specific options
+  // shadcn/ui specific options (December 2025 - new create feature)
   shadcnStyle?: ShadcnStyle;
+  shadcnBase?: ShadcnBase;
   shadcnBaseColor?: ShadcnBaseColor;
+  shadcnIconLibrary?: ShadcnIconLibrary;
+  shadcnMenuAccent?: ShadcnMenuAccent;
+  shadcnMenuColor?: ShadcnMenuColor;
   shadcnRadius?: string;
 
   // Supabase specific options
