@@ -1,13 +1,10 @@
+import { type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, type TemplateContext } from '@bunkit/core';
 
 /**
  * Setup Docker configuration
  */
-export async function setupDocker(
-  projectPath: string,
-  context: TemplateContext
-): Promise<void> {
+export async function setupDocker(projectPath: string, context: TemplateContext): Promise<void> {
   // Dockerfile for Bun
   const dockerfile = `# Use Bun official image
 FROM oven/bun:1 AS base
@@ -33,14 +30,18 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 bunuser && \\
     adduser --system --uid 1001 bunuser
 
-${context.preset === 'web' || context.preset === 'full' ? `# Copy Next.js build
+${
+  context.preset === 'web' || context.preset === 'full'
+    ? `# Copy Next.js build
 COPY --from=builder --chown=bunuser:bunuser /app/.next/standalone ./
 COPY --from=builder --chown=bunuser:bunuser /app/.next/static ./.next/static
 COPY --from=builder --chown=bunuser:bunuser /app/public ./public
-` : `# Copy application
+`
+    : `# Copy application
 COPY --from=builder --chown=bunuser:bunuser /app/src ./src
 COPY --from=builder --chown=bunuser:bunuser /app/package.json ./package.json
-`}
+`
+}
 USER bunuser
 
 EXPOSE 3000
@@ -54,10 +55,13 @@ ${context.preset === 'web' || context.preset === 'full' ? 'CMD ["bun", "run", "s
   await writeFile(join(projectPath, 'Dockerfile'), dockerfile);
 
   // docker-compose.yml
-  const isSupabase = context.database === 'supabase' || context.database === 'supabase-drizzle' || context.database === 'supabase-prisma';
+  const isSupabase =
+    context.database === 'supabase' ||
+    context.database === 'supabase-drizzle' ||
+    context.database === 'supabase-prisma';
   const hasLocalDb = context.database && context.database !== 'none' && !isSupabase;
   const hasRedis = context.redis === true;
-  
+
   const dockerCompose = `version: '3.8'
 
 services:
@@ -70,11 +74,15 @@ services:
     environment:
       - NODE_ENV=development
       ${hasLocalDb ? `- DATABASE_URL=postgres://postgres:postgres@db:5432/${context.projectName}` : ''}
-      ${isSupabase ? `- NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
+      ${
+        isSupabase
+          ? `- NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
       - SUPABASE_URL=http://localhost:8000
       - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU` : ''}
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU`
+          : ''
+      }
       ${hasRedis ? '- REDIS_URL=redis://redis:6379' : ''}
     ${hasLocalDb ? 'depends_on:\n      - db' : ''}
     ${isSupabase ? 'depends_on:\n      - supabase-db\n      - supabase-auth\n      - supabase-storage\n      - supabase-realtime' : ''}
@@ -83,16 +91,22 @@ services:
     networks:
       - ${context.projectName}-network
 
-  ${hasLocalDb ? `db:
+  ${
+    hasLocalDb
+      ? `db:
     image: ${context.database === 'sqlite-drizzle' ? 'alpine:latest' : context.database?.includes('mysql') ? 'mysql:8.0' : 'postgres:16-alpine'}
-    ${context.database !== 'sqlite-drizzle' && !context.database?.includes('mysql') ? `environment:
+    ${
+      context.database !== 'sqlite-drizzle' && !context.database?.includes('mysql')
+        ? `environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=${context.projectName}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"` : context.database?.includes('mysql') ? `environment:
+      - "5432:5432"`
+        : context.database?.includes('mysql')
+          ? `environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=${context.projectName}
       - MYSQL_USER=app
@@ -100,13 +114,19 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
-      - "3306:3306"` : 'volumes:\n      - sqlite_data:/data'}
+      - "3306:3306"`
+          : 'volumes:\n      - sqlite_data:/data'
+    }
     restart: unless-stopped
     networks:
       - ${context.projectName}-network
-` : ''}
+`
+      : ''
+  }
 
-  ${isSupabase ? `# Supabase Local Development Stack
+  ${
+    isSupabase
+      ? `# Supabase Local Development Stack
   supabase-db:
     image: supabase/postgres:15.1.0.147
     ports:
@@ -256,9 +276,13 @@ services:
     restart: unless-stopped
     networks:
       - ${context.projectName}-network
-` : ''}
+`
+      : ''
+  }
 
-  ${hasRedis ? `redis:
+  ${
+    hasRedis
+      ? `redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
@@ -268,20 +292,30 @@ services:
     restart: unless-stopped
     networks:
       - ${context.projectName}-network
-` : ''}
+`
+      : ''
+  }
 
-${hasLocalDb || isSupabase || hasRedis ? `volumes:
+${
+  hasLocalDb || isSupabase || hasRedis
+    ? `volumes:
   ${hasLocalDb && !context.database?.includes('mysql') && context.database !== 'sqlite-drizzle' ? 'postgres_data:' : ''}
   ${context.database?.includes('mysql') ? 'mysql_data:' : ''}
   ${context.database === 'sqlite-drizzle' ? 'sqlite_data:' : ''}
-  ${isSupabase ? `supabase_db_data:
-  supabase_storage_data:` : ''}
+  ${
+    isSupabase
+      ? `supabase_db_data:
+  supabase_storage_data:`
+      : ''
+  }
   ${hasRedis ? 'redis_data:' : ''}
 
 networks:
   ${context.projectName}-network:
     driver: bridge
-` : ''}
+`
+    : ''
+}
 `;
 
   await writeFile(join(projectPath, 'docker-compose.yml'), dockerCompose);

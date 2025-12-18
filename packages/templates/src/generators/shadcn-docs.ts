@@ -1,6 +1,6 @@
-import { join } from 'pathe';
-import { writeFile, ensureDirectory } from '@bunkit/core';
 import type { TemplateContext } from '@bunkit/core';
+import { ensureDirectory, writeFile } from '@bunkit/core';
+import { join } from 'pathe';
 
 /**
  * Create shadcn/ui documentation/README in the project
@@ -14,7 +14,8 @@ export async function createShadcnDocs(
     ? join(projectPath, 'packages/ui/SHADCN.md')
     : join(projectPath, 'SHADCN.md');
 
-  const monorepoSection = isMonorepo ? `
+  const monorepoSection = isMonorepo
+    ? `
 ## 🏗️ Bun Monorepo Setup
 
 This is a **Bun monorepo** with shared UI components in \`packages/ui\`. All shadcn/ui components are installed here and shared across all apps in the monorepo.
@@ -79,7 +80,8 @@ This setup leverages Bun 1.3 workspace features:
 - **Workspace Aliases**: Use \`@workspace/ui\` for internal imports
 - **Fast Resolution**: Bun's native workspace resolution
 
-` : '';
+`
+    : '';
 
   const docsContent = `# shadcn/ui Guide
 
@@ -114,8 +116,9 @@ ${isMonorepo ? 'cd packages/ui && ' : ''}bunx shadcn@latest add input
 
 ### Using Components
 
-${isMonorepo 
-  ? `Import components from the \`@workspace/ui\` package:
+${
+  isMonorepo
+    ? `Import components from the \`@workspace/ui\` package:
 
 \`\`\`tsx
 import { Button } from "@workspace/ui/components/ui/button"
@@ -142,7 +145,7 @@ export function MyComponent() {
   )
 }
 \`\`\``
-  : `Import components from the \`@/components/ui\` path:
+    : `Import components from the \`@/components/ui\` path:
 
 \`\`\`tsx
 import { Button } from "@/components/ui/button"
@@ -168,7 +171,8 @@ export function MyComponent() {
     </Card>
   )
 }
-\`\`\``}
+\`\`\``
+}
 
 ## 📚 Available Components
 
@@ -223,9 +227,13 @@ Edit the CSS variables in \`${isMonorepo ? 'packages/ui/src/styles/globals.css' 
 
 Components are copied directly into your project at \`${isMonorepo ? 'packages/ui/src/components/ui' : 'src/components/ui'}\`. You can modify them directly - they're YOUR code!
 
-${isMonorepo ? `
+${
+  isMonorepo
+    ? `
 **Monorepo Tip**: Since components are in \`packages/ui\`, changes automatically propagate to all apps that import them. This ensures consistent UI across your entire monorepo.
-` : ''}
+`
+    : ''
+}
 
 ## 📖 Documentation
 
@@ -258,8 +266,7 @@ bunx shadcn@latest init
   try {
     await ensureDirectory(join(docsPath, '..'));
     await writeFile(docsPath, docsContent);
-  } catch (error) {
+  } catch (_error) {
     // Non-critical - skip if fails
   }
 }
-

@@ -1,51 +1,48 @@
+import { type DatabaseType, ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext, type DatabaseType } from '@bunkit/core';
+import { setupBetterAuth, setupNextAuth } from '../generators/auth';
+import { generateBunfigContent } from '../generators/bunfig';
+import { setupGitHubActions } from '../generators/cicd';
 import {
-  setupPostgresDrizzle,
-  setupPostgresPrisma,
   setupMySQLDrizzle,
   setupMySQLPrisma,
-  setupSupabaseOnly,
-  setupSupabaseDrizzle,
-  setupSupabasePrisma,
+  setupPostgresDrizzle,
+  setupPostgresPrisma,
+  setupRedis,
   setupSQLiteDrizzle,
   setupSQLitePrisma,
-  setupRedis,
+  setupSupabaseDrizzle,
+  setupSupabaseOnly,
+  setupSupabasePrisma,
 } from '../generators/database';
-import {
-  setupBetterAuth,
-  setupNextAuth,
-} from '../generators/auth';
-import { setupEnhancedHono } from '../generators/hono';
-import { setupBunSecrets } from '../generators/secrets';
-import { generateBunfigContent } from '../generators/bunfig';
-import { setupUltracite, setupBiome } from '../generators/ultracite';
-import { setupDocker } from '../generators/docker';
-import { setupGitHubActions } from '../generators/cicd';
 import { setupVSCodeDebug } from '../generators/debug';
+import { setupDocker } from '../generators/docker';
+import { setupEnhancedHono } from '../generators/hono';
 import { generateHonoApiReadme } from '../generators/readme';
+import { setupBunSecrets } from '../generators/secrets';
+import { setupBiome, setupUltracite } from '../generators/ultracite';
 
 // Database setup function map
-const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
+const databaseSetupMap: Record<
+  DatabaseType,
+  (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>
+> = {
   'postgres-drizzle': setupPostgresDrizzle,
   'postgres-prisma': setupPostgresPrisma,
   'mysql-drizzle': setupMySQLDrizzle,
   'mysql-prisma': setupMySQLPrisma,
-  'supabase': setupSupabaseOnly,
+  supabase: setupSupabaseOnly,
   'supabase-drizzle': setupSupabaseDrizzle,
   'supabase-prisma': setupSupabasePrisma,
   'sqlite-drizzle': setupSQLiteDrizzle,
   'sqlite-prisma': setupSQLitePrisma,
-  'none': async () => {}, // No-op
+  none: async () => {}, // No-op
 };
 
 /**
  * Build API (Hono) preset files
  */
-export async function buildApiPreset(
-  projectPath: string,
-  context: TemplateContext
-): Promise<void> {
+export async function buildApiPreset(projectPath: string, context: TemplateContext): Promise<void> {
   // Create directories
   await ensureDirectory(join(projectPath, 'src/routes'));
   await ensureDirectory(join(projectPath, 'src/middleware'));
@@ -79,7 +76,9 @@ app.get('/health', (context) => {
   });
 });
 
-${context.database && context.database !== 'none' ? `// Database example routes
+${
+  context.database && context.database !== 'none'
+    ? `// Database example routes
 app.get('/users', async (context) => {
   try {
     const allUsers = await db.select().from(users);
@@ -116,7 +115,9 @@ app.post('/users', async (context) => {
     return context.json({ error: 'Failed to create user' }, 500);
   }
 });
-` : ''}
+`
+    : ''
+}
 // 404 handler
 app.notFound((context) => {
   return context.json({ error: 'Not found' }, 404);
@@ -215,10 +216,7 @@ export default users;
     compilerOptions: getTsCompilerOptions(),
   };
 
-  await writeFile(
-    join(projectPath, 'tsconfig.json'),
-    JSON.stringify(tsconfigContent, null, 2)
-  );
+  await writeFile(join(projectPath, 'tsconfig.json'), JSON.stringify(tsconfigContent, null, 2));
 
   // bunfig.toml with enhanced defaults
   const bunfigContent = generateBunfigContent(context);

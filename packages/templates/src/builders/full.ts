@@ -1,45 +1,46 @@
+import { type DatabaseType, ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext, type DatabaseType } from '@bunkit/core';
+import { setupBetterAuth, setupNextAuth } from '../generators/auth';
+import { generateBunfigContent } from '../generators/bunfig';
 import {
-  setupPostgresDrizzle,
-  setupPostgresPrisma,
   setupMySQLDrizzle,
   setupMySQLPrisma,
-  setupSupabaseOnly,
-  setupSupabaseDrizzle,
-  setupSupabasePrisma,
+  setupPostgresDrizzle,
+  setupPostgresPrisma,
+  setupRedis,
   setupSQLiteDrizzle,
   setupSQLitePrisma,
-  setupRedis,
+  setupSupabaseDrizzle,
+  setupSupabaseOnly,
+  setupSupabasePrisma,
 } from '../generators/database';
-import {
-  setupBetterAuth,
-  setupNextAuth,
-} from '../generators/auth';
 import { setupEnhancedHono } from '../generators/hono';
 import { setupBunSecrets } from '../generators/secrets';
-import { generateBunfigContent } from '../generators/bunfig';
 
 // Database setup function map
-const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
+const databaseSetupMap: Record<
+  DatabaseType,
+  (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>
+> = {
   'postgres-drizzle': setupPostgresDrizzle,
   'postgres-prisma': setupPostgresPrisma,
   'mysql-drizzle': setupMySQLDrizzle,
   'mysql-prisma': setupMySQLPrisma,
-  'supabase': setupSupabaseOnly,
+  supabase: setupSupabaseOnly,
   'supabase-drizzle': setupSupabaseDrizzle,
   'supabase-prisma': setupSupabasePrisma,
   'sqlite-drizzle': setupSQLiteDrizzle,
   'sqlite-prisma': setupSQLitePrisma,
-  'none': async () => {}, // No-op
+  none: async () => {}, // No-op
 };
-import { setupUltracite, setupBiome } from '../generators/ultracite';
-import { setupDocker } from '../generators/docker';
+
 import { setupGitHubActions } from '../generators/cicd';
-import { setupShadcnMonorepo } from '../generators/shadcn';
 import { setupVSCodeDebug } from '../generators/debug';
-import { setupTooling } from '../generators/tooling';
+import { setupDocker } from '../generators/docker';
 import { generateMonorepoReadme } from '../generators/readme';
+import { setupShadcnMonorepo } from '../generators/shadcn';
+import { setupTooling } from '../generators/tooling';
+import { setupBiome, setupUltracite } from '../generators/ultracite';
 
 /**
  * Build full-stack monorepo preset files
@@ -49,12 +50,12 @@ export async function buildFullPreset(
   context: TemplateContext
 ): Promise<void> {
   // Create monorepo structure (enterprise SaaS trifecta)
-  await ensureDirectory(join(projectPath, 'apps/web'));      // Customer-facing app
+  await ensureDirectory(join(projectPath, 'apps/web')); // Customer-facing app
   await ensureDirectory(join(projectPath, 'apps/platform')); // Dashboard/Admin panel
-  await ensureDirectory(join(projectPath, 'apps/api'));      // Backend API
+  await ensureDirectory(join(projectPath, 'apps/api')); // Backend API
   await ensureDirectory(join(projectPath, 'packages/types'));
   await ensureDirectory(join(projectPath, 'packages/utils'));
-  await ensureDirectory(join(projectPath, 'packages/ui'));    // Shared UI components (shadcn/ui)
+  await ensureDirectory(join(projectPath, 'packages/ui')); // Shared UI components (shadcn/ui)
 
   // Create database package if database is configured
   if (context.database && context.database !== 'none') {
@@ -97,7 +98,7 @@ export async function buildFullPreset(
       // Database
       'drizzle-orm': '^0.45.1',
       'drizzle-kit': '^0.31.8',
-      'postgres': '^3.4.7',
+      postgres: '^3.4.7',
       '@supabase/supabase-js': '^2.88.0',
 
       // Styling
@@ -117,7 +118,9 @@ export async function buildFullPreset(
 
       // Code Quality
       ...(context.codeQuality === 'biome' ? { '@biomejs/biome': '^2.3.10' } : {}),
-      ...(context.codeQuality === 'ultracite' ? { ultracite: '^6.4.2', '@biomejs/biome': '^2.3.10' } : {}),
+      ...(context.codeQuality === 'ultracite'
+        ? { ultracite: '^6.4.2', '@biomejs/biome': '^2.3.10' }
+        : {}),
 
       // Testing
       vitest: '^4.0.16',
@@ -131,10 +134,7 @@ export async function buildFullPreset(
     },
   };
 
-  await writeFile(
-    join(projectPath, 'package.json'),
-    JSON.stringify(rootPackageJson, null, 2)
-  );
+  await writeFile(join(projectPath, 'package.json'), JSON.stringify(rootPackageJson, null, 2));
 
   // bunfig.toml with enhanced defaults
   const bunfigContent = generateBunfigContent(context);
@@ -543,7 +543,10 @@ export default function RootLayout({
 }
 `;
 
-  await writeFile(join(projectPath, 'apps/platform/src/app/globals.css'), platformGlobalsCssContent);
+  await writeFile(
+    join(projectPath, 'apps/platform/src/app/globals.css'),
+    platformGlobalsCssContent
+  );
 
   // apps/platform/next.config.ts
   const platformNextConfigContent = `import type { NextConfig } from 'next';
@@ -571,7 +574,10 @@ const config: Config = {
 export default config;
 `;
 
-  await writeFile(join(projectPath, 'apps/platform/tailwind.config.ts'), platformTailwindConfigContent);
+  await writeFile(
+    join(projectPath, 'apps/platform/tailwind.config.ts'),
+    platformTailwindConfigContent
+  );
 
   // apps/platform/tsconfig.json - extends tooling
   const platformTsconfigContent = {
@@ -683,10 +689,7 @@ console.log('🚀 ${context.projectName} API running on http://localhost:3001');
     exclude: ['node_modules'],
   };
 
-  await writeFile(
-    join(projectPath, 'tsconfig.json'),
-    JSON.stringify(tsconfigContent, null, 2)
-  );
+  await writeFile(join(projectPath, 'tsconfig.json'), JSON.stringify(tsconfigContent, null, 2));
 
   // ========================================
   // INTEGRATIONS - Database, Code Quality, Docker, CI/CD
@@ -703,39 +706,41 @@ console.log('🚀 ${context.projectName} API running on http://localhost:3001');
       private: true,
       main: './src/index.ts',
       types: './src/index.ts',
-      dependencies: context.database === 'supabase'
-        ? {
-            '@supabase/supabase-js': 'catalog:',
-          }
-        : context.database === 'supabase-drizzle'
-        ? {
-            '@supabase/supabase-js': 'catalog:',
-            'drizzle-orm': 'catalog:',
-            'postgres': 'catalog:',
-          }
-        : context.database === 'postgres-drizzle'
-        ? {
-            'drizzle-orm': 'catalog:',
-            'postgres': 'catalog:',
-          }
-        : context.database === 'sqlite-drizzle'
-        ? {
-            'drizzle-orm': 'catalog:',
-          }
-        : {},
+      dependencies:
+        context.database === 'supabase'
+          ? {
+              '@supabase/supabase-js': 'catalog:',
+            }
+          : context.database === 'supabase-drizzle'
+            ? {
+                '@supabase/supabase-js': 'catalog:',
+                'drizzle-orm': 'catalog:',
+                postgres: 'catalog:',
+              }
+            : context.database === 'postgres-drizzle'
+              ? {
+                  'drizzle-orm': 'catalog:',
+                  postgres: 'catalog:',
+                }
+              : context.database === 'sqlite-drizzle'
+                ? {
+                    'drizzle-orm': 'catalog:',
+                  }
+                : {},
       devDependencies: {
-        ...(context.database === 'postgres-drizzle' || context.database === 'supabase-drizzle' || context.database === 'sqlite-drizzle' ? {
-          'drizzle-kit': 'catalog:',
-        } : {}),
+        ...(context.database === 'postgres-drizzle' ||
+        context.database === 'supabase-drizzle' ||
+        context.database === 'sqlite-drizzle'
+          ? {
+              'drizzle-kit': 'catalog:',
+            }
+          : {}),
         '@types/bun': 'latest',
-        'typescript': 'catalog:',
+        typescript: 'catalog:',
       },
     };
 
-    await writeFile(
-      join(dbPackagePath, 'package.json'),
-      JSON.stringify(dbPackageJson, null, 2)
-    );
+    await writeFile(join(dbPackagePath, 'package.json'), JSON.stringify(dbPackageJson, null, 2));
 
     // Setup database files
     if (context.database) {
@@ -745,27 +750,27 @@ console.log('🚀 ${context.projectName} API running on http://localhost:3001');
       }
     }
 
-  // Setup Redis if configured (independent of database)
-  if (context.redis) {
-    await setupRedis(projectPath, context, true);
-  }
-
-  // Setup authentication if configured (independent of database)
-  if (context.auth && context.auth !== 'none') {
-    if (context.auth === 'better-auth') {
-      await setupBetterAuth(projectPath, context, true);
-    } else if (context.auth === 'nextauth') {
-      await setupNextAuth(projectPath, context, true);
+    // Setup Redis if configured (independent of database)
+    if (context.redis) {
+      await setupRedis(projectPath, context, true);
     }
-  }
 
-  // Setup enhanced Hono middleware and utilities for API
-  await setupEnhancedHono(projectPath, context, true);
+    // Setup authentication if configured (independent of database)
+    if (context.auth && context.auth !== 'none') {
+      if (context.auth === 'better-auth') {
+        await setupBetterAuth(projectPath, context, true);
+      } else if (context.auth === 'nextauth') {
+        await setupNextAuth(projectPath, context, true);
+      }
+    }
 
-  // Setup Bun.secrets if configured
-  if (context.useBunSecrets) {
-    await setupBunSecrets(projectPath, context, true);
-  }
+    // Setup enhanced Hono middleware and utilities for API
+    await setupEnhancedHono(projectPath, context, true);
+
+    // Setup Bun.secrets if configured
+    if (context.useBunSecrets) {
+      await setupBunSecrets(projectPath, context, true);
+    }
 
     // Update apps/api to use database
     const apiPackageJson = JSON.parse(
@@ -790,10 +795,13 @@ console.log('🚀 ${context.projectName} API running on http://localhost:3001');
     await setupDocker(projectPath, context);
 
     // Create docker-compose for monorepo with all services
-    const isSupabase = context.database === 'supabase' || context.database === 'supabase-drizzle' || context.database === 'supabase-prisma';
+    const isSupabase =
+      context.database === 'supabase' ||
+      context.database === 'supabase-drizzle' ||
+      context.database === 'supabase-prisma';
     const hasLocalDb = context.database && context.database !== 'none' && !isSupabase;
     const hasRedis = context.redis === true;
-    
+
     const dockerCompose = `version: '3.8'
 
 services:
@@ -805,8 +813,12 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      ${isSupabase ? `- NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0` : ''}
+      ${
+        isSupabase
+          ? `- NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0`
+          : ''
+      }
       ${hasRedis ? '- REDIS_URL=redis://redis:6379' : ''}
     ${isSupabase ? 'depends_on:\n      - supabase-db\n      - supabase-auth\n      - supabase-storage\n      - supabase-realtime' : ''}
     ${hasRedis ? 'depends_on:\n      - redis' : ''}
@@ -822,8 +834,12 @@ services:
       - "3001:3000"
     environment:
       - NODE_ENV=development
-      ${isSupabase ? `- NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0` : ''}
+      ${
+        isSupabase
+          ? `- NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0`
+          : ''
+      }
       ${hasRedis ? '- REDIS_URL=redis://redis:6379' : ''}
     ${isSupabase ? 'depends_on:\n      - supabase-db\n      - supabase-auth\n      - supabase-storage\n      - supabase-realtime' : ''}
     ${hasRedis ? 'depends_on:\n      - redis' : ''}
@@ -840,9 +856,13 @@ services:
     environment:
       - NODE_ENV=development
       ${hasLocalDb ? `- DATABASE_URL=postgres://postgres:postgres@db:5432/${context.projectName}` : ''}
-      ${isSupabase ? `- SUPABASE_URL=http://localhost:8000
+      ${
+        isSupabase
+          ? `- SUPABASE_URL=http://localhost:8000
       - SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0
-      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU` : ''}
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU`
+          : ''
+      }
       ${hasRedis ? '- REDIS_URL=redis://redis:6379' : ''}
     ${hasLocalDb ? 'depends_on:\n      - db' : ''}
     ${isSupabase ? 'depends_on:\n      - supabase-db\n      - supabase-auth\n      - supabase-storage\n      - supabase-realtime' : ''}
@@ -851,16 +871,22 @@ services:
     networks:
       - ${context.projectName}-network
 
-  ${hasLocalDb ? `db:
+  ${
+    hasLocalDb
+      ? `db:
     image: ${context.database === 'sqlite-drizzle' ? 'alpine:latest' : context.database?.includes('mysql') ? 'mysql:8.0' : 'postgres:16-alpine'}
-    ${context.database !== 'sqlite-drizzle' && !context.database?.includes('mysql') ? `environment:
+    ${
+      context.database !== 'sqlite-drizzle' && !context.database?.includes('mysql')
+        ? `environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=${context.projectName}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"` : context.database?.includes('mysql') ? `environment:
+      - "5432:5432"`
+        : context.database?.includes('mysql')
+          ? `environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=${context.projectName}
       - MYSQL_USER=app
@@ -868,13 +894,19 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
-      - "3306:3306"` : 'volumes:\n      - sqlite_data:/data'}
+      - "3306:3306"`
+          : 'volumes:\n      - sqlite_data:/data'
+    }
     restart: unless-stopped
     networks:
       - ${context.projectName}-network
-` : ''}
+`
+      : ''
+  }
 
-  ${isSupabase ? `# Supabase Local Development Stack
+  ${
+    isSupabase
+      ? `# Supabase Local Development Stack
   supabase-db:
     image: supabase/postgres:15.1.0.147
     ports:
@@ -1024,9 +1056,13 @@ services:
     restart: unless-stopped
     networks:
       - ${context.projectName}-network
-` : ''}
+`
+      : ''
+  }
 
-  ${hasRedis ? `redis:
+  ${
+    hasRedis
+      ? `redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
@@ -1036,20 +1072,30 @@ services:
     restart: unless-stopped
     networks:
       - ${context.projectName}-network
-` : ''}
+`
+      : ''
+  }
 
-${hasLocalDb || isSupabase || hasRedis ? `volumes:
+${
+  hasLocalDb || isSupabase || hasRedis
+    ? `volumes:
   ${hasLocalDb && !context.database?.includes('mysql') && context.database !== 'sqlite-drizzle' ? 'postgres_data:' : ''}
   ${context.database?.includes('mysql') ? 'mysql_data:' : ''}
   ${context.database === 'sqlite-drizzle' ? 'sqlite_data:' : ''}
-  ${isSupabase ? `supabase_db_data:
-  supabase_storage_data:` : ''}
+  ${
+    isSupabase
+      ? `supabase_db_data:
+  supabase_storage_data:`
+      : ''
+  }
   ${hasRedis ? 'redis_data:' : ''}
 
 networks:
   ${context.projectName}-network:
     driver: bridge
-` : ''}
+`
+    : ''
+}
 `;
 
     await writeFile(join(projectPath, 'docker-compose.yml'), dockerCompose);
@@ -1062,7 +1108,10 @@ networks:
 
   // Setup shadcn/ui for full-stack preset (always included with Tailwind)
   // Full-stack monorepo presets should always have shadcn/ui configured for shared UI components
-  if (context.cssFramework === 'tailwind' && (context.uiLibrary === 'shadcn' || context.uiLibrary === undefined)) {
+  if (
+    context.cssFramework === 'tailwind' &&
+    (context.uiLibrary === 'shadcn' || context.uiLibrary === undefined)
+  ) {
     // Ensure uiLibrary is set to shadcn for full-stack preset
     const fullContext = {
       ...context,

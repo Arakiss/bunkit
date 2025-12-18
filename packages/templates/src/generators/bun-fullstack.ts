@@ -1,5 +1,5 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 
 /**
  * Setup Bun.serve() full-stack application with HTML imports
@@ -137,7 +137,9 @@ export function setupRoutes() {
       });
     },
 
-${context.database && context.database !== 'none' ? `    '/api/users': {
+${
+  context.database && context.database !== 'none'
+    ? `    '/api/users': {
       GET: async () => {
         try {
           const allUsers = await db.select().from(users);
@@ -147,13 +149,15 @@ ${context.database && context.database !== 'none' ? `    '/api/users': {
           return Response.json({ error: 'Failed to fetch users' }, { status: 500 });
         }
       },
-    },` : `    '/api/example': {
+    },`
+    : `    '/api/example': {
       GET: () => Response.json({ message: 'Hello from API!' }),
       POST: async (req: Request) => {
         const body = await req.json();
         return Response.json({ received: body }, { status: 201 });
       },
-    },`}
+    },`
+}
 
     '/api/*': () => {
       return Response.json({ message: 'API endpoint not found' }, { status: 404 });
@@ -196,4 +200,3 @@ export function errorHandler(error: Error): Response {
   // Package.json scripts need to be updated by the builder
   // This generator just creates the structure
 }
-

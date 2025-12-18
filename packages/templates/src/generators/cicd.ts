@@ -1,5 +1,5 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 
 /**
  * Setup GitHub Actions CI/CD workflow
@@ -56,9 +56,11 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Type check
-        run: ${context.preset === 'full' ? 'bun run --filter \'*\' typecheck' : 'bun run typecheck'}
+        run: ${context.preset === 'full' ? "bun run --filter '*' typecheck" : 'bun run typecheck'}
 
-  ${context.testing !== 'none' ? `test:
+  ${
+    context.testing !== 'none'
+      ? `test:
     name: Run Tests
     runs-on: ubuntu-latest
 
@@ -76,9 +78,15 @@ jobs:
 
       - name: Run tests
         run: ${context.testing === 'bun-test' ? 'bun test' : 'bun run test'}
-        ${context.database && context.database !== 'none' ? `env:
-          DATABASE_URL: sqlite://test.db` : ''}
-` : ''}
+        ${
+          context.database && context.database !== 'none'
+            ? `env:
+          DATABASE_URL: sqlite://test.db`
+            : ''
+        }
+`
+      : ''
+  }
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -96,14 +104,24 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      ${context.preset === 'web' || context.preset === 'full' ? `- name: Build application
+      ${
+        context.preset === 'web' || context.preset === 'full'
+          ? `- name: Build application
         run: bun run build
         env:
-          ${(context.database === 'supabase' || context.database === 'supabase-drizzle') ? `NEXT_PUBLIC_SUPABASE_URL: \${{ secrets.SUPABASE_URL }}
+          ${
+            context.database === 'supabase' || context.database === 'supabase-drizzle'
+              ? `NEXT_PUBLIC_SUPABASE_URL: \${{ secrets.SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: \${{ secrets.SUPABASE_ANON_KEY }}
-          ` : ''}NODE_ENV: production` : ''}
+          `
+              : ''
+          }NODE_ENV: production`
+          : ''
+      }
 
-      ${context.docker ? `- name: Set up Docker Buildx
+      ${
+        context.docker
+          ? `- name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
@@ -113,7 +131,9 @@ jobs:
           push: false
           tags: ${context.projectName}:latest
           cache-from: type=gha
-          cache-to: type=gha,mode=max` : ''}
+          cache-to: type=gha,mode=max`
+          : ''
+      }
 `;
 
   await writeFile(join(projectPath, '.github/workflows/ci.yml'), ciWorkflow);
@@ -147,8 +167,12 @@ jobs:
 #         run: bun run build
 #         env:
 #           NODE_ENV: production
-#           ${context.database === 'supabase' ? `NEXT_PUBLIC_SUPABASE_URL: \${{ secrets.SUPABASE_URL }}
-#           NEXT_PUBLIC_SUPABASE_ANON_KEY: \${{ secrets.SUPABASE_ANON_KEY }}` : ''}
+#           ${
+    context.database === 'supabase'
+      ? `NEXT_PUBLIC_SUPABASE_URL: \${{ secrets.SUPABASE_URL }}
+#           NEXT_PUBLIC_SUPABASE_ANON_KEY: \${{ secrets.SUPABASE_ANON_KEY }}`
+      : ''
+  }
 #
 #       # Add your deployment steps here
 #       # Examples:
@@ -173,13 +197,17 @@ updates:
     labels:
       - "dependencies"
 
-  ${context.docker ? `- package-ecosystem: "docker"
+  ${
+    context.docker
+      ? `- package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
     labels:
       - "dependencies"
-      - "docker"` : ''}
+      - "docker"`
+      : ''
+  }
 
   - package-ecosystem: "github-actions"
     directory: "/"

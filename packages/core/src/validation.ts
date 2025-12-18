@@ -21,15 +21,7 @@ export function validateProjectName(name: string): { valid: boolean; error?: str
     };
   }
 
-  const reserved = [
-    'node_modules',
-    'favicon.ico',
-    '.git',
-    '.env',
-    '.next',
-    'dist',
-    'build',
-  ];
+  const reserved = ['node_modules', 'favicon.ico', '.git', '.env', '.next', 'dist', 'build'];
 
   if (reserved.includes(name.toLowerCase())) {
     return { valid: false, error: `"${name}" is a reserved name` };

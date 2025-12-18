@@ -1,14 +1,14 @@
-import { join, basename, resolve } from 'pathe';
-import type { ProjectConfig, TemplateContext } from './types';
+import { basename, join, resolve } from 'pathe';
 import {
-  ensureDirectory,
-  writeFile,
-  isDirectoryEmpty,
   createPackageName,
   directoryExists,
+  ensureDirectory,
+  isDirectoryEmpty,
+  writeFile,
 } from './fs';
-import { initGit, isGitAvailable, getGitUser } from './git';
+import { getGitUser, initGit, isGitAvailable } from './git';
 import { logger } from './logger';
+import type { ProjectConfig, TemplateContext } from './types';
 
 /**
  * Create a new project
@@ -27,15 +27,15 @@ export async function createProject(config: ProjectConfig): Promise<void> {
       // This provides a better UX when user is already in the target directory
       throw new Error(
         `You are already in a directory named "${config.name}". ` +
-        `Since this directory is empty, you can initialize the project here directly. ` +
-        `Please run "bunkit init" instead, or navigate to the parent directory first.`
+          `Since this directory is empty, you can initialize the project here directly. ` +
+          `Please run "bunkit init" instead, or navigate to the parent directory first.`
       );
     } else {
       // If current directory is not empty, warn about creating nested directory
       throw new Error(
         `You are already in a directory named "${config.name}" which is not empty. ` +
-        `Creating the project here would result in "${config.name}/${config.name}". ` +
-        `Please navigate to the parent directory first, or use a different project name.`
+          `Creating the project here would result in "${config.name}/${config.name}". ` +
+          `Please navigate to the parent directory first, or use a different project name.`
       );
     }
   }
@@ -67,10 +67,7 @@ export async function createProject(config: ProjectConfig): Promise<void> {
 /**
  * Create package.json for project
  */
-async function createPackageJson(
-  projectPath: string,
-  config: ProjectConfig
-): Promise<void> {
+async function createPackageJson(projectPath: string, config: ProjectConfig): Promise<void> {
   const gitUser = await getGitUser();
   const packageName = createPackageName(config.name);
 
@@ -88,10 +85,7 @@ async function createPackageJson(
     ...(gitUser.name && { author: gitUser.name }),
   };
 
-  await writeFile(
-    join(projectPath, 'package.json'),
-    JSON.stringify(packageJson, null, 2)
-  );
+  await writeFile(join(projectPath, 'package.json'), JSON.stringify(packageJson, null, 2));
 }
 
 /**
@@ -146,10 +140,7 @@ function getScriptsForPreset(preset: string): Record<string, string> {
 /**
  * Create base configuration files
  */
-async function createBaseFiles(
-  projectPath: string,
-  config: ProjectConfig
-): Promise<void> {
+async function createBaseFiles(projectPath: string, config: ProjectConfig): Promise<void> {
   // .gitignore
   const gitignore = `# Dependencies
 node_modules/
@@ -234,15 +225,15 @@ export function createTemplateContext(config: ProjectConfig): TemplateContext {
     cicd: config.cicd,
     envExample: config.envExample,
     pathAliases: config.pathAliases,
-    
-        // shadcn/ui specific options
-        shadcnStyle: config.shadcnStyle,
-        shadcnBaseColor: config.shadcnBaseColor,
-        shadcnRadius: config.shadcnRadius,
 
-        // Supabase specific options
-        supabasePreset: config.supabasePreset,
-        supabaseFeatures: config.supabaseFeatures,
-        supabaseWithDrizzle: config.supabaseWithDrizzle,
-      };
-    }
+    // shadcn/ui specific options
+    shadcnStyle: config.shadcnStyle,
+    shadcnBaseColor: config.shadcnBaseColor,
+    shadcnRadius: config.shadcnRadius,
+
+    // Supabase specific options
+    supabasePreset: config.supabasePreset,
+    supabaseFeatures: config.supabaseFeatures,
+    supabaseWithDrizzle: config.supabaseWithDrizzle,
+  };
+}

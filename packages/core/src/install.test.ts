@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtemp, rm, writeFile, readFile } from 'fs/promises';
-import { tmpdir } from 'os';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'pathe';
-import { isBunAvailable, installDependencies, installDevDependencies } from './install';
+import { installDependencies, installDevDependencies, isBunAvailable } from './install';
 
 describe('install utilities', () => {
   let testDir: string;
@@ -61,7 +61,7 @@ describe('install utilities', () => {
 
       const dependencies = {
         zod: '^3.24.1',
-        'picocolors': '^1.1.1',
+        picocolors: '^1.1.1',
       };
 
       await installDependencies(testDir, dependencies);
@@ -80,11 +80,15 @@ describe('install utilities', () => {
 
       await writeFile(
         join(testDir, 'package.json'),
-        JSON.stringify({
-          name: 'test',
-          version: '1.0.0',
-          dependencies: { 'picocolors': '^1.1.1' },
-        }, null, 2)
+        JSON.stringify(
+          {
+            name: 'test',
+            version: '1.0.0',
+            dependencies: { picocolors: '^1.1.1' },
+          },
+          null,
+          2
+        )
       );
 
       await installDependencies(testDir, { zod: '^3.24.1' });
@@ -126,9 +130,7 @@ describe('install utilities', () => {
       }
 
       // Try to install to a non-existent directory
-      await expect(
-        installDependencies('/nonexistent/directory', ['zod'])
-      ).rejects.toThrow();
+      await expect(installDependencies('/nonexistent/directory', ['zod'])).rejects.toThrow();
     });
   });
 
@@ -164,4 +166,3 @@ describe('install utilities', () => {
     });
   });
 });
-

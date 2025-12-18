@@ -1,12 +1,12 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 
 /**
  * Setup enhanced Hono defaults with middleware and utilities
  */
 export async function setupEnhancedHono(
   projectPath: string,
-  context: TemplateContext,
+  _context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
   const middlewarePath = isMonorepo
@@ -379,4 +379,3 @@ export { successResponse, errorResponse, type ApiResponse } from './response';
 
   await writeFile(join(utilsPath, 'index.ts'), utilsIndex);
 }
-

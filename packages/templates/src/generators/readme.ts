@@ -1,6 +1,6 @@
+import type { TemplateContext } from '@bunkit/core';
 import { writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import type { TemplateContext } from '@bunkit/core';
 
 /**
  * Generate README.md footer with author attribution
@@ -118,10 +118,14 @@ ${context.projectName}/
 │   │   ├── layout.tsx      # Root layout
 │   │   ├── page.tsx        # Home page
 │   │   └── globals.css     # Global styles
-${hasShadcn ? `│   ├── components/
+${
+  hasShadcn
+    ? `│   ├── components/
 │   │   └── ui/             # shadcn/ui components
 │   └── lib/
-│       └── utils.ts        # Utility functions` : `│   └── components/         # Your components`}
+│       └── utils.ts        # Utility functions`
+    : `│   └── components/         # Your components`
+}
 ├── public/                  # Static assets
 ├── next.config.ts
 ├── tsconfig.json
@@ -136,7 +140,9 @@ ${hasShadcn ? `│   ├── components/
 - **Language**: TypeScript 5.9+
 - **Runtime**: Bun 1.3+
 
-${hasShadcn ? `## Adding shadcn/ui Components
+${
+  hasShadcn
+    ? `## Adding shadcn/ui Components
 
 \`\`\`bash
 # Add components
@@ -145,7 +151,9 @@ bunx shadcn@latest add card
 bunx shadcn@latest add dialog
 \`\`\`
 
-` : ''}## Scripts
+`
+    : ''
+}## Scripts
 
 | Script | Description |
 |--------|-------------|
@@ -420,17 +428,19 @@ bun run build
 ## Demo
 
 After starting with \`bun dev\`, visit:
-${type === 'enterprise'
-  ? `- [http://localhost:3000](http://localhost:3000) - Marketing site
+${
+  type === 'enterprise'
+    ? `- [http://localhost:3000](http://localhost:3000) - Marketing site
 - [http://localhost:3001](http://localhost:3001) - Admin dashboard
 - [http://localhost:3002](http://localhost:3002) - Main product
 - [http://localhost:3003](http://localhost:3003) - Identity service`
-  : type === 'nextjs'
-    ? `- [http://localhost:3000](http://localhost:3000) - Customer app
+    : type === 'nextjs'
+      ? `- [http://localhost:3000](http://localhost:3000) - Customer app
 - [http://localhost:3001](http://localhost:3001) - Admin dashboard
 - [http://localhost:3002](http://localhost:3002) - API server`
-    : `- [http://localhost:3000](http://localhost:3000) - Web app
-- [http://localhost:3001](http://localhost:3001) - API server`}
+      : `- [http://localhost:3000](http://localhost:3000) - Web app
+- [http://localhost:3001](http://localhost:3001) - API server`
+}
 
 ## Project Structure
 
@@ -499,7 +509,9 @@ bunkit add workspace --name apps/docs --preset nextjs
 # Add a shared package
 bunkit add package --name @${context.packageName}/email --type library
 \`\`\`
-${hasShadcn ? `
+${
+  hasShadcn
+    ? `
 ## Adding shadcn/ui Components
 
 \`\`\`bash
@@ -512,7 +524,9 @@ Import in apps:
 \`\`\`typescript
 import { Button } from '@${context.packageName}/ui/components/ui/button';
 \`\`\`
-` : ''}
+`
+    : ''
+}
 ${generateReadmeFooter(context)}`;
 
   await writeFile(join(projectPath, 'README.md'), content);

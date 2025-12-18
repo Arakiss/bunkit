@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.10/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -8,13 +8,14 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [
-      "node_modules",
-      "dist",
-      "build",
-      ".turbo",
-      "coverage",
-      "*.min.js"
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/.turbo",
+      "!**/coverage",
+      "!**/*.min.js"
     ]
   },
   "formatter": {
@@ -24,18 +25,16 @@
     "lineWidth": 100,
     "lineEnding": "lf"
   },
-  "organizeImports": {
-    "enabled": true
-  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
       "recommended": true,
       "complexity": {
         "noExtraBooleanCast": "error",
-        "noMultipleSpacesInRegularExpressionLiterals": "error",
         "noUselessCatch": "error",
-        "noWith": "error"
+        "noAdjacentSpacesInRegex": "error",
+        "noArguments": "error"
       },
       "correctness": {
         "noConstAssign": "error",
@@ -44,7 +43,6 @@
         "noEmptyPattern": "error",
         "noGlobalObjectCalls": "error",
         "noInvalidConstructorSuper": "error",
-        "noInvalidNewBuiltin": "error",
         "noNonoctalDecimalEscape": "error",
         "noPrecisionLoss": "error",
         "noSelfAssign": "error",
@@ -59,11 +57,11 @@
         "noUnusedVariables": "error",
         "useIsNan": "error",
         "useValidForDirection": "error",
-        "useYield": "error"
+        "useYield": "error",
+        "noInvalidBuiltinInstantiation": "error",
+        "useValidTypeof": "error"
       },
       "style": {
-        "noArguments": "error",
-        "noVar": "error",
         "useConst": "error",
         "useTemplate": "error"
       },
@@ -79,7 +77,7 @@
         "noDuplicateClassMembers": "error",
         "noDuplicateObjectKeys": "error",
         "noDuplicateParameters": "error",
-        "noEmptyBlockStatements": "error",
+        "noEmptyBlockStatements": "warn",
         "noExplicitAny": "warn",
         "noExtraNonNullAssertion": "error",
         "noFallthroughSwitchClause": "error",
@@ -92,7 +90,8 @@
         "noShadowRestrictedNames": "error",
         "noUnsafeNegation": "error",
         "useGetterReturn": "error",
-        "useValidTypeof": "error"
+        "noWith": "error",
+        "noVar": "error"
       }
     }
   },
@@ -106,6 +105,52 @@
       "bracketSpacing": true,
       "bracketSameLine": false,
       "quoteProperties": "asNeeded"
+    },
+    "globals": [
+      "Bun",
+      "describe",
+      "it",
+      "expect",
+      "test",
+      "beforeEach",
+      "afterEach",
+      "beforeAll",
+      "afterAll",
+      "mock",
+      "spyOn"
+    ]
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.test.ts", "**/*.spec.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/templates/**/*.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noTemplateCurlyInString": "off",
+            "noExplicitAny": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/core/**/*.ts", "packages/cli/**/*.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "warn"
+          }
+        }
+      }
     }
-  }
+  ]
 }

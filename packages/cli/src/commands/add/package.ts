@@ -1,15 +1,15 @@
-import * as p from '@clack/prompts';
-import pc from 'picocolors';
-import { join } from 'pathe';
 import {
-  detectMonorepo,
   addWorkspaceToRoot,
-  workspaceExists,
-  validateWorkspaceName,
+  detectMonorepo,
   ensureDirectory,
   installDependencies,
   type PackageType,
+  validateWorkspaceName,
+  workspaceExists,
 } from '@bunkit/core';
+import * as p from '@clack/prompts';
+import { join } from 'pathe';
+import pc from 'picocolors';
 
 /**
  * Options for package command
@@ -126,10 +126,7 @@ export const config = {
     exclude: ['node_modules', 'dist'],
   };
 
-  await writeFile(
-    join(packagePath, 'tsconfig.json'),
-    JSON.stringify(tsconfigContent, null, 2)
-  );
+  await writeFile(join(packagePath, 'tsconfig.json'), JSON.stringify(tsconfigContent, null, 2));
 
   // README.md
   const readmeContent = `# ${packageName}
@@ -230,10 +227,26 @@ export async function addPackageCommand(options: PackageOptions = {}) {
       const typeChoice = await p.select({
         message: 'Select package type',
         options: [
-          { value: 'library', label: 'Library', hint: 'Shared code and components - reusable across workspaces' },
-          { value: 'utils', label: 'Utilities', hint: 'Utility functions and helpers - common operations' },
-          { value: 'types', label: 'Type Definitions', hint: 'Shared TypeScript types and interfaces' },
-          { value: 'config', label: 'Configuration', hint: 'Shared configuration files and settings' },
+          {
+            value: 'library',
+            label: 'Library',
+            hint: 'Shared code and components - reusable across workspaces',
+          },
+          {
+            value: 'utils',
+            label: 'Utilities',
+            hint: 'Utility functions and helpers - common operations',
+          },
+          {
+            value: 'types',
+            label: 'Type Definitions',
+            hint: 'Shared TypeScript types and interfaces',
+          },
+          {
+            value: 'config',
+            label: 'Configuration',
+            hint: 'Shared configuration files and settings',
+          },
         ],
       });
 
@@ -279,7 +292,7 @@ export async function addPackageCommand(options: PackageOptions = {}) {
     const { writeFile: write } = await import('@bunkit/core');
     await write(
       join(packagePath, 'package.json'),
-      JSON.stringify(packageJsonContent, null, 2) + '\n'
+      `${JSON.stringify(packageJsonContent, null, 2)}\n`
     );
     spinner.stop('package.json generated');
 

@@ -1,28 +1,28 @@
+import {
+  createProject,
+  createTemplateContext,
+  installDependencies,
+  type PresetType,
+  type ProjectConfig,
+  type ShadcnBaseColor,
+  type ShadcnStyle,
+  validateProjectName,
+} from '@bunkit/core';
+import {
+  buildApiPreset,
+  buildBunApiPreset,
+  buildBunFullstackPreset,
+  buildEnterprisePreset,
+  buildFullPreset,
+  buildMinimalPreset,
+  buildMonorepoBunPreset,
+  buildWebPreset,
+  installDefaultShadcnComponents,
+} from '@bunkit/templates';
 import * as p from '@clack/prompts';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import { join } from 'pathe';
-import {
-  validateProjectName,
-  createProject,
-  createTemplateContext,
-  installDependencies,
-  type ProjectConfig,
-  type PresetType,
-  type ShadcnBaseColor,
-  type ShadcnStyle,
-} from '@bunkit/core';
-import {
-  buildMinimalPreset,
-  buildWebPreset,
-  buildApiPreset,
-  buildBunApiPreset,
-  buildBunFullstackPreset,
-  buildFullPreset,
-  buildMonorepoBunPreset,
-  buildEnterprisePreset,
-  installDefaultShadcnComponents,
-} from '@bunkit/templates';
 
 /**
  * Quick, non-interactive project creation command
@@ -35,29 +35,32 @@ export async function createCommand(
 ) {
   // Normalize preset (handle aliases to primary names)
   const presetMap: Record<string, string> = {
-    'web': 'nextjs',
-    'api': 'hono-api',
-    'full': 'nextjs-monorepo',
+    web: 'nextjs',
+    api: 'hono-api',
+    full: 'nextjs-monorepo',
     'monorepo-nextjs': 'nextjs-monorepo',
     'monorepo-bun': 'bun-monorepo',
   };
   const normalizedPreset = presetMap[preset] || preset;
-  
+
   // Validate preset (accept both primary names and aliases)
   const validPresets = [
-    'minimal', 
-    'nextjs', 'web',
-    'hono-api', 'api',
-    'bun-api', 
-    'bun-fullstack', 
-    'nextjs-monorepo', 'full', 'monorepo-nextjs',
-    'bun-monorepo', 'monorepo-bun',
-    'enterprise-monorepo'
+    'minimal',
+    'nextjs',
+    'web',
+    'hono-api',
+    'api',
+    'bun-api',
+    'bun-fullstack',
+    'nextjs-monorepo',
+    'full',
+    'monorepo-nextjs',
+    'bun-monorepo',
+    'monorepo-bun',
+    'enterprise-monorepo',
   ];
   if (!validPresets.includes(normalizedPreset)) {
-    throw new Error(
-      `Invalid preset: ${preset}. Valid options: ${validPresets.join(', ')}`
-    );
+    throw new Error(`Invalid preset: ${preset}. Valid options: ${validPresets.join(', ')}`);
   }
 
   // Validate project name
@@ -67,49 +70,53 @@ export async function createCommand(
   }
 
   console.log(''); // Add spacing
-  
+
   const s = p.spinner();
   const isEnterprise = normalizedPreset === 'enterprise-monorepo';
-  
+
   // Enterprise preset: Allow quick customization of shadcn/ui config
   let shadcnStyle: ShadcnStyle = 'new-york';
   let shadcnBaseColor: ShadcnBaseColor = 'zinc';
   let shadcnRadius = '0.625rem';
-  
+
   if (isEnterprise) {
     // Show defaults and ask if user wants to customize
     p.note(
       `Default theme: ${chalk.cyan('New York')} style, ${chalk.cyan('Zinc')} color, ${chalk.cyan('0.625rem')} radius`,
       'shadcn/ui defaults'
     );
-    
+
     const customize = await p.confirm({
       message: `🎨 Customize shadcn/ui theme?`,
       initialValue: false,
     });
-    
+
     if (p.isCancel(customize)) {
       p.cancel('Operation cancelled.');
       process.exit(0);
     }
-    
+
     if (customize) {
       // Ask for style
       const styleChoice = await p.select({
         message: '🎨 Component style',
         options: [
-          { value: 'new-york', label: 'New York (Recommended)', hint: 'Modern, rounded, subtle shadows' },
+          {
+            value: 'new-york',
+            label: 'New York (Recommended)',
+            hint: 'Modern, rounded, subtle shadows',
+          },
           { value: 'default', label: 'Default', hint: 'Classic, sharper edges, higher contrast' },
         ],
         initialValue: 'new-york',
       });
-      
+
       if (p.isCancel(styleChoice)) {
         p.cancel('Operation cancelled.');
         process.exit(0);
       }
       shadcnStyle = styleChoice as ShadcnStyle;
-      
+
       // Ask for base color
       const colorChoice = await p.select({
         message: '🎨 Base color theme',
@@ -122,13 +129,13 @@ export async function createCommand(
         ],
         initialValue: 'zinc',
       });
-      
+
       if (p.isCancel(colorChoice)) {
         p.cancel('Operation cancelled.');
         process.exit(0);
       }
       shadcnBaseColor = colorChoice as ShadcnBaseColor;
-      
+
       // Ask for radius
       const radiusInput = await p.text({
         message: '📐 Border radius',
@@ -141,7 +148,7 @@ export async function createCommand(
           }
         },
       });
-      
+
       if (p.isCancel(radiusInput)) {
         p.cancel('Operation cancelled.');
         process.exit(0);
@@ -149,7 +156,7 @@ export async function createCommand(
       shadcnRadius = radiusInput as string;
     }
   }
-  
+
   s.start(`${chalk.cyan('🔨')} Creating ${preset} project: ${chalk.bold(name)}`);
 
   try {
@@ -216,18 +223,18 @@ export async function createCommand(
     }
 
     s.message(`${chalk.cyan('✨')} Finalizing setup...`);
-    
+
     // Install dependencies first (critical for monorepos with catalog: references)
     // This ensures Bun resolves all catalog: dependencies before shadcn CLI runs
     if (config.install !== false) {
       s.message(`${chalk.cyan('📦')} Installing dependencies...`);
       try {
         await installDependencies(projectPath);
-      } catch (error) {
+      } catch (_error) {
         s.message(`${chalk.yellow('⚠️')} Dependency installation had issues, but continuing...`);
       }
     }
-    
+
     // Install default shadcn/ui components for enterprise preset with shadcn/ui
     // Dependencies must be installed first so Bun resolves catalog: references
     // shadcn CLI internally uses npm which doesn't understand catalog: protocol
@@ -238,26 +245,37 @@ export async function createCommand(
           silent: false,
           skipDefaults: false,
         });
-      } catch (error) {
+      } catch (_error) {
         // Non-critical - components can be installed manually
         s.message(`${chalk.yellow('⚠️')} Could not install default components automatically`);
-        s.message(`${chalk.dim('   You can install them manually:')} ${chalk.cyan('cd packages/ui && bun install && bunx shadcn@latest add button card')}`);
+        s.message(
+          `${chalk.dim('   You can install them manually:')} ${chalk.cyan('cd packages/ui && bun install && bunx shadcn@latest add button card')}`
+        );
       }
     }
-    
+
     s.stop(`${chalk.green('✅')} Project ${chalk.bold(name)} created successfully!`);
 
     const getPresetEmoji = () => {
       switch (normalizedPreset) {
-        case 'minimal': return '⚡';
-        case 'nextjs': return '🌐';
-        case 'hono-api': return '🚀';
-        case 'bun-api': return '⚡';
-        case 'bun-fullstack': return '🔥';
-        case 'nextjs-monorepo': return '📦';
-        case 'bun-monorepo': return '🔥';
-        case 'enterprise-monorepo': return '🏢';
-        default: return '✨';
+        case 'minimal':
+          return '⚡';
+        case 'nextjs':
+          return '🌐';
+        case 'hono-api':
+          return '🚀';
+        case 'bun-api':
+          return '⚡';
+        case 'bun-fullstack':
+          return '🔥';
+        case 'nextjs-monorepo':
+          return '📦';
+        case 'bun-monorepo':
+          return '🔥';
+        case 'enterprise-monorepo':
+          return '🏢';
+        default:
+          return '✨';
       }
     };
 
@@ -266,30 +284,37 @@ export async function createCommand(
       `${chalk.bold.cyan('📁 Navigate to your project')}`,
       `${chalk.cyan('cd')} ${chalk.bold(name)}`,
       '',
-      options.install === false ? [
-        `${chalk.bold.cyan('📦 Install dependencies')}`,
-        `${chalk.cyan('bun install')}`,
-        '',
-      ].join('\n') : '',
+      options.install === false
+        ? [
+            `${chalk.bold.cyan('📦 Install dependencies')}`,
+            `${chalk.cyan('bun install')}`,
+            '',
+          ].join('\n')
+        : '',
       `${chalk.bold.cyan('🚀 Start development')}`,
       `${chalk.cyan(normalizedPreset === 'nextjs' ? 'bun dev' : 'bun run dev')} ${chalk.dim('# Start development server')}`,
       '',
       `${chalk.dim('─'.repeat(40))}`,
       `${chalk.bold.yellow('💡 Tip')}`,
       `  Use ${chalk.cyan('bunkit init')} for full customization options`,
-    ].filter(Boolean).join('\n');
+    ]
+      .filter(Boolean)
+      .join('\n');
 
-    console.log('\n' + boxen(nextStepsContent, {
-      padding: { top: 1, bottom: 1, left: 2, right: 2 },
-      title: `${getPresetEmoji()} Next Steps`,
-      titleAlignment: 'left',
-      borderColor: 'green',
-      borderStyle: 'round',
-      dimBorder: false,
-    }));
+    console.log(
+      '\n' +
+        boxen(nextStepsContent, {
+          padding: { top: 1, bottom: 1, left: 2, right: 2 },
+          title: `${getPresetEmoji()} Next Steps`,
+          titleAlignment: 'left',
+          borderColor: 'green',
+          borderStyle: 'round',
+          dimBorder: false,
+        })
+    );
   } catch (error) {
     s.stop(`${chalk.red('❌')} Project creation failed`);
-    
+
     const errorBox = [
       `${chalk.bold.red('Error occurred')}`,
       '',
@@ -298,11 +323,14 @@ export async function createCommand(
       `${chalk.dim('Need help?')} ${chalk.cyan('https://github.com/Arakiss/bunkit/issues')}`,
     ].join('\n');
 
-    console.log('\n' + boxen(errorBox, {
-      padding: { top: 1, bottom: 1, left: 2, right: 2 },
-      borderColor: 'red',
-      borderStyle: 'round',
-    }));
+    console.log(
+      '\n' +
+        boxen(errorBox, {
+          padding: { top: 1, bottom: 1, left: 2, right: 2 },
+          borderColor: 'red',
+          borderStyle: 'round',
+        })
+    );
 
     throw error;
   }

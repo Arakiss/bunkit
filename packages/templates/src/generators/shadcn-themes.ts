@@ -465,15 +465,12 @@ export const themes: Record<string, ShadcnTheme> = {
 /**
  * Generate CSS for a theme (Tailwind CSS v4 format)
  * Based on official Tailwind CSS v4 documentation: https://tailwindcss.com/blog/tailwindcss-v4#css-first-configuration
- * 
+ *
  * Tailwind v4 uses CSS-first configuration with @theme inline directive.
  * Colors are stored in OKLCH format (Tailwind v4's default) and exposed via CSS variables.
  * NO tailwind.config.ts is needed - everything is configured in CSS.
  */
-export function generateThemeCSS(
-  theme: ShadcnTheme,
-  customRadius?: string
-): string {
+export function generateThemeCSS(theme: ShadcnTheme, customRadius?: string): string {
   const radius = customRadius || theme.light.radius;
 
   // Tailwind v4 uses OKLCH colors by default (modern color space)
@@ -605,4 +602,3 @@ export function generateThemeCSS(
 }
 `;
 }
-

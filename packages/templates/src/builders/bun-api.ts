@@ -1,42 +1,42 @@
+import { type DatabaseType, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext, type DatabaseType } from '@bunkit/core';
+import { setupBetterAuth, setupNextAuth } from '../generators/auth';
+import { setupBunServeNative } from '../generators/bun-serve';
+import { generateBunfigContent } from '../generators/bunfig';
+import { setupGitHubActions } from '../generators/cicd';
 import {
-  setupPostgresDrizzle,
-  setupPostgresPrisma,
   setupMySQLDrizzle,
   setupMySQLPrisma,
-  setupSupabaseOnly,
-  setupSupabaseDrizzle,
-  setupSupabasePrisma,
+  setupPostgresDrizzle,
+  setupPostgresPrisma,
+  setupRedis,
   setupSQLiteDrizzle,
   setupSQLitePrisma,
-  setupRedis,
+  setupSupabaseDrizzle,
+  setupSupabaseOnly,
+  setupSupabasePrisma,
 } from '../generators/database';
-import {
-  setupBetterAuth,
-  setupNextAuth,
-} from '../generators/auth';
-import { setupBunServeNative } from '../generators/bun-serve';
-import { setupBunSecrets } from '../generators/secrets';
-import { generateBunfigContent } from '../generators/bunfig';
-import { setupUltracite, setupBiome } from '../generators/ultracite';
-import { setupDocker } from '../generators/docker';
-import { setupGitHubActions } from '../generators/cicd';
 import { setupVSCodeDebug } from '../generators/debug';
+import { setupDocker } from '../generators/docker';
 import { generateBunApiReadme } from '../generators/readme';
+import { setupBunSecrets } from '../generators/secrets';
+import { setupBiome, setupUltracite } from '../generators/ultracite';
 
 // Database setup function map
-const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
+const databaseSetupMap: Record<
+  DatabaseType,
+  (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>
+> = {
   'postgres-drizzle': setupPostgresDrizzle,
   'postgres-prisma': setupPostgresPrisma,
   'mysql-drizzle': setupMySQLDrizzle,
   'mysql-prisma': setupMySQLPrisma,
-  'supabase': setupSupabaseOnly,
+  supabase: setupSupabaseOnly,
   'supabase-drizzle': setupSupabaseDrizzle,
   'supabase-prisma': setupSupabasePrisma,
   'sqlite-drizzle': setupSQLiteDrizzle,
   'sqlite-prisma': setupSQLitePrisma,
-  'none': async () => {}, // No-op
+  none: async () => {}, // No-op
 };
 
 /**
@@ -111,10 +111,7 @@ export async function buildBunApiPreset(
     },
   };
 
-  await writeFile(
-    join(projectPath, 'package.json'),
-    JSON.stringify(packageJson, null, 2)
-  );
+  await writeFile(join(projectPath, 'package.json'), JSON.stringify(packageJson, null, 2));
 
   // Create bunfig.toml
   const bunfigContent = generateBunfigContent(context);
@@ -123,4 +120,3 @@ export async function buildBunApiPreset(
   // Generate README.md with author attribution
   await generateBunApiReadme(projectPath, context);
 }
-

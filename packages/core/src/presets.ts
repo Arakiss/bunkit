@@ -1,5 +1,5 @@
 import { join } from 'pathe';
-import { readFile, writeFile, ensureDirectory } from './fs';
+import { ensureDirectory, readFile, writeFile } from './fs';
 import type { ProjectConfig } from './types';
 
 export interface CustomPreset {
@@ -27,7 +27,7 @@ export async function loadCustomPresets(): Promise<Record<string, CustomPreset>>
     await ensureDirectory(presetsDir);
     const content = await readFile(getPresetsFile());
     return JSON.parse(content);
-  } catch (error) {
+  } catch (_error) {
     // File doesn't exist or is invalid - return empty object
     return {};
   }
@@ -39,14 +39,14 @@ export async function loadCustomPresets(): Promise<Record<string, CustomPreset>>
 export async function saveCustomPreset(preset: CustomPreset): Promise<void> {
   await ensureDirectory(getPresetsDir());
   const presets = await loadCustomPresets();
-  
+
   const existing = presets[preset.name];
   presets[preset.name] = {
     ...preset,
     createdAt: existing?.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  
+
   await writeFile(getPresetsFile(), JSON.stringify(presets, null, 2));
 }
 
@@ -58,7 +58,7 @@ export async function deleteCustomPreset(name: string): Promise<boolean> {
   if (!presets[name]) {
     return false;
   }
-  
+
   delete presets[name];
   await writeFile(getPresetsFile(), JSON.stringify(presets, null, 2));
   return true;
@@ -79,4 +79,3 @@ export async function listCustomPresets(): Promise<CustomPreset[]> {
   const presets = await loadCustomPresets();
   return Object.values(presets);
 }
-

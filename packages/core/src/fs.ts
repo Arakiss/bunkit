@@ -1,6 +1,13 @@
+import {
+  cp,
+  mkdir,
+  readFile as nodeReadFile,
+  writeFile as nodeWriteFile,
+  readdir,
+  stat,
+} from 'node:fs/promises';
 import { glob } from 'fast-glob';
-import { join, resolve, dirname, basename } from 'pathe';
-import { mkdir, stat, readdir, readFile as nodeReadFile, writeFile as nodeWriteFile, cp } from 'node:fs/promises';
+import { basename, dirname, resolve } from 'pathe';
 import type { FileOperationResult } from './types';
 
 /**
@@ -48,10 +55,7 @@ export async function copyPath(source: string, destination: string): Promise<voi
 /**
  * Write file with content, creating directories if needed
  */
-export async function writeFile(
-  path: string,
-  content: string
-): Promise<FileOperationResult> {
+export async function writeFile(path: string, content: string): Promise<FileOperationResult> {
   try {
     await ensureDirectory(dirname(path));
     await nodeWriteFile(path, content, 'utf-8');

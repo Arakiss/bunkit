@@ -1,5 +1,5 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 
 /**
  * Setup Bun.serve() native routing for API servers
@@ -8,7 +8,7 @@ import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 export async function setupBunServeNative(
   projectPath: string,
   context: TemplateContext,
-  isMonorepo: boolean = false
+  _isMonorepo: boolean = false
 ): Promise<void> {
   // If isMonorepo is true, projectPath is already the app path (e.g., apps/api)
   // If false, projectPath is the root project path
@@ -96,7 +96,9 @@ export function setupRoutes() {
       });
     },
 
-${context.database && context.database !== 'none' ? `    // Database example routes
+${
+  context.database && context.database !== 'none'
+    ? `    // Database example routes
     '/api/users': {
       GET: async () => {
         try {
@@ -123,7 +125,8 @@ ${context.database && context.database !== 'none' ? `    // Database example rou
         console.error('Database error:', error);
         return Response.json({ error: 'Failed to fetch user' }, { status: 500 });
       }
-    },` : `    // Example POST route
+    },`
+    : `    // Example POST route
     '/api/example': {
       POST: async (req: Request) => {
         try {
@@ -136,7 +139,8 @@ ${context.database && context.database !== 'none' ? `    // Database example rou
           return Response.json({ error: 'Invalid JSON' }, { status: 400 });
         }
       },
-    },`}
+    },`
+}
 
     // Wildcard for unmatched API routes
     '/api/*': () => {
@@ -264,4 +268,3 @@ export function errorResponse(error: string, status: number = 400): Response {
 
   await writeFile(join(utilsPath, 'index.ts'), utilsIndex);
 }
-

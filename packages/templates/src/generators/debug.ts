@@ -1,12 +1,12 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 
 /**
  * Setup VSCode debugging configuration for Bun
  */
 export async function setupVSCodeDebug(
   projectPath: string,
-  context: TemplateContext,
+  _context: TemplateContext,
   preset: 'minimal' | 'web' | 'api' | 'full' = 'api'
 ): Promise<void> {
   const vscodePath = join(projectPath, '.vscode');
@@ -24,7 +24,10 @@ export async function setupVSCodeDebug(
               name: 'Debug Bun',
               type: 'bun',
               request: 'launch',
-              program: preset === 'minimal' ? '${workspaceFolder}/src/index.ts' : '${workspaceFolder}/src/index.ts',
+              program:
+                preset === 'minimal'
+                  ? '${workspaceFolder}/src/index.ts'
+                  : '${workspaceFolder}/src/index.ts',
               cwd: '${workspaceFolder}',
               env: {},
               stopOnEntry: false,
@@ -33,7 +36,10 @@ export async function setupVSCodeDebug(
               name: 'Debug Bun (Break on Start)',
               type: 'bun',
               request: 'launch',
-              program: preset === 'minimal' ? '${workspaceFolder}/src/index.ts' : '${workspaceFolder}/src/index.ts',
+              program:
+                preset === 'minimal'
+                  ? '${workspaceFolder}/src/index.ts'
+                  : '${workspaceFolder}/src/index.ts',
               cwd: '${workspaceFolder}',
               env: {},
               stopOnEntry: true,
@@ -100,10 +106,7 @@ export async function setupVSCodeDebug(
   };
 
   const launchConfig = getLaunchConfig();
-  await writeFile(
-    join(vscodePath, 'launch.json'),
-    JSON.stringify(launchConfig, null, 2)
-  );
+  await writeFile(join(vscodePath, 'launch.json'), JSON.stringify(launchConfig, null, 2));
 
   // Settings for better Bun development experience
   const settings = {
@@ -127,22 +130,12 @@ export async function setupVSCodeDebug(
     },
   };
 
-  await writeFile(
-    join(vscodePath, 'settings.json'),
-    JSON.stringify(settings, null, 2)
-  );
+  await writeFile(join(vscodePath, 'settings.json'), JSON.stringify(settings, null, 2));
 
   // Extensions recommendations
   const extensions = {
-    recommendations: [
-      'oven.bun-vscode',
-      'biomejs.biome',
-    ],
+    recommendations: ['oven.bun-vscode', 'biomejs.biome'],
   };
 
-  await writeFile(
-    join(vscodePath, 'extensions.json'),
-    JSON.stringify(extensions, null, 2)
-  );
+  await writeFile(join(vscodePath, 'extensions.json'), JSON.stringify(extensions, null, 2));
 }
-

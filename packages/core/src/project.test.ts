@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'pathe';
-import { mkdtemp, rm, mkdir } from 'fs/promises';
-import { tmpdir } from 'os';
 import { createProject, createTemplateContext } from './project';
 import type { ProjectConfig } from './types';
 
@@ -103,7 +103,7 @@ describe('createProject', () => {
       const projectPath = join(testDir, 'my-project');
       const packageJsonPath = join(projectPath, 'package.json');
       const packageJson = await Bun.file(packageJsonPath).json();
-      
+
       expect(packageJson.name).toBe('my-project');
     });
 
@@ -159,7 +159,7 @@ describe('createProject', () => {
       await createProject(config);
 
       const projectPath = join(testDir, 'test-project');
-      
+
       // Check that essential files were created
       expect(await Bun.file(join(projectPath, 'package.json')).exists()).toBe(true);
       expect(await Bun.file(join(projectPath, '.gitignore')).exists()).toBe(true);
@@ -189,7 +189,7 @@ describe('createProject', () => {
 
       const projectPath = join(testDir, 'my-awesome-project');
       const packageJson = await Bun.file(join(projectPath, 'package.json')).json();
-      
+
       expect(packageJson.name).toBe('my-awesome-project');
       expect(packageJson.version).toBe('0.0.0');
       expect(packageJson.private).toBe(true);
@@ -219,7 +219,7 @@ describe('createProject', () => {
 
       const projectPath = join(testDir, 'web-project');
       const packageJson = await Bun.file(join(projectPath, 'package.json')).json();
-      
+
       expect(packageJson.scripts.dev).toContain('next dev');
       expect(packageJson.scripts.build).toBe('next build');
     });
@@ -247,7 +247,7 @@ describe('createProject', () => {
 
       const projectPath = join(testDir, 'api-project');
       const packageJson = await Bun.file(join(projectPath, 'package.json')).json();
-      
+
       expect(packageJson.scripts.dev).toContain('bun run --hot');
       expect(packageJson.scripts.test).toBe('bun test');
     });
@@ -275,7 +275,7 @@ describe('createProject', () => {
 
       const projectPath = join(testDir, 'full-project');
       const packageJson = await Bun.file(join(projectPath, 'package.json')).json();
-      
+
       expect(packageJson.scripts.dev).toContain('bun run --filter');
       expect(packageJson.scripts.build).toContain('bun run --filter');
     });
@@ -303,7 +303,7 @@ describe('createProject', () => {
 
       const projectPath = join(testDir, 'unknown-project');
       const packageJson = await Bun.file(join(projectPath, 'package.json')).json();
-      
+
       expect(packageJson.scripts).toEqual({});
     });
 
@@ -329,9 +329,7 @@ describe('createProject', () => {
         pathAliases: true,
       };
 
-      await expect(createProject(config)).rejects.toThrow(
-        'already exists and is not empty'
-      );
+      await expect(createProject(config)).rejects.toThrow('already exists and is not empty');
     });
 
     it('should initialize git when git is enabled and available', async () => {
@@ -512,4 +510,3 @@ describe('createProject', () => {
     });
   });
 });
-

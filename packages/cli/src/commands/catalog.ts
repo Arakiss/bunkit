@@ -1,8 +1,8 @@
+import { existsSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import * as p from '@clack/prompts';
-import pc from 'picocolors';
-import { readFile, writeFile } from 'fs/promises';
 import { join } from 'pathe';
-import { existsSync } from 'fs';
+import pc from 'picocolors';
 
 /**
  * Options for catalog commands
@@ -18,7 +18,7 @@ interface CatalogOptions {
  */
 async function readCatalog(cwd: string): Promise<Record<string, string>> {
   const packageJsonPath = join(cwd, 'package.json');
-  
+
   if (!existsSync(packageJsonPath)) {
     throw new Error('package.json not found. Are you in a project root?');
   }
@@ -33,13 +33,10 @@ async function readCatalog(cwd: string): Promise<Record<string, string>> {
 async function writeCatalog(cwd: string, catalog: Record<string, string>): Promise<void> {
   const packageJsonPath = join(cwd, 'package.json');
   const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
-  
+
   packageJson.catalog = catalog;
-  
-  await writeFile(
-    packageJsonPath,
-    JSON.stringify(packageJson, null, 2) + '\n'
-  );
+
+  await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
 }
 
 /**
@@ -132,7 +129,7 @@ export async function catalogSyncCommand(options: CatalogOptions = {}) {
 
   try {
     spinner.start('Detecting monorepo structure...');
-    
+
     const rootPackageJsonPath = join(cwd, 'package.json');
     if (!existsSync(rootPackageJsonPath)) {
       throw new Error('package.json not found. Are you in a monorepo root?');
@@ -151,7 +148,7 @@ export async function catalogSyncCommand(options: CatalogOptions = {}) {
     // Find all package.json files in workspaces
     const { glob } = await import('fast-glob');
     const workspacePatterns = rootPackageJson.workspaces || [];
-    
+
     if (workspacePatterns.length === 0) {
       p.log.warn('No workspaces found. This command works best in a monorepo.');
       process.exit(0);
@@ -204,10 +201,7 @@ export async function catalogSyncCommand(options: CatalogOptions = {}) {
       }
 
       if (modified) {
-        await writeFile(
-          packageJsonPath,
-          JSON.stringify(packageJson, null, 2) + '\n'
-        );
+        await writeFile(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`);
         updatedCount++;
         totalReplacements += replacements;
       }
@@ -236,61 +230,58 @@ export async function catalogSyncCommand(options: CatalogOptions = {}) {
  */
 export async function catalogListCommand(options: CatalogOptions = {}) {
   const cwd = options.cwd || process.cwd();
+  const catalog = await readCatalog(cwd);
 
-  try {
-    const catalog = await readCatalog(cwd);
+  if (Object.keys(catalog).length === 0) {
+    p.log.info('Catalog is empty. Add packages with: bunkit catalog add');
+    return;
+  }
 
-    if (Object.keys(catalog).length === 0) {
-      p.log.info('Catalog is empty. Add packages with: bunkit catalog add');
-      return;
-    }
+  p.log.info(`Found ${Object.keys(catalog).length} package(s) in catalog:\n`);
 
-    p.log.info(`Found ${Object.keys(catalog).length} package(s) in catalog:\n`);
+  // Group by category (comments in catalog)
+  const categories: Record<string, Array<[string, string]>> = {};
+  let currentCategory = 'Other';
 
-    // Group by category (comments in catalog)
-    const categories: Record<string, Array<[string, string]>> = {};
-    let currentCategory = 'Other';
+  // Read package.json to preserve comments structure
+  const packageJsonPath = join(cwd, 'package.json');
+  const packageJsonContent = await readFile(packageJsonPath, 'utf-8');
+  const lines = packageJsonContent.split('\n');
 
-    // Read package.json to preserve comments structure
-    const packageJsonPath = join(cwd, 'package.json');
-    const packageJsonContent = await readFile(packageJsonPath, 'utf-8');
-    const lines = packageJsonContent.split('\n');
-    
-    for (const [packageName, version] of Object.entries(catalog)) {
-      // Try to find category by looking at lines before the package
-      const packageIndex = lines.findIndex((line) => 
-        line.includes(`"${packageName}"`) && line.includes(version)
-      );
-      
-      if (packageIndex > 0) {
-        // Look backwards for comment
-        for (let i = packageIndex - 1; i >= 0; i--) {
-          if (lines[i].trim().startsWith('"//')) {
-            currentCategory = lines[i].trim().replace(/^"\/\/\s*/, '').replace(/":\s*$/, '');
-            break;
-          }
+  for (const [packageName, version] of Object.entries(catalog)) {
+    // Try to find category by looking at lines before the package
+    const packageIndex = lines.findIndex(
+      (line) => line.includes(`"${packageName}"`) && line.includes(version)
+    );
+
+    if (packageIndex > 0) {
+      // Look backwards for comment
+      for (let i = packageIndex - 1; i >= 0; i--) {
+        if (lines[i].trim().startsWith('"//')) {
+          currentCategory = lines[i]
+            .trim()
+            .replace(/^"\/\/\s*/, '')
+            .replace(/":\s*$/, '');
+          break;
         }
       }
-
-      if (!categories[currentCategory]) {
-        categories[currentCategory] = [];
-      }
-      categories[currentCategory].push([packageName, version]);
     }
 
-    // Display grouped
-    for (const [category, packages] of Object.entries(categories)) {
-      if (category !== 'Other') {
-        console.log(pc.dim(`\n// ${category}`));
-      }
-      for (const [packageName, version] of packages) {
-        console.log(`  ${pc.cyan(packageName.padEnd(30))} ${pc.yellow(version)}`);
-      }
+    if (!categories[currentCategory]) {
+      categories[currentCategory] = [];
     }
-
-    console.log('');
-  } catch (error) {
-    throw error;
+    categories[currentCategory].push([packageName, version]);
   }
-}
 
+  // Display grouped
+  for (const [category, packages] of Object.entries(categories)) {
+    if (category !== 'Other') {
+      console.log(pc.dim(`\n// ${category}`));
+    }
+    for (const [packageName, version] of packages) {
+      console.log(`  ${pc.cyan(packageName.padEnd(30))} ${pc.yellow(version)}`);
+    }
+  }
+
+  console.log('');
+}

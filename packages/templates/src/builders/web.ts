@@ -1,20 +1,17 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 import { generateBunfigContent } from '../generators/bunfig';
-import { setupUltracite, setupBiome } from '../generators/ultracite';
-import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
-import { setupShadcnWeb } from '../generators/shadcn';
 import { setupVSCodeDebug } from '../generators/debug';
+import { setupDocker } from '../generators/docker';
 import { generateNextjsReadme } from '../generators/readme';
+import { setupShadcnWeb } from '../generators/shadcn';
+import { setupBiome, setupUltracite } from '../generators/ultracite';
 
 /**
  * Build web (Next.js) preset files
  */
-export async function buildWebPreset(
-  projectPath: string,
-  context: TemplateContext
-): Promise<void> {
+export async function buildWebPreset(projectPath: string, context: TemplateContext): Promise<void> {
   // Create directories
   await ensureDirectory(join(projectPath, 'src/app'));
   await ensureDirectory(join(projectPath, 'public'));
@@ -157,10 +154,7 @@ export default config;
     exclude: ['node_modules'],
   };
 
-  await writeFile(
-    join(projectPath, 'tsconfig.json'),
-    JSON.stringify(tsconfigContent, null, 2)
-  );
+  await writeFile(join(projectPath, 'tsconfig.json'), JSON.stringify(tsconfigContent, null, 2));
 
   // bunfig.toml with enhanced defaults
   const bunfigContent = generateBunfigContent(context);
@@ -226,10 +220,12 @@ export default config;
     existingPackageJson.scripts.debug = 'bun --inspect node_modules/.bin/next dev --turbopack';
   }
   if (!existingPackageJson.scripts['debug:brk']) {
-    existingPackageJson.scripts['debug:brk'] = 'bun --inspect-brk node_modules/.bin/next dev --turbopack';
+    existingPackageJson.scripts['debug:brk'] =
+      'bun --inspect-brk node_modules/.bin/next dev --turbopack';
   }
   if (!existingPackageJson.scripts['debug:wait']) {
-    existingPackageJson.scripts['debug:wait'] = 'bun --inspect-wait node_modules/.bin/next dev --turbopack';
+    existingPackageJson.scripts['debug:wait'] =
+      'bun --inspect-wait node_modules/.bin/next dev --turbopack';
   }
   await writeFile(packageJsonPath, JSON.stringify(existingPackageJson, null, 2));
 

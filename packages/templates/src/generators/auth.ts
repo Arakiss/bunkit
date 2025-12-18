@@ -1,5 +1,5 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 
 /**
  * Setup Better Auth
@@ -10,9 +10,7 @@ export async function setupBetterAuth(
   context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const authPath = isMonorepo
-    ? join(projectPath, 'packages/auth')
-    : join(projectPath, 'src/auth');
+  const authPath = isMonorepo ? join(projectPath, 'packages/auth') : join(projectPath, 'src/auth');
 
   await ensureDirectory(authPath);
 
@@ -157,9 +155,7 @@ export async function setupNextAuth(
   context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const authPath = isMonorepo
-    ? join(projectPath, 'packages/auth')
-    : join(projectPath, 'src/auth');
+  const authPath = isMonorepo ? join(projectPath, 'packages/auth') : join(projectPath, 'src/auth');
 
   await ensureDirectory(authPath);
 
@@ -380,4 +376,3 @@ export function getAuthDependencies(authProvider: string): Record<string, string
       return {};
   }
 }
-

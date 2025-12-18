@@ -91,7 +91,7 @@ export async function updateRootPackageJson(
     ...updates,
   };
 
-  await writeFile(packageJsonPath, JSON.stringify(updated, null, 2) + '\n');
+  await writeFile(packageJsonPath, `${JSON.stringify(updated, null, 2)}\n`);
 }
 
 /**

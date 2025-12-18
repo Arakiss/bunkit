@@ -1,5 +1,5 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 
 /**
  * Setup PostgreSQL + Drizzle ORM
@@ -9,9 +9,7 @@ export async function setupPostgresDrizzle(
   context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const dbPath = isMonorepo
-    ? join(projectPath, 'packages/db')
-    : join(projectPath, 'src/db');
+  const dbPath = isMonorepo ? join(projectPath, 'packages/db') : join(projectPath, 'src/db');
 
   await ensureDirectory(join(dbPath, 'schema'));
 
@@ -78,9 +76,7 @@ export async function setupSupabaseOnly(
   context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const dbPath = isMonorepo
-    ? join(projectPath, 'packages/db')
-    : join(projectPath, 'src/db');
+  const dbPath = isMonorepo ? join(projectPath, 'packages/db') : join(projectPath, 'src/db');
 
   await ensureDirectory(dbPath);
 
@@ -107,20 +103,40 @@ export const supabase = createClient(
   }
 );
 
-${hasAuth ? `// Auth helpers
-export const auth = supabase.auth;` : ''}
+${
+  hasAuth
+    ? `// Auth helpers
+export const auth = supabase.auth;`
+    : ''
+}
 
-${hasStorage ? `// Storage helpers
-export const storage = supabase.storage;` : ''}
+${
+  hasStorage
+    ? `// Storage helpers
+export const storage = supabase.storage;`
+    : ''
+}
 
-${hasRealtime ? `// Realtime helpers
-export const realtime = supabase.realtime;` : ''}
+${
+  hasRealtime
+    ? `// Realtime helpers
+export const realtime = supabase.realtime;`
+    : ''
+}
 
-${hasEdgeFunctions ? `// Edge Functions helpers
-export const functions = supabase.functions;` : ''}
+${
+  hasEdgeFunctions
+    ? `// Edge Functions helpers
+export const functions = supabase.functions;`
+    : ''
+}
 
-${hasDatabase ? `// Database helpers (using Supabase client directly)
-export const db = supabase.from;` : ''}
+${
+  hasDatabase
+    ? `// Database helpers (using Supabase client directly)
+export const db = supabase.from;`
+    : ''
+}
 `;
 
   await writeFile(join(dbPath, 'index.ts'), clientContent);
@@ -129,7 +145,9 @@ export const db = supabase.from;` : ''}
   const examplesContent = `// Supabase usage examples
 import { supabase${hasAuth ? ', auth' : ''}${hasStorage ? ', storage' : ''}${hasRealtime ? ', realtime' : ''}${hasEdgeFunctions ? ', functions' : ''}${hasDatabase ? ', db' : ''} } from './index';
 
-${hasAuth ? `// Auth example
+${
+  hasAuth
+    ? `// Auth example
 export async function signUp(email: string, password: string) {
   const { data, error } = await auth.signUp({
     email,
@@ -149,9 +167,13 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
   const { error } = await auth.signOut();
   return { error };
-}` : ''}
+}`
+    : ''
+}
 
-${hasStorage ? `// Storage example
+${
+  hasStorage
+    ? `// Storage example
 export async function uploadFile(bucket: string, path: string, file: File) {
   const { data, error } = await storage.from(bucket).upload(path, file);
   return { data, error };
@@ -160,27 +182,41 @@ export async function uploadFile(bucket: string, path: string, file: File) {
 export function getPublicUrl(bucket: string, path: string) {
   const { data } = storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
-}` : ''}
+}`
+    : ''
+}
 
-${hasRealtime ? `// Realtime example
+${
+  hasRealtime
+    ? `// Realtime example
 export function subscribeToChannel(channel: string, callback: (payload: any) => void) {
   const channelInstance = realtime.channel(channel);
   channelInstance.on('postgres_changes', { event: '*', schema: 'public', table: '*' }, callback);
   channelInstance.subscribe();
   return channelInstance;
-}` : ''}
+}`
+    : ''
+}
 
-${hasEdgeFunctions ? `// Edge Functions example
+${
+  hasEdgeFunctions
+    ? `// Edge Functions example
 export async function invokeFunction(functionName: string, body?: any) {
   const { data, error } = await functions.invoke(functionName, { body });
   return { data, error };
-}` : ''}
+}`
+    : ''
+}
 
-${hasDatabase ? `// Database example (using Supabase client directly)
+${
+  hasDatabase
+    ? `// Database example (using Supabase client directly)
 export async function getUsers() {
   const { data, error } = await supabase.from('users').select('*');
   return { data, error };
-}` : ''}
+}`
+    : ''
+}
 `;
 
   await writeFile(join(dbPath, 'examples.ts'), examplesContent);
@@ -208,9 +244,7 @@ export async function setupSupabaseDrizzle(
   context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const dbPath = isMonorepo
-    ? join(projectPath, 'packages/db')
-    : join(projectPath, 'src/db');
+  const dbPath = isMonorepo ? join(projectPath, 'packages/db') : join(projectPath, 'src/db');
 
   await ensureDirectory(join(dbPath, 'schema'));
 
@@ -258,21 +292,41 @@ export const supabase = createClient(
   }
 );
 
-${hasAuth ? `// Auth helpers
-export const auth = supabase.auth;` : ''}
+${
+  hasAuth
+    ? `// Auth helpers
+export const auth = supabase.auth;`
+    : ''
+}
 
-${hasStorage ? `// Storage helpers
-export const storage = supabase.storage;` : ''}
+${
+  hasStorage
+    ? `// Storage helpers
+export const storage = supabase.storage;`
+    : ''
+}
 
-${hasRealtime ? `// Realtime helpers
-export const realtime = supabase.realtime;` : ''}
+${
+  hasRealtime
+    ? `// Realtime helpers
+export const realtime = supabase.realtime;`
+    : ''
+}
 
-${hasEdgeFunctions ? `// Edge Functions helpers
-export const functions = supabase.functions;` : ''}
+${
+  hasEdgeFunctions
+    ? `// Edge Functions helpers
+export const functions = supabase.functions;`
+    : ''
+}
 
 // Drizzle client for type-safe database queries
-${hasDatabase ? `const queryClient = postgres(process.env.DATABASE_URL!);
-export const db = drizzle(queryClient, { schema });` : '// Database queries via Drizzle ORM'}
+${
+  hasDatabase
+    ? `const queryClient = postgres(process.env.DATABASE_URL!);
+export const db = drizzle(queryClient, { schema });`
+    : '// Database queries via Drizzle ORM'
+}
 `;
 
   await writeFile(join(dbPath, 'index.ts'), clientContent);
@@ -283,7 +337,9 @@ import { supabase${hasAuth ? ', auth' : ''}${hasStorage ? ', storage' : ''}${has
 import { users } from './schema';
 import { eq } from 'drizzle-orm';
 
-${hasAuth ? `// Auth example
+${
+  hasAuth
+    ? `// Auth example
 export async function signUp(email: string, password: string) {
   const { data, error } = await auth.signUp({
     email,
@@ -303,9 +359,13 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
   const { error } = await auth.signOut();
   return { error };
-}` : ''}
+}`
+    : ''
+}
 
-${hasStorage ? `// Storage example
+${
+  hasStorage
+    ? `// Storage example
 export async function uploadFile(bucket: string, path: string, file: File) {
   const { data, error } = await storage.from(bucket).upload(path, file);
   return { data, error };
@@ -314,30 +374,44 @@ export async function uploadFile(bucket: string, path: string, file: File) {
 export function getPublicUrl(bucket: string, path: string) {
   const { data } = storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
-}` : ''}
+}`
+    : ''
+}
 
-${hasRealtime ? `// Realtime example
+${
+  hasRealtime
+    ? `// Realtime example
 export function subscribeToChannel(channel: string, callback: (payload: any) => void) {
   const channelInstance = realtime.channel(channel);
   channelInstance.on('postgres_changes', { event: '*', schema: 'public', table: '*' }, callback);
   channelInstance.subscribe();
   return channelInstance;
-}` : ''}
+}`
+    : ''
+}
 
-${hasEdgeFunctions ? `// Edge Functions example
+${
+  hasEdgeFunctions
+    ? `// Edge Functions example
 export async function invokeFunction(functionName: string, body?: any) {
   const { data, error } = await functions.invoke(functionName, { body });
   return { data, error };
-}` : ''}
+}`
+    : ''
+}
 
-${hasDatabase ? `// Database example (using Drizzle ORM)
+${
+  hasDatabase
+    ? `// Database example (using Drizzle ORM)
 export async function getUsers() {
   return await db.select().from(users);
 }
 
 export async function getUserById(id: string) {
   return await db.select().from(users).where(eq(users.id, id));
-}` : ''}
+}`
+    : ''
+}
 `;
 
   await writeFile(join(dbPath, 'examples.ts'), examplesContent);
@@ -392,9 +466,7 @@ export async function setupSupabasePrisma(
   context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const dbPath = isMonorepo
-    ? join(projectPath, 'packages/db')
-    : join(projectPath, 'prisma');
+  const dbPath = isMonorepo ? join(projectPath, 'packages/db') : join(projectPath, 'prisma');
 
   await ensureDirectory(dbPath);
 
@@ -448,17 +520,33 @@ export const supabase = createClient(
   }
 );
 
-${hasAuth ? `// Auth helpers
-export const auth = supabase.auth;` : ''}
+${
+  hasAuth
+    ? `// Auth helpers
+export const auth = supabase.auth;`
+    : ''
+}
 
-${hasStorage ? `// Storage helpers
-export const storage = supabase.storage;` : ''}
+${
+  hasStorage
+    ? `// Storage helpers
+export const storage = supabase.storage;`
+    : ''
+}
 
-${hasRealtime ? `// Realtime helpers
-export const realtime = supabase.realtime;` : ''}
+${
+  hasRealtime
+    ? `// Realtime helpers
+export const realtime = supabase.realtime;`
+    : ''
+}
 
-${hasEdgeFunctions ? `// Edge Functions helpers
-export const functions = supabase.functions;` : ''}
+${
+  hasEdgeFunctions
+    ? `// Edge Functions helpers
+export const functions = supabase.functions;`
+    : ''
+}
 
 // Prisma client for type-safe database queries
 const globalForPrisma = globalThis as unknown as {
@@ -494,12 +582,10 @@ ${hasDatabase ? 'DATABASE_URL=postgresql://postgres:[password]@db.your-project.s
  */
 export async function setupSQLiteDrizzle(
   projectPath: string,
-  context: TemplateContext,
+  _context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const dbPath = isMonorepo
-    ? join(projectPath, 'packages/db')
-    : join(projectPath, 'src/db');
+  const dbPath = isMonorepo ? join(projectPath, 'packages/db') : join(projectPath, 'src/db');
 
   await ensureDirectory(join(dbPath, 'schema'));
 
@@ -573,9 +659,7 @@ export async function setupPostgresPrisma(
   context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const dbPath = isMonorepo
-    ? join(projectPath, 'packages/db')
-    : join(projectPath, 'prisma');
+  const dbPath = isMonorepo ? join(projectPath, 'packages/db') : join(projectPath, 'prisma');
 
   await ensureDirectory(dbPath);
 
@@ -642,9 +726,7 @@ export async function setupMySQLPrisma(
   context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const dbPath = isMonorepo
-    ? join(projectPath, 'packages/db')
-    : join(projectPath, 'prisma');
+  const dbPath = isMonorepo ? join(projectPath, 'packages/db') : join(projectPath, 'prisma');
 
   await ensureDirectory(dbPath);
 
@@ -711,9 +793,7 @@ export async function setupMySQLDrizzle(
   context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const dbPath = isMonorepo
-    ? join(projectPath, 'packages/db')
-    : join(projectPath, 'src/db');
+  const dbPath = isMonorepo ? join(projectPath, 'packages/db') : join(projectPath, 'src/db');
 
   await ensureDirectory(join(dbPath, 'schema'));
 
@@ -787,12 +867,10 @@ DB_NAME=${context.projectName}
  */
 export async function setupSQLitePrisma(
   projectPath: string,
-  context: TemplateContext,
+  _context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
-  const dbPath = isMonorepo
-    ? join(projectPath, 'packages/db')
-    : join(projectPath, 'prisma');
+  const dbPath = isMonorepo ? join(projectPath, 'packages/db') : join(projectPath, 'prisma');
 
   await ensureDirectory(dbPath);
 
@@ -865,7 +943,7 @@ DATABASE_URL="file:./dev.db"
  */
 export async function setupRedis(
   projectPath: string,
-  context: TemplateContext,
+  _context: TemplateContext,
   isMonorepo: boolean = false
 ): Promise<void> {
   const redisPath = isMonorepo
@@ -991,23 +1069,23 @@ export function getDatabaseDependencies(databaseType: string): Record<string, st
       return {
         'drizzle-orm': '^0.44.7',
         'drizzle-kit': '^0.31.7',
-        'postgres': '^3.4.7',
+        postgres: '^3.4.7',
       };
     case 'postgres-prisma':
       return {
         '@prisma/client': '^6.19.0',
-        'prisma': '^6.19.0',
+        prisma: '^6.19.0',
       };
     case 'mysql-drizzle':
       return {
         'drizzle-orm': '^0.44.7',
         'drizzle-kit': '^0.31.7',
-        'mysql2': '^3.11.5',
+        mysql2: '^3.11.5',
       };
     case 'mysql-prisma':
       return {
         '@prisma/client': '^6.19.0',
-        'prisma': '^6.19.0',
+        prisma: '^6.19.0',
       };
     case 'supabase':
       // Supabase only (without Drizzle)
@@ -1020,14 +1098,14 @@ export function getDatabaseDependencies(databaseType: string): Record<string, st
         '@supabase/supabase-js': '^2.81.1',
         'drizzle-orm': '^0.44.7',
         'drizzle-kit': '^0.31.7',
-        'postgres': '^3.4.7',
+        postgres: '^3.4.7',
       };
     case 'supabase-prisma':
       // Supabase with Prisma ORM
       return {
         '@supabase/supabase-js': '^2.81.1',
         '@prisma/client': '^6.19.0',
-        'prisma': '^6.19.0',
+        prisma: '^6.19.0',
       };
     case 'sqlite-drizzle':
       return {
@@ -1037,7 +1115,7 @@ export function getDatabaseDependencies(databaseType: string): Record<string, st
     case 'sqlite-prisma':
       return {
         '@prisma/client': '^6.19.0',
-        'prisma': '^6.19.0',
+        prisma: '^6.19.0',
       };
     default:
       return {};

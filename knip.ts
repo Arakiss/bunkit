@@ -20,13 +20,7 @@ const config: KnipConfig = {
     '!**/*.spec.{ts,tsx,js,jsx}',
   ],
 
-  ignore: [
-    'node_modules/**',
-    'dist/**',
-    'build/**',
-    '.changeset/**',
-    'packages/*/dist/**',
-  ],
+  ignore: ['node_modules/**', 'dist/**', 'build/**', '.changeset/**', 'packages/*/dist/**'],
 
   // Suppress catalog entries warning - these are template versions, not direct deps
   rules: {

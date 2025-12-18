@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtemp, rm, writeFile, mkdir } from 'fs/promises';
-import { tmpdir } from 'os';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'pathe';
 import {
-  detectMonorepo,
-  getRootPackageJson,
-  updateRootPackageJson,
-  addWorkspaceToRoot,
-  getCatalog,
   addToCatalog,
-  workspaceExists,
+  addWorkspaceToRoot,
+  detectMonorepo,
+  getCatalog,
+  getRootPackageJson,
   getWorkspaceName,
+  updateRootPackageJson,
   validateWorkspaceName,
+  workspaceExists,
 } from './monorepo';
 
 describe('monorepo utilities', () => {
@@ -149,10 +149,7 @@ describe('monorepo utilities', () => {
   describe('getRootPackageJson', () => {
     it('should read package.json from root', async () => {
       const packageJson = { name: 'test', version: '1.0.0' };
-      await writeFile(
-        join(testDir, 'package.json'),
-        JSON.stringify(packageJson, null, 2)
-      );
+      await writeFile(join(testDir, 'package.json'), JSON.stringify(packageJson, null, 2));
 
       const result = await getRootPackageJson(testDir);
 
@@ -161,9 +158,7 @@ describe('monorepo utilities', () => {
     });
 
     it('should throw error when package.json does not exist', async () => {
-      await expect(getRootPackageJson(testDir)).rejects.toThrow(
-        'No package.json found'
-      );
+      await expect(getRootPackageJson(testDir)).rejects.toThrow('No package.json found');
     });
   });
 
@@ -263,10 +258,7 @@ describe('monorepo utilities', () => {
     });
 
     it('should return empty object when catalog does not exist', async () => {
-      await writeFile(
-        join(testDir, 'package.json'),
-        JSON.stringify({ name: 'test' }, null, 2)
-      );
+      await writeFile(join(testDir, 'package.json'), JSON.stringify({ name: 'test' }, null, 2));
 
       const result = await getCatalog(testDir);
 
@@ -300,10 +292,7 @@ describe('monorepo utilities', () => {
     });
 
     it('should create catalog if it does not exist', async () => {
-      await writeFile(
-        join(testDir, 'package.json'),
-        JSON.stringify({ name: 'test' }, null, 2)
-      );
+      await writeFile(join(testDir, 'package.json'), JSON.stringify({ name: 'test' }, null, 2));
 
       await addToCatalog('package-name', '1.0.0', testDir);
 
@@ -401,4 +390,3 @@ describe('monorepo utilities', () => {
     });
   });
 });
-

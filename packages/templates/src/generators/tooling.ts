@@ -1,5 +1,5 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 
 /**
  * Setup shared tooling directory with TypeScript configurations
@@ -139,4 +139,3 @@ Extend these configurations in your workspace \`tsconfig.json\`:
 
   await writeFile(join(projectPath, 'tooling/README.md'), toolingReadme);
 }
-

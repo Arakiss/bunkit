@@ -1,17 +1,17 @@
-import * as p from '@clack/prompts';
-import pc from 'picocolors';
-import { join } from 'pathe';
 import {
-  detectMonorepo,
   addWorkspaceToRoot,
-  workspaceExists,
-  getWorkspaceName,
-  validateWorkspaceName,
+  detectMonorepo,
   ensureDirectory,
+  getWorkspaceName,
   installDependencies,
+  validateWorkspaceName,
   type WorkspacePreset,
+  workspaceExists,
 } from '@bunkit/core';
 import { buildWorkspace } from '@bunkit/templates';
+import * as p from '@clack/prompts';
+import { join } from 'pathe';
+import pc from 'picocolors';
 
 /**
  * Options for workspace command
@@ -171,8 +171,16 @@ export async function addWorkspaceCommand(options: WorkspaceOptions = {}) {
             label: 'Next.js Application',
             hint: 'Next.js 16 + React 19 + Tailwind CSS 4 - production-ready web app',
           },
-          { value: 'hono', label: 'Hono API Server', hint: 'Hono 4 + Bun.serve() - ultra-fast REST API' },
-          { value: 'library', label: 'Shared Library', hint: 'Reusable package for shared code and components' },
+          {
+            value: 'hono',
+            label: 'Hono API Server',
+            hint: 'Hono 4 + Bun.serve() - ultra-fast REST API',
+          },
+          {
+            value: 'library',
+            label: 'Shared Library',
+            hint: 'Reusable package for shared code and components',
+          },
         ],
       });
 
@@ -210,7 +218,7 @@ export async function addWorkspaceCommand(options: WorkspaceOptions = {}) {
     const { writeFile: write } = await import('@bunkit/core');
     await write(
       join(workspacePath, 'package.json'),
-      JSON.stringify(packageJsonContent, null, 2) + '\n'
+      `${JSON.stringify(packageJsonContent, null, 2)}\n`
     );
     spinner.stop('package.json generated');
 

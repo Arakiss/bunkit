@@ -1,4 +1,4 @@
-import { describe, it, expect, mock } from 'bun:test';
+import { describe, expect, it, mock } from 'bun:test';
 
 // Mock execa to throw error BEFORE importing install module
 mock.module('execa', () => ({
@@ -14,4 +14,3 @@ describe('install utilities - catch blocks', () => {
     expect(available).toBe(false);
   });
 });
-

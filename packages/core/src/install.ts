@@ -1,6 +1,6 @@
+import { readFile, writeFile } from 'node:fs/promises';
 import { execa } from 'execa';
 import { join } from 'pathe';
-import { readFile, writeFile } from 'node:fs/promises';
 import { logger } from './logger';
 
 /**
@@ -56,10 +56,7 @@ async function addDependenciesToPackageJson(
 /**
  * Add development dependencies
  */
-export async function installDevDependencies(
-  cwd: string,
-  packages: string[]
-): Promise<void> {
+export async function installDevDependencies(cwd: string, packages: string[]): Promise<void> {
   if (packages.length === 0) return;
 
   logger.step('Installing dev dependencies...');

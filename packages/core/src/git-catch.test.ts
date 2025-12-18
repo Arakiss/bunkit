@@ -1,4 +1,4 @@
-import { describe, it, expect, mock } from 'bun:test';
+import { describe, expect, it, mock } from 'bun:test';
 
 // Mock execa to throw error BEFORE importing git module
 mock.module('execa', () => ({
@@ -20,4 +20,3 @@ describe('git utilities - catch blocks', () => {
     expect(user).toEqual({});
   });
 });
-

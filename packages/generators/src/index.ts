@@ -1,6 +1,7 @@
 /**
  * Code generators for bunkit
  */
-export { generateComponent } from './component';
+
 export { generateApi } from './api';
+export { generateComponent } from './component';
 export { generateSchema } from './schema';

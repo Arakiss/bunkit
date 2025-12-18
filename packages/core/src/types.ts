@@ -2,11 +2,11 @@ import { z } from 'zod';
 
 /**
  * Preset types for project scaffolding
- * 
+ *
  * Naming convention: {framework}-{architecture}
  * - Framework: nextjs, hono-api, bun-api, bun-fullstack
  * - Architecture: (none) = single repo, monorepo = monorepo
- * 
+ *
  * Presets:
  * - minimal: Single-file Bun project - perfect for CLIs and scripts
  * - nextjs: Next.js 16 + React 19 - Production-ready web application (single repo)
@@ -16,7 +16,7 @@ import { z } from 'zod';
  * - nextjs-monorepo: Monorepo with Next.js + Hono - Enterprise SaaS architecture
  * - bun-monorepo: Monorepo with Bun.serve() - Full-stack without Next.js
  * - enterprise-monorepo: Enterprise monorepo with multiple Next.js apps and services
- * 
+ *
  * Aliases (for backwards compatibility):
  * - web → nextjs
  * - api → hono-api
@@ -24,19 +24,19 @@ import { z } from 'zod';
  * - monorepo-nextjs → nextjs-monorepo
  * - monorepo-bun → bun-monorepo
  */
-export type PresetType = 
-  | 'minimal' 
-  | 'nextjs'           // Next.js single repo (primary name)
-  | 'web'              // Alias for nextjs (backwards compatibility)
-  | 'hono-api'         // Hono API single repo (primary name)
-  | 'api'              // Alias for hono-api (backwards compatibility)
-  | 'bun-api'          // Bun.serve() native API single repo
-  | 'bun-fullstack'     // Bun.serve() + HTML imports single repo
-  | 'nextjs-monorepo'   // Next.js + Hono monorepo (primary name)
-  | 'full'              // Alias for nextjs-monorepo (backwards compatibility)
-  | 'monorepo-nextjs'   // Alias for nextjs-monorepo (backwards compatibility)
-  | 'bun-monorepo'      // Bun.serve() monorepo (primary name)
-  | 'monorepo-bun'      // Alias for bun-monorepo (backwards compatibility)
+export type PresetType =
+  | 'minimal'
+  | 'nextjs' // Next.js single repo (primary name)
+  | 'web' // Alias for nextjs (backwards compatibility)
+  | 'hono-api' // Hono API single repo (primary name)
+  | 'api' // Alias for hono-api (backwards compatibility)
+  | 'bun-api' // Bun.serve() native API single repo
+  | 'bun-fullstack' // Bun.serve() + HTML imports single repo
+  | 'nextjs-monorepo' // Next.js + Hono monorepo (primary name)
+  | 'full' // Alias for nextjs-monorepo (backwards compatibility)
+  | 'monorepo-nextjs' // Alias for nextjs-monorepo (backwards compatibility)
+  | 'bun-monorepo' // Bun.serve() monorepo (primary name)
+  | 'monorepo-bun' // Alias for bun-monorepo (backwards compatibility)
   | 'enterprise-monorepo'; // Enterprise monorepo with multiple apps and services
 
 /**
@@ -47,15 +47,15 @@ export type FeatureType = 'auth' | 'database' | 'ui' | 'payments' | 'email' | 's
 /**
  * Database options
  */
-export type DatabaseType = 
-  | 'postgres-drizzle' 
+export type DatabaseType =
+  | 'postgres-drizzle'
   | 'postgres-prisma'
   | 'mysql-drizzle'
   | 'mysql-prisma'
-  | 'supabase' 
-  | 'supabase-drizzle' 
+  | 'supabase'
+  | 'supabase-drizzle'
   | 'supabase-prisma'
-  | 'sqlite-drizzle' 
+  | 'sqlite-drizzle'
   | 'sqlite-prisma'
   | 'none';
 
@@ -120,19 +120,19 @@ export type TestingFramework = 'bun-test' | 'vitest' | 'none';
 export const ProjectConfigSchema = z.object({
   name: z.string().min(1),
   preset: z.enum([
-    'minimal', 
+    'minimal',
     'nextjs',
-    'web',              // Alias for nextjs
+    'web', // Alias for nextjs
     'hono-api',
-    'api',              // Alias for hono-api
+    'api', // Alias for hono-api
     'bun-api',
     'bun-fullstack',
     'nextjs-monorepo',
-    'full',             // Alias for nextjs-monorepo
-    'monorepo-nextjs',  // Alias for nextjs-monorepo
+    'full', // Alias for nextjs-monorepo
+    'monorepo-nextjs', // Alias for nextjs-monorepo
     'bun-monorepo',
-    'monorepo-bun',     // Alias for bun-monorepo
-    'enterprise-monorepo'
+    'monorepo-bun', // Alias for bun-monorepo
+    'enterprise-monorepo',
   ]),
   path: z.string(),
   features: z.array(z.string()).optional(),
@@ -140,31 +140,35 @@ export const ProjectConfigSchema = z.object({
   install: z.boolean().default(true),
 
   // Database configuration
-  database: z.enum([
-    'postgres-drizzle', 
-    'postgres-prisma',
-    'mysql-drizzle',
-    'mysql-prisma',
-    'supabase', 
-    'supabase-drizzle',
-    'supabase-prisma',
-    'sqlite-drizzle',
-    'sqlite-prisma',
-    'none'
-  ]).optional(),
+  database: z
+    .enum([
+      'postgres-drizzle',
+      'postgres-prisma',
+      'mysql-drizzle',
+      'mysql-prisma',
+      'supabase',
+      'supabase-drizzle',
+      'supabase-prisma',
+      'sqlite-drizzle',
+      'sqlite-prisma',
+      'none',
+    ])
+    .optional(),
 
   // Authentication configuration
   auth: z.enum(['supabase', 'better-auth', 'nextauth', 'none']).optional(),
-  
+
   // Redis configuration (optional, for caching)
   redis: z.boolean().default(false),
-  
+
   // Use Bun.secrets for credentials
   useBunSecrets: z.boolean().default(false),
 
   // Supabase configuration (only if database is supabase or supabase-drizzle)
   supabasePreset: z.enum(['full-stack', 'auth-only', 'database-only', 'custom']).optional(),
-  supabaseFeatures: z.array(z.enum(['auth', 'storage', 'realtime', 'edge-functions', 'database'])).optional(),
+  supabaseFeatures: z
+    .array(z.enum(['auth', 'storage', 'realtime', 'edge-functions', 'database']))
+    .optional(),
   supabaseWithDrizzle: z.boolean().optional(), // For supabase preset, whether to include Drizzle
 
   // Code quality
@@ -176,7 +180,7 @@ export const ProjectConfigSchema = z.object({
   // UI & Styling
   uiLibrary: z.enum(['shadcn', 'none']).optional(),
   cssFramework: z.enum(['tailwind', 'vanilla', 'css-modules']).optional(),
-  
+
   // shadcn/ui specific options
   shadcnStyle: z.enum(['new-york', 'default']).optional(),
   shadcnBaseColor: z.enum(['neutral', 'gray', 'zinc', 'stone', 'slate']).optional(),
@@ -217,30 +221,30 @@ export interface TemplateContext {
   features: string[];
   supportsTypeScript: boolean;
 
-      // Configuration options
-      database?: DatabaseType;
-      auth?: AuthProvider;
-      redis?: boolean;
-      useBunSecrets?: boolean;
-      codeQuality?: CodeQualityType;
-      tsStrictness?: TypeScriptStrictness;
-      uiLibrary?: UILibrary;
-      cssFramework?: CSSFramework;
-      testing?: TestingFramework;
-      docker?: boolean;
-      cicd?: boolean;
-      envExample?: boolean;
-      pathAliases?: boolean;
+  // Configuration options
+  database?: DatabaseType;
+  auth?: AuthProvider;
+  redis?: boolean;
+  useBunSecrets?: boolean;
+  codeQuality?: CodeQualityType;
+  tsStrictness?: TypeScriptStrictness;
+  uiLibrary?: UILibrary;
+  cssFramework?: CSSFramework;
+  testing?: TestingFramework;
+  docker?: boolean;
+  cicd?: boolean;
+  envExample?: boolean;
+  pathAliases?: boolean;
 
-      // shadcn/ui specific options
-      shadcnStyle?: ShadcnStyle;
-      shadcnBaseColor?: ShadcnBaseColor;
-      shadcnRadius?: string;
+  // shadcn/ui specific options
+  shadcnStyle?: ShadcnStyle;
+  shadcnBaseColor?: ShadcnBaseColor;
+  shadcnRadius?: string;
 
-      // Supabase specific options
-      supabasePreset?: SupabasePreset;
-      supabaseFeatures?: SupabaseFeature[];
-      supabaseWithDrizzle?: boolean;
+  // Supabase specific options
+  supabasePreset?: SupabasePreset;
+  supabaseFeatures?: SupabaseFeature[];
+  supabaseWithDrizzle?: boolean;
 
   [key: string]: unknown;
 }

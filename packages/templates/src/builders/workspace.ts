@@ -1,5 +1,5 @@
+import { ensureDirectory, type WorkspacePreset, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type WorkspacePreset } from '@bunkit/core';
 
 /**
  * Build Next.js workspace
@@ -215,10 +215,7 @@ curl http://localhost:3001
 /**
  * Build library workspace (shared package)
  */
-async function buildLibraryWorkspace(
-  workspacePath: string,
-  workspaceName: string
-): Promise<void> {
+async function buildLibraryWorkspace(workspacePath: string, workspaceName: string): Promise<void> {
   // Create directories
   await ensureDirectory(join(workspacePath, 'src'));
 

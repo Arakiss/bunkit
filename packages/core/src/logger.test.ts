@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { logger } from './logger';
 
 describe('logger', () => {
@@ -12,10 +12,10 @@ describe('logger', () => {
     originalDebug = process.env.DEBUG;
     originalConsoleLog = console.log;
     originalConsoleError = console.error;
-    
+
     logCalls = [];
     errorCalls = [];
-    
+
     console.log = mock((...args: unknown[]) => {
       logCalls.push(args);
     });
@@ -98,4 +98,3 @@ describe('logger', () => {
     });
   });
 });
-

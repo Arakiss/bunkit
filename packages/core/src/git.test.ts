@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtemp, rm, writeFile } from 'fs/promises';
-import { tmpdir } from 'os';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'pathe';
-import { isGitAvailable, initGit, isGitRepository, getGitUser } from './git';
+import { getGitUser, initGit, isGitAvailable, isGitRepository } from './git';
 
 describe('git utilities', () => {
   let testDir: string;
@@ -72,7 +72,9 @@ describe('git utilities', () => {
 
       // Check that .git directory exists
       const gitDir = join(testDir, '.git');
-      const gitDirExists = await Bun.file(gitDir).exists().catch(() => false);
+      const gitDirExists = await Bun.file(gitDir)
+        .exists()
+        .catch(() => false);
       expect(gitDirExists || (await isGitRepository(testDir))).toBe(true);
     });
 
@@ -140,4 +142,3 @@ describe('git utilities', () => {
     });
   });
 });
-

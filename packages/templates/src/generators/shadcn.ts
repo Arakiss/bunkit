@@ -1,21 +1,21 @@
-import { join } from 'pathe';
-import { writeFile, ensureDirectory, directoryExists, fileExists, type TemplateContext } from '@bunkit/core';
-import { themes, generateThemeCSS } from './shadcn-themes';
 import type { ShadcnBaseColor } from '@bunkit/core';
 import {
-  installDefaultShadcnComponents,
-  createShadcnExample,
-} from './shadcn-components';
+  directoryExists,
+  ensureDirectory,
+  fileExists,
+  type TemplateContext,
+  writeFile,
+} from '@bunkit/core';
+import { join } from 'pathe';
+import { createShadcnExample } from './shadcn-components';
 import { createShadcnDocs } from './shadcn-docs';
+import { generateThemeCSS, themes } from './shadcn-themes';
 
 /**
  * Setup shadcn/ui for a single-repo web project
  * Creates components.json and initial structure
  */
-export async function setupShadcnWeb(
-  projectPath: string,
-  context: TemplateContext
-): Promise<void> {
+export async function setupShadcnWeb(projectPath: string, context: TemplateContext): Promise<void> {
   // Create components directory
   await ensureDirectory(join(projectPath, 'src/components/ui'));
   await ensureDirectory(join(projectPath, 'src/lib'));
@@ -48,10 +48,7 @@ export async function setupShadcnWeb(
     },
   };
 
-  await writeFile(
-    join(projectPath, 'components.json'),
-    JSON.stringify(componentsJson, null, 2)
-  );
+  await writeFile(join(projectPath, 'components.json'), JSON.stringify(componentsJson, null, 2));
 
   // Create lib/utils.ts (cn utility function)
   const utilsContent = `import { clsx, type ClassValue } from 'clsx';
@@ -67,7 +64,7 @@ export function cn(...inputs: ClassValue[]) {
   // Update package.json to include shadcn/ui dependencies
   const packageJsonPath = join(projectPath, 'package.json');
   let packageJson: any = {};
-  
+
   try {
     packageJson = JSON.parse(await Bun.file(packageJsonPath).text());
   } catch {
@@ -81,7 +78,7 @@ export function cn(...inputs: ClassValue[]) {
 
   packageJson.dependencies['@radix-ui/react-slot'] = 'catalog:';
   packageJson.dependencies['class-variance-authority'] = 'catalog:';
-  packageJson.dependencies['clsx'] = 'catalog:';
+  packageJson.dependencies.clsx = 'catalog:';
   packageJson.dependencies['tailwind-merge'] = 'catalog:';
   packageJson.dependencies['lucide-react'] = 'catalog:';
 
@@ -92,7 +89,7 @@ export function cn(...inputs: ClassValue[]) {
 
   packageJson.catalog['@radix-ui/react-slot'] = '^1.2.4';
   packageJson.catalog['class-variance-authority'] = '^0.7.1';
-  packageJson.catalog['clsx'] = '^2.1.1';
+  packageJson.catalog.clsx = '^2.1.1';
   packageJson.catalog['tailwind-merge'] = '^3.4.0';
   packageJson.catalog['lucide-react'] = '^0.562.0';
   packageJson.catalog['tw-animate-css'] = '^1.2.9';
@@ -102,7 +99,7 @@ export function cn(...inputs: ClassValue[]) {
   // Update globals.css with shadcn/ui CSS variables
   const globalsCssPath = join(projectPath, 'src/app/globals.css');
   let globalsCss = '';
-  
+
   try {
     globalsCss = await Bun.file(globalsCssPath).text();
   } catch {
@@ -117,7 +114,7 @@ export function cn(...inputs: ClassValue[]) {
 
     // Append to existing CSS or create new
     if (globalsCss) {
-      globalsCss = globalsCss + '\n' + shadcnCss;
+      globalsCss = `${globalsCss}\n${shadcnCss}`;
     } else {
       globalsCss = `@import "tailwindcss";
 
@@ -155,7 +152,7 @@ export async function setupShadcnMonorepo(
 ): Promise<void> {
   const packageName = context.packageName || context.projectName.toLowerCase().replace(/\s+/g, '-');
   const uiPackageName = `@${packageName}/ui`;
-  
+
   // Get theme configuration from context
   const style = context.shadcnStyle || 'new-york';
   const baseColor = (context.shadcnBaseColor || 'zinc') as ShadcnBaseColor;
@@ -346,7 +343,7 @@ export default config;
   // Helper function to configure any Next.js app
   const configureNextJsApp = async (appName: string) => {
     const appPath = join(projectPath, `apps/${appName}`);
-    
+
     // Check if app exists
     if (!(await directoryExists(appPath))) {
       return;
@@ -368,34 +365,34 @@ export default config;
         cssVariables: true,
       },
       iconLibrary: 'lucide',
-    aliases: {
-      components: '@/components',
-      hooks: '@/hooks',
-      lib: '@/lib',
-      // Use Bun workspace alias for monorepo imports
-      utils: '@workspace/ui/lib/utils',
-      ui: '@workspace/ui/components/ui',
-    },
+      aliases: {
+        components: '@/components',
+        hooks: '@/hooks',
+        lib: '@/lib',
+        // Use Bun workspace alias for monorepo imports
+        utils: '@workspace/ui/lib/utils',
+        ui: '@workspace/ui/components/ui',
+      },
     };
 
-    await writeFile(
-      join(appPath, 'components.json'),
-      JSON.stringify(appComponentsJson, null, 2)
-    );
+    await writeFile(join(appPath, 'components.json'), JSON.stringify(appComponentsJson, null, 2));
 
     // Update layout.tsx to import UI package CSS directly (like mycelio does)
     // No local globals.css needed - import directly from workspace package
     const layoutPath = join(appPath, 'src/app/layout.tsx');
-    
+
     if (await fileExists(layoutPath)) {
       let layoutContent = await Bun.file(layoutPath).text();
-      
+
       // Remove any local globals.css import and add UI package import
       // Pattern: import './globals.css' or import "./globals.css"
       layoutContent = layoutContent.replace(/import\s+['"]\.\/globals\.css['"];?\s*\n?/g, '');
-      
+
       // Add UI package CSS import if not already present
-      if (!layoutContent.includes(`${uiPackageName}/globals.css`) && !layoutContent.includes('@workspace/ui/globals.css')) {
+      if (
+        !layoutContent.includes(`${uiPackageName}/globals.css`) &&
+        !layoutContent.includes('@workspace/ui/globals.css')
+      ) {
         // Find the first import statement and add after it
         const importMatch = layoutContent.match(/^(import\s+.*?from\s+['"].*?['"];?\s*\n)/m);
         if (importMatch) {
@@ -433,13 +430,13 @@ export default function RootLayout({
 `;
       await writeFile(layoutPath, layoutContent);
     }
-    
+
     // Create postcss.config.mjs that re-exports from UI package (like mycelio does)
     const postcssConfigPath = join(appPath, 'postcss.config.mjs');
     const postcssConfig = `export { default } from '${uiPackageName}/postcss.config';
 `;
     await writeFile(postcssConfigPath, postcssConfig);
-    
+
     // Update next.config.ts to include transpilePackages (required for workspace packages)
     const nextConfigPath = join(appPath, 'next.config.ts');
     let nextConfigContent = '';
@@ -455,7 +452,7 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 `;
     }
-    
+
     // Add transpilePackages if not present
     if (!nextConfigContent.includes('transpilePackages')) {
       // Check if it's a TypeScript or JavaScript config
@@ -474,18 +471,18 @@ export default nextConfig;
       }
       await writeFile(nextConfigPath, nextConfigContent);
     }
-    
+
     // Remove local globals.css if it exists (we import from UI package instead)
     const localGlobalsCssPath = join(appPath, 'src/app/globals.css');
     if (await fileExists(localGlobalsCssPath)) {
-      const { unlink } = await import('fs/promises');
+      const { unlink } = await import('node:fs/promises');
       await unlink(localGlobalsCssPath);
     }
 
     // Update package.json to include ui package dependency
     const packageJsonPath = join(appPath, 'package.json');
     let packageJson: any = {};
-    
+
     try {
       packageJson = JSON.parse(await Bun.file(packageJsonPath).text());
     } catch {
@@ -513,7 +510,7 @@ export default nextConfig;
   // Bun 1.3 catalogs allow centralized version management across monorepo
   const rootPackageJsonPath = join(projectPath, 'package.json');
   let rootPackageJson: any = {};
-  
+
   try {
     rootPackageJson = JSON.parse(await Bun.file(rootPackageJsonPath).text());
   } catch {
@@ -542,10 +539,9 @@ export default nextConfig;
 
   // Merge catalog entries (don't overwrite existing)
   Object.assign(rootPackageJson.catalog, shadcnDependencies);
-  
+
   await writeFile(rootPackageJsonPath, JSON.stringify(rootPackageJson, null, 2));
 
   // Create documentation in packages/ui
   await createShadcnDocs(join(projectPath, 'packages/ui'), true, context);
 }
-

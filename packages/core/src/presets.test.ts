@@ -1,15 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtemp, rm, mkdir, writeFile } from 'fs/promises';
-import { tmpdir } from 'os';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'pathe';
-import { readFile } from './fs';
 import {
-  loadCustomPresets,
-  saveCustomPreset,
+  type CustomPreset,
   deleteCustomPreset,
   getCustomPreset,
   listCustomPresets,
-  type CustomPreset,
+  loadCustomPresets,
+  saveCustomPreset,
 } from './presets';
 
 describe('presets utilities', () => {
@@ -52,7 +51,7 @@ describe('presets utilities', () => {
       const freshTestDir = await mkdtemp(join(tmpdir(), 'bunkit-presets-fresh-'));
       const originalHome = process.env.HOME;
       process.env.HOME = freshTestDir;
-      
+
       try {
         const presets = await loadCustomPresets();
         expect(presets).toEqual({});
@@ -67,7 +66,7 @@ describe('presets utilities', () => {
       const freshTestDir = await mkdtemp(join(tmpdir(), 'bunkit-presets-load-'));
       const originalHome = process.env.HOME;
       process.env.HOME = freshTestDir;
-      
+
       try {
         const presetsData = {
           'my-preset': {
@@ -116,10 +115,12 @@ describe('presets utilities', () => {
       await loadCustomPresets();
 
       const presetsDir = join(testDir, '.bunkit');
-      const dirExists = await Bun.file(presetsDir).exists().catch(() => false);
+      const _dirExists = await Bun.file(presetsDir)
+        .exists()
+        .catch(() => false);
       // Directory should be created (we can't easily check directory existence with Bun.file)
       // But the function should not throw
-      expect(typeof await loadCustomPresets()).toBe('object');
+      expect(typeof (await loadCustomPresets())).toBe('object');
     });
   });
 
@@ -326,7 +327,7 @@ describe('presets utilities', () => {
       const freshTestDir = await mkdtemp(join(tmpdir(), 'bunkit-presets-list-empty-'));
       const originalHome = process.env.HOME;
       process.env.HOME = freshTestDir;
-      
+
       try {
         const presets = await listCustomPresets();
         expect(presets).toEqual([]);
@@ -399,9 +400,8 @@ describe('presets utilities', () => {
       const presets = await listCustomPresets();
 
       expect(presets.length).toBeGreaterThanOrEqual(2);
-      expect(presets.some(p => p.name === 'preset1')).toBe(true);
-      expect(presets.some(p => p.name === 'preset2')).toBe(true);
+      expect(presets.some((p) => p.name === 'preset1')).toBe(true);
+      expect(presets.some((p) => p.name === 'preset2')).toBe(true);
     });
   });
 });
-

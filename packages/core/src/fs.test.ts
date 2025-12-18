@@ -1,18 +1,18 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtemp, rm, writeFile as fsWriteFile, mkdir } from 'fs/promises';
-import { tmpdir } from 'os';
-import { join, resolve } from 'pathe';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { writeFile as fsWriteFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'pathe';
 import {
-  directoryExists,
-  fileExists,
-  ensureDirectory,
-  isDirectoryEmpty,
-  createPackageName,
   copyPath,
-  writeFile,
-  readFile,
+  createPackageName,
+  directoryExists,
+  ensureDirectory,
+  fileExists,
   findFiles,
   getProjectName,
+  isDirectoryEmpty,
+  readFile,
+  writeFile,
 } from './fs';
 
 describe('fs utilities', () => {
@@ -280,14 +280,14 @@ describe('fs utilities', () => {
       const files = await findFiles('**/*.ts', { cwd: testDir });
 
       expect(files.length).toBeGreaterThan(0);
-      expect(files.some(f => f.includes('index.ts'))).toBe(true);
-      expect(files.some(f => f.includes('utils.ts'))).toBe(true);
+      expect(files.some((f) => f.includes('index.ts'))).toBe(true);
+      expect(files.some((f) => f.includes('utils.ts'))).toBe(true);
     });
 
     it('should ignore node_modules by default', async () => {
       const files = await findFiles('**/*.js', { cwd: testDir });
 
-      expect(files.some(f => f.includes('node_modules'))).toBe(false);
+      expect(files.some((f) => f.includes('node_modules'))).toBe(false);
     });
 
     it('should respect custom ignore patterns', async () => {
@@ -296,14 +296,14 @@ describe('fs utilities', () => {
         ignore: ['**/src/**'],
       });
 
-      expect(files.some(f => f.includes('src'))).toBe(false);
+      expect(files.some((f) => f.includes('src'))).toBe(false);
     });
 
     it('should find files with multiple patterns', async () => {
       const files = await findFiles(['**/*.ts', '**/*.tsx'], { cwd: testDir });
 
-      expect(files.some(f => f.includes('index.ts'))).toBe(true);
-      expect(files.some(f => f.includes('Button.tsx'))).toBe(true);
+      expect(files.some((f) => f.includes('index.ts'))).toBe(true);
+      expect(files.some((f) => f.includes('Button.tsx'))).toBe(true);
     });
 
     it('should find dotfiles when dot option is enabled', async () => {
@@ -348,4 +348,3 @@ describe('fs utilities', () => {
     });
   });
 });
-

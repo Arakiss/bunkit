@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'bun:test';
-import { validateProjectName, validatePath, validatePackageName } from './validation';
+import { describe, expect, it } from 'bun:test';
+import { validatePackageName, validatePath, validateProjectName } from './validation';
 
 describe('validateProjectName', () => {
   it('should accept valid project names', () => {
@@ -113,9 +113,9 @@ describe('validatePath', () => {
   });
 
   it('should reject paths with ..', () => {
-    expect(validatePath('../my-project')).toEqual({ 
+    expect(validatePath('../my-project')).toEqual({
       valid: false,
-      error: 'Path cannot contain ".."'
+      error: 'Path cannot contain ".."',
     });
   });
 
@@ -170,15 +170,15 @@ describe('validatePackageName', () => {
   });
 
   it('should reject invalid package names', () => {
-    expect(validatePackageName('')).toEqual({ 
+    expect(validatePackageName('')).toEqual({
       valid: false,
-      error: 'Project name cannot be empty'
+      error: 'Project name cannot be empty',
     });
     // Note: validatePackageName allows numbers at start, but enforces lowercase
     expect(validatePackageName('123invalid')).toEqual({ valid: true });
-    expect(validatePackageName('Invalid')).toEqual({ 
+    expect(validatePackageName('Invalid')).toEqual({
       valid: false,
-      error: 'Package name must be lowercase'
+      error: 'Package name must be lowercase',
     });
   });
 
@@ -238,4 +238,3 @@ describe('validatePackageName', () => {
     expect(result.error).toContain('empty');
   });
 });
-

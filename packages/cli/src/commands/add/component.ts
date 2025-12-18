@@ -1,8 +1,7 @@
-import * as p from '@clack/prompts';
-import { execa } from 'execa';
-import { join } from 'pathe';
-import { existsSync } from 'fs';
+import { existsSync } from 'node:fs';
 import { installShadcnComponents } from '@bunkit/templates';
+import * as p from '@clack/prompts';
+import { join } from 'pathe';
 
 /**
  * Get package name from root package.json (for monorepo)
@@ -14,7 +13,7 @@ async function getPackageName(cwd: string): Promise<string | null> {
       const packageJson = JSON.parse(await Bun.file(packageJsonPath).text());
       // Extract package name from monorepo name (e.g., "myapp-monorepo" -> "myapp")
       const name = packageJson.name;
-      if (name && name.endsWith('-monorepo')) {
+      if (name?.endsWith('-monorepo')) {
         return name.replace('-monorepo', '');
       }
       return name || null;
@@ -37,9 +36,7 @@ interface AddComponentOptions {
 /**
  * Add shadcn/ui component(s) to project
  */
-export async function addComponentCommand(
-  options: AddComponentOptions = {}
-): Promise<void> {
+export async function addComponentCommand(options: AddComponentOptions = {}): Promise<void> {
   const cwd = options.cwd || process.cwd();
   const spinner = p.spinner();
 
@@ -177,22 +174,18 @@ export async function addComponentCommand(
       const packageName = await getPackageName(cwd);
       p.note(
         `Components installed in packages/ui. Import them using:\n` +
-        `import { Button } from "@workspace/ui/components/ui/button"\n` +
-        `// Or using workspace alias:\n` +
-        `import { Button } from "${packageName ? `@${packageName}/ui` : '@workspace/ui'}/components/ui/button"`,
+          `import { Button } from "@workspace/ui/components/ui/button"\n` +
+          `// Or using workspace alias:\n` +
+          `import { Button } from "${packageName ? `@${packageName}/ui` : '@workspace/ui'}/components/ui/button"`,
         'Usage'
       );
     } else {
-      p.note(
-        `Import components using:\nimport { Button } from "@/components/ui/button"`,
-        'Usage'
-      );
+      p.note(`Import components using:\nimport { Button } from "@/components/ui/button"`, 'Usage');
     }
   } catch (error) {
     spinner.stop('❌ Failed to install components');
     p.log.error((error as Error).message);
-    p.log.info('Try installing manually: bunx shadcn@latest add ' + components.join(' '));
+    p.log.info(`Try installing manually: bunx shadcn@latest add ${components.join(' ')}`);
     process.exit(1);
   }
 }
-

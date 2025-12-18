@@ -1,44 +1,44 @@
+import { type DatabaseType, ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext, type DatabaseType } from '@bunkit/core';
+import { setupBetterAuth, setupNextAuth } from '../generators/auth';
+import { setupBunFullstack } from '../generators/bun-fullstack';
+import { setupBunServeNative } from '../generators/bun-serve';
+import { generateBunfigContent } from '../generators/bunfig';
+import { setupGitHubActions } from '../generators/cicd';
 import {
-  setupPostgresDrizzle,
-  setupPostgresPrisma,
   setupMySQLDrizzle,
   setupMySQLPrisma,
-  setupSupabaseOnly,
-  setupSupabaseDrizzle,
-  setupSupabasePrisma,
+  setupPostgresDrizzle,
+  setupPostgresPrisma,
+  setupRedis,
   setupSQLiteDrizzle,
   setupSQLitePrisma,
-  setupRedis,
+  setupSupabaseDrizzle,
+  setupSupabaseOnly,
+  setupSupabasePrisma,
 } from '../generators/database';
-import {
-  setupBetterAuth,
-  setupNextAuth,
-} from '../generators/auth';
-import { setupBunServeNative } from '../generators/bun-serve';
-import { setupBunFullstack } from '../generators/bun-fullstack';
-import { setupBunSecrets } from '../generators/secrets';
-import { generateBunfigContent } from '../generators/bunfig';
-import { setupUltracite, setupBiome } from '../generators/ultracite';
-import { setupDocker } from '../generators/docker';
-import { setupGitHubActions } from '../generators/cicd';
 import { setupVSCodeDebug } from '../generators/debug';
-import { setupTooling } from '../generators/tooling';
+import { setupDocker } from '../generators/docker';
 import { generateMonorepoReadme } from '../generators/readme';
+import { setupBunSecrets } from '../generators/secrets';
+import { setupTooling } from '../generators/tooling';
+import { setupBiome, setupUltracite } from '../generators/ultracite';
 
 // Database setup function map
-const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
+const databaseSetupMap: Record<
+  DatabaseType,
+  (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>
+> = {
   'postgres-drizzle': setupPostgresDrizzle,
   'postgres-prisma': setupPostgresPrisma,
   'mysql-drizzle': setupMySQLDrizzle,
   'mysql-prisma': setupMySQLPrisma,
-  'supabase': setupSupabaseOnly,
+  supabase: setupSupabaseOnly,
   'supabase-drizzle': setupSupabaseDrizzle,
   'supabase-prisma': setupSupabasePrisma,
   'sqlite-drizzle': setupSQLiteDrizzle,
   'sqlite-prisma': setupSQLitePrisma,
-  'none': async () => {}, // No-op
+  none: async () => {}, // No-op
 };
 
 /**
@@ -50,8 +50,8 @@ export async function buildMonorepoBunPreset(
   context: TemplateContext
 ): Promise<void> {
   // Create monorepo structure
-  await ensureDirectory(join(projectPath, 'apps/web'));      // Frontend with HTML imports
-  await ensureDirectory(join(projectPath, 'apps/api'));      // Backend API with Bun.serve()
+  await ensureDirectory(join(projectPath, 'apps/web')); // Frontend with HTML imports
+  await ensureDirectory(join(projectPath, 'apps/api')); // Backend API with Bun.serve()
   await ensureDirectory(join(projectPath, 'packages/types'));
   await ensureDirectory(join(projectPath, 'packages/utils'));
 
@@ -91,7 +91,7 @@ export async function buildMonorepoBunPreset(
       // Database
       'drizzle-orm': '^0.45.1',
       'drizzle-kit': '^0.31.8',
-      'postgres': '^3.4.7',
+      postgres: '^3.4.7',
       '@supabase/supabase-js': '^2.88.0',
       '@prisma/client': '^7.2.0',
       prisma: '^7.2.0',
@@ -115,10 +115,7 @@ export async function buildMonorepoBunPreset(
     },
   };
 
-  await writeFile(
-    join(projectPath, 'package.json'),
-    JSON.stringify(rootPackageJson, null, 2)
-  );
+  await writeFile(join(projectPath, 'package.json'), JSON.stringify(rootPackageJson, null, 2));
 
   // Setup API app with Bun.serve() native
   const apiPath = join(projectPath, 'apps/api');
@@ -145,10 +142,7 @@ export async function buildMonorepoBunPreset(
     },
   };
 
-  await writeFile(
-    join(apiPath, 'package.json'),
-    JSON.stringify(apiPackageJson, null, 2)
-  );
+  await writeFile(join(apiPath, 'package.json'), JSON.stringify(apiPackageJson, null, 2));
 
   // Setup Web app with Bun.serve() + HTML imports
   const webPath = join(projectPath, 'apps/web');
@@ -180,10 +174,7 @@ export async function buildMonorepoBunPreset(
     },
   };
 
-  await writeFile(
-    join(webPath, 'package.json'),
-    JSON.stringify(webPackageJson, null, 2)
-  );
+  await writeFile(join(webPath, 'package.json'), JSON.stringify(webPackageJson, null, 2));
 
   // Setup database if configured
   if (context.database && context.database !== 'none') {
@@ -316,9 +307,5 @@ export function capitalize(str: string): string {
     exclude: ['node_modules'],
   };
 
-  await writeFile(
-    join(projectPath, 'tsconfig.json'),
-    JSON.stringify(tsconfigContent, null, 2)
-  );
+  await writeFile(join(projectPath, 'tsconfig.json'), JSON.stringify(tsconfigContent, null, 2));
 }
-

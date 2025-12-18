@@ -1,46 +1,44 @@
+import { type DatabaseType, ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext, type DatabaseType } from '@bunkit/core';
+import { setupBetterAuth, setupNextAuth } from '../generators/auth';
+import { generateBunfigContent } from '../generators/bunfig';
+import { setupGitHubActions } from '../generators/cicd';
 import {
-  setupPostgresDrizzle,
-  setupPostgresPrisma,
   setupMySQLDrizzle,
   setupMySQLPrisma,
-  setupSupabaseOnly,
-  setupSupabaseDrizzle,
-  setupSupabasePrisma,
+  setupPostgresDrizzle,
+  setupPostgresPrisma,
+  setupRedis,
   setupSQLiteDrizzle,
   setupSQLitePrisma,
-  setupRedis,
+  setupSupabaseDrizzle,
+  setupSupabaseOnly,
+  setupSupabasePrisma,
 } from '../generators/database';
-import {
-  setupBetterAuth,
-  setupNextAuth,
-} from '../generators/auth';
-import { setupEnhancedHono } from '../generators/hono';
-import { setupBunSecrets } from '../generators/secrets';
-import { generateBunfigContent } from '../generators/bunfig';
-import { setupUltracite, setupBiome } from '../generators/ultracite';
-import { setupDocker } from '../generators/docker';
-import { setupGitHubActions } from '../generators/cicd';
-import { setupShadcnMonorepo } from '../generators/shadcn';
 import { setupVSCodeDebug } from '../generators/debug';
-import { setupTooling } from '../generators/tooling';
-import { buildNextJsWorkspace } from './workspace';
-import { buildHonoWorkspace } from './workspace';
+import { setupDocker } from '../generators/docker';
 import { generateMonorepoReadme } from '../generators/readme';
+import { setupBunSecrets } from '../generators/secrets';
+import { setupShadcnMonorepo } from '../generators/shadcn';
+import { setupTooling } from '../generators/tooling';
+import { setupBiome, setupUltracite } from '../generators/ultracite';
+import { buildHonoWorkspace, buildNextJsWorkspace } from './workspace';
 
 // Database setup function map
-const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
+const databaseSetupMap: Record<
+  DatabaseType,
+  (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>
+> = {
   'postgres-drizzle': setupPostgresDrizzle,
   'postgres-prisma': setupPostgresPrisma,
   'mysql-drizzle': setupMySQLDrizzle,
   'mysql-prisma': setupMySQLPrisma,
-  'supabase': setupSupabaseOnly,
+  supabase: setupSupabaseOnly,
   'supabase-drizzle': setupSupabaseDrizzle,
   'supabase-prisma': setupSupabasePrisma,
   'sqlite-drizzle': setupSQLiteDrizzle,
   'sqlite-prisma': setupSQLitePrisma,
-  'none': async () => {}, // No-op
+  none: async () => {}, // No-op
 };
 
 /**
@@ -52,13 +50,13 @@ export async function buildEnterprisePreset(
   context: TemplateContext
 ): Promise<void> {
   // Create enterprise monorepo structure
-  await ensureDirectory(join(projectPath, 'apps/web'));          // Marketing/Landing site Next.js app
-  await ensureDirectory(join(projectPath, 'apps/app'));          // Main SaaS product Next.js app
-  await ensureDirectory(join(projectPath, 'apps/platform'));     // Admin/Dashboard Next.js app
+  await ensureDirectory(join(projectPath, 'apps/web')); // Marketing/Landing site Next.js app
+  await ensureDirectory(join(projectPath, 'apps/app')); // Main SaaS product Next.js app
+  await ensureDirectory(join(projectPath, 'apps/platform')); // Admin/Dashboard Next.js app
   await ensureDirectory(join(projectPath, 'apps/service-identity')); // Identity service API
   await ensureDirectory(join(projectPath, 'packages/types'));
   await ensureDirectory(join(projectPath, 'packages/utils'));
-  await ensureDirectory(join(projectPath, 'packages/ui'));       // Shared UI components
+  await ensureDirectory(join(projectPath, 'packages/ui')); // Shared UI components
 
   // Create database package if database is configured
   if (context.database && context.database !== 'none') {
@@ -136,10 +134,7 @@ export async function buildEnterprisePreset(
     },
   };
 
-  await writeFile(
-    join(projectPath, 'package.json'),
-    JSON.stringify(rootPackageJson, null, 2)
-  );
+  await writeFile(join(projectPath, 'package.json'), JSON.stringify(rootPackageJson, null, 2));
 
   // bunfig.toml with enhanced defaults
   const bunfigContent = generateBunfigContent(context);
@@ -207,7 +202,9 @@ export async function buildEnterprisePreset(
       [`@${context.packageName}/types`]: 'workspace:*',
       [`@${context.packageName}/utils`]: 'workspace:*',
       [`@${context.packageName}/ui`]: 'workspace:*',
-      ...(context.database && context.database !== 'none' ? { [`@${context.packageName}/db`]: 'workspace:*' } : {}),
+      ...(context.database && context.database !== 'none'
+        ? { [`@${context.packageName}/db`]: 'workspace:*' }
+        : {}),
     },
     devDependencies: {
       '@types/react': 'catalog:',
@@ -240,7 +237,9 @@ export async function buildEnterprisePreset(
       [`@${context.packageName}/types`]: 'workspace:*',
       [`@${context.packageName}/utils`]: 'workspace:*',
       [`@${context.packageName}/ui`]: 'workspace:*',
-      ...(context.database && context.database !== 'none' ? { [`@${context.packageName}/db`]: 'workspace:*' } : {}),
+      ...(context.database && context.database !== 'none'
+        ? { [`@${context.packageName}/db`]: 'workspace:*' }
+        : {}),
     },
     devDependencies: {
       '@types/react': 'catalog:',
@@ -268,7 +267,9 @@ export async function buildEnterprisePreset(
       hono: 'catalog:',
       [`@${context.packageName}/types`]: 'workspace:*',
       [`@${context.packageName}/utils`]: 'workspace:*',
-      ...(context.database && context.database !== 'none' ? { [`@${context.packageName}/db`]: 'workspace:*' } : {}),
+      ...(context.database && context.database !== 'none'
+        ? { [`@${context.packageName}/db`]: 'workspace:*' }
+        : {}),
     },
     devDependencies: {
       '@types/bun': 'latest',
@@ -339,7 +340,10 @@ export async function buildEnterprisePreset(
 
   // Setup shadcn/ui for enterprise preset (always included with Tailwind)
   // Enterprise presets should always have shadcn/ui configured for shared UI components
-  if (context.cssFramework === 'tailwind' && (context.uiLibrary === 'shadcn' || context.uiLibrary === undefined)) {
+  if (
+    context.cssFramework === 'tailwind' &&
+    (context.uiLibrary === 'shadcn' || context.uiLibrary === undefined)
+  ) {
     // Ensure uiLibrary is set to shadcn for enterprise preset
     const enterpriseContext = {
       ...context,
@@ -477,9 +481,5 @@ export default {
     exclude: ['node_modules'],
   };
 
-  await writeFile(
-    join(projectPath, 'tsconfig.json'),
-    JSON.stringify(tsconfigContent, null, 2)
-  );
+  await writeFile(join(projectPath, 'tsconfig.json'), JSON.stringify(tsconfigContent, null, 2));
 }
-

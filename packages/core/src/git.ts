@@ -20,11 +20,7 @@ export async function initGit(cwd: string): Promise<void> {
   await execa('git', ['init', '--initial-branch=main'], { cwd });
   await execa('git', ['add', '-A'], { cwd });
   try {
-    await execa(
-      'git',
-      ['commit', '-m', 'Initial commit from bunkit', '--no-verify'],
-      { cwd }
-    );
+    await execa('git', ['commit', '-m', 'Initial commit from bunkit', '--no-verify'], { cwd });
   } catch {
     // If there are no files to commit, that's okay
     // The repository is still initialized

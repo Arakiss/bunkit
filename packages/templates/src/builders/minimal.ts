@@ -1,9 +1,9 @@
+import { type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, type TemplateContext } from '@bunkit/core';
 import { generateBunfigContent } from '../generators/bunfig';
 import { setupVSCodeDebug } from '../generators/debug';
-import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { generateMinimalReadme } from '../generators/readme';
+import { setupBiome, setupUltracite } from '../generators/ultracite';
 
 /**
  * Build minimal preset files
@@ -48,10 +48,7 @@ greet('Bun');
     },
   };
 
-  await writeFile(
-    join(projectPath, 'tsconfig.json'),
-    JSON.stringify(tsconfigContent, null, 2)
-  );
+  await writeFile(join(projectPath, 'tsconfig.json'), JSON.stringify(tsconfigContent, null, 2));
 
   // bunfig.toml with enhanced defaults
   const bunfigContent = generateBunfigContent(context);

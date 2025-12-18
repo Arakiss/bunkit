@@ -1,22 +1,13 @@
 #!/usr/bin/env bun
-import { Command } from 'commander';
-import { outro, log } from '@clack/prompts';
-import pc from 'picocolors';
 import { showBanner } from '@bunkit/core';
-import { enhancedInitCommand } from './commands/init.enhanced';
-import { createCommand } from './commands/create';
+import { log, outro } from '@clack/prompts';
+import { Command } from 'commander';
+import pc from 'picocolors';
 import { addCommand } from './commands/add';
-import {
-  catalogAddCommand,
-  catalogSyncCommand,
-  catalogListCommand,
-} from './commands/catalog';
-import {
-  savePresetCommand,
-  listPresetsCommand,
-  deletePresetCommand,
-  loadPresetCommand,
-} from './commands/preset';
+import { catalogAddCommand, catalogListCommand, catalogSyncCommand } from './commands/catalog';
+import { createCommand } from './commands/create';
+import { enhancedInitCommand } from './commands/init.enhanced';
+import { deletePresetCommand, listPresetsCommand } from './commands/preset';
 
 // Read version from package.json
 const packageJson = await Bun.file(new URL('../package.json', import.meta.url)).json();
@@ -29,7 +20,9 @@ program
   .description('Bake production-ready apps in seconds | Modern CLI for Bun-powered projects')
   .version(VERSION)
   .usage('<command> [options]')
-  .addHelpText('after', `
+  .addHelpText(
+    'after',
+    `
 Examples:
   $ bunkit init                    Create a new project interactively
   $ bunkit create nextjs my-app   Create a Next.js web application
@@ -39,26 +32,42 @@ Examples:
   $ bunkit preset list             List all custom presets
 
 For more information, visit: https://github.com/Arakiss/bunkit
-  `);
+  `
+  );
 
 program
   .command('init')
   .description('Create a new project with full customization options')
   .alias('i')
   .option('--name <name>', 'Project name (kebab-case recommended, e.g., my-awesome-app)')
-  .option('--preset <preset>', 'Project preset: minimal | nextjs | hono-api | bun-api | bun-fullstack | nextjs-monorepo | bun-monorepo | enterprise-monorepo')
-  .option('--database <database>', 'Database option: postgres-drizzle | postgres-prisma | mysql-drizzle | mysql-prisma | supabase | supabase-drizzle | supabase-prisma | sqlite-drizzle | sqlite-prisma | none')
+  .option(
+    '--preset <preset>',
+    'Project preset: minimal | nextjs | hono-api | bun-api | bun-fullstack | nextjs-monorepo | bun-monorepo | enterprise-monorepo'
+  )
+  .option(
+    '--database <database>',
+    'Database option: postgres-drizzle | postgres-prisma | mysql-drizzle | mysql-prisma | supabase | supabase-drizzle | supabase-prisma | sqlite-drizzle | sqlite-prisma | none'
+  )
   .option('--auth <auth>', 'Authentication system: better-auth | nextauth | supabase | none')
   .option('--redis', 'Enable Redis cache/session store')
   .option('--use-bun-secrets', 'Use Bun.secrets API instead of .env files')
-  .option('--supabase-preset <preset>', 'Supabase configuration preset: full-stack | auth-only | database-only | custom')
-  .option('--supabase-features <features>', 'Comma-separated Supabase features: auth,storage,realtime,edge-functions,database')
+  .option(
+    '--supabase-preset <preset>',
+    'Supabase configuration preset: full-stack | auth-only | database-only | custom'
+  )
+  .option(
+    '--supabase-features <features>',
+    'Comma-separated Supabase features: auth,storage,realtime,edge-functions,database'
+  )
   .option('--code-quality <tool>', 'Code quality tool: ultracite | biome')
   .option('--ts-strictness <level>', 'TypeScript strictness level: strict | moderate | loose')
   .option('--ui-library <library>', 'UI component library: shadcn | none')
   .option('--css-framework <framework>', 'CSS framework: tailwind | vanilla | css-modules')
   .option('--shadcn-style <style>', 'shadcn/ui component style: new-york | default')
-  .option('--shadcn-base-color <color>', 'shadcn/ui base color theme: neutral | gray | zinc | stone | slate')
+  .option(
+    '--shadcn-base-color <color>',
+    'shadcn/ui base color theme: neutral | gray | zinc | stone | slate'
+  )
   .option('--shadcn-radius <radius>', 'shadcn/ui border radius (CSS value, e.g., 0.5rem, 8px)')
   .option('--testing <framework>', 'Testing framework: bun-test | vitest | none')
   .option('--docker', 'Include Docker configuration files')
@@ -68,7 +77,9 @@ program
   .option('--non-interactive', 'Run in non-interactive mode (requires all options via flags)')
   .option('--save-preset <name>', 'Save current configuration as a custom preset')
   .option('--load-preset <name>', 'Load configuration from a custom preset')
-  .addHelpText('after', `
+  .addHelpText(
+    'after',
+    `
 Examples:
   $ bunkit init                                    Interactive project creation
   $ bunkit init --name my-app --preset nextjs     Quick web app creation
@@ -86,7 +97,8 @@ Presets:
   
 Aliases (backwards compatible):
   web → nextjs, api → hono-api, full → nextjs-monorepo, monorepo-bun → bun-monorepo
-  `)
+  `
+  )
   .action(async (options) => {
     showBanner(VERSION);
     try {
@@ -102,12 +114,17 @@ Aliases (backwards compatible):
 program
   .command('create')
   .alias('c')
-  .argument('<preset>', 'Project preset: minimal | nextjs | hono-api | bun-api | bun-fullstack | nextjs-monorepo | bun-monorepo | enterprise-monorepo')
+  .argument(
+    '<preset>',
+    'Project preset: minimal | nextjs | hono-api | bun-api | bun-fullstack | nextjs-monorepo | bun-monorepo | enterprise-monorepo'
+  )
   .argument('<name>', 'Project name (kebab-case recommended)')
   .option('--no-git', 'Skip Git repository initialization')
   .option('--no-install', 'Skip dependency installation after project creation')
   .description('Quick project creation with sensible defaults (non-interactive)')
-  .addHelpText('after', `
+  .addHelpText(
+    'after',
+    `
 Examples:
   $ bunkit create nextjs my-app          Create Next.js web application
   $ bunkit create hono-api my-api       Create Hono API server
@@ -117,7 +134,8 @@ Examples:
 Aliases: web → nextjs, api → hono-api, full → nextjs-monorepo
   
 Note: This command uses sensible defaults. Use 'bunkit init' for full customization.
-  `)
+  `
+  )
   .action(async (preset, name, options) => {
     showBanner(VERSION);
     try {
@@ -131,9 +149,9 @@ Note: This command uses sensible defaults. Use 'bunkit init' for full customizat
   });
 
 // Preset management commands
-const presetCmd = new Command('preset')
-  .description('Manage custom presets')
-  .addHelpText('after', `
+const presetCmd = new Command('preset').description('Manage custom presets').addHelpText(
+  'after',
+  `
 Subcommands:
   save [name]      Save current configuration as preset
   list             List all custom presets
@@ -145,13 +163,14 @@ Examples:
   $ bunkit preset delete my-api-preset
   
 Custom presets allow you to save and reuse project configurations.
-  `);
+  `
+);
 
 presetCmd
   .command('save')
   .argument('[name]', 'Preset name')
   .description('Save current configuration as a custom preset')
-  .action(async (name) => {
+  .action(async (_name) => {
     showBanner(VERSION);
     try {
       // This would need to be called from init command context
@@ -206,7 +225,9 @@ program
   .option('--components <components>', 'Comma-separated component names (e.g., button,card,input)')
   .option('--all', 'Show interactive component browser (for component feature)')
   .description('Add workspace, shared package, or shadcn/ui component to existing project')
-  .addHelpText('after', `
+  .addHelpText(
+    'after',
+    `
 Examples:
   $ bunkit add workspace --name apps/admin --preset nextjs
   $ bunkit add package --name @myapp/utils --type utils
@@ -217,7 +238,8 @@ Features:
   workspace   Add a new workspace to monorepo (app or package)
   package     Add a shared package to monorepo
   component   Add shadcn/ui components (requires shadcn/ui setup)
-  `)
+  `
+  )
   .action(async (feature, options) => {
     showBanner(VERSION);
     try {
@@ -242,7 +264,9 @@ Features:
 const catalogCmd = new Command('catalog')
   .alias('cat')
   .description('Manage dependency catalog for version synchronization')
-  .addHelpText('after', `
+  .addHelpText(
+    'after',
+    `
 Subcommands:
   add <package> [version]   Add package to catalog
   sync                      Sync catalog versions across workspaces
@@ -256,7 +280,8 @@ Examples:
   
 The catalog allows you to centralize dependency versions in monorepos.
 Use "catalog:" in package.json dependencies to reference catalog versions.
-  `);
+  `
+  );
 
 catalogCmd
   .command('add')
@@ -310,7 +335,10 @@ catalogCmd
 program.addCommand(catalogCmd);
 
 // Show banner when no command is provided
-if (process.argv.length === 2 || (process.argv.length === 3 && (process.argv[2] === '--help' || process.argv[2] === '-h'))) {
+if (
+  process.argv.length === 2 ||
+  (process.argv.length === 3 && (process.argv[2] === '--help' || process.argv[2] === '-h'))
+) {
   showBanner(VERSION);
 }
 

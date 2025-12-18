@@ -1,14 +1,14 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 
 /**
  * Determine which Ultracite presets to use based on project preset
  */
 function getUltracitePresets(preset: string | undefined): string[] {
   const presets: string[] = ['ultracite/core'];
-  
+
   const presetStr = preset || 'minimal';
-  
+
   // Determine if React is used
   const usesReact = [
     'nextjs',
@@ -21,7 +21,7 @@ function getUltracitePresets(preset: string | undefined): string[] {
     'monorepo-bun',
     'enterprise-monorepo',
   ].includes(presetStr);
-  
+
   // Determine if Next.js is used
   const usesNext = [
     'nextjs',
@@ -31,15 +31,15 @@ function getUltracitePresets(preset: string | undefined): string[] {
     'monorepo-nextjs',
     'enterprise-monorepo',
   ].includes(presetStr);
-  
+
   if (usesReact) {
     presets.push('ultracite/react');
   }
-  
+
   if (usesNext) {
     presets.push('ultracite/next');
   }
-  
+
   return presets;
 }
 
@@ -47,18 +47,15 @@ function getUltracitePresets(preset: string | undefined): string[] {
  * Setup Ultracite (AI-optimized Biome preset)
  * Follows official Ultracite structure and conventions
  */
-export async function setupUltracite(
-  projectPath: string,
-  context: TemplateContext
-): Promise<void> {
+export async function setupUltracite(projectPath: string, context: TemplateContext): Promise<void> {
   const preset = (context.preset as string) || 'minimal';
   const ultracitePresets = getUltracitePresets(preset);
-  
+
   // biome.jsonc with Ultracite presets - minimal config as per official Ultracite
   const biomeConfig = `{
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "extends": [
-${ultracitePresets.map(p => `    "${p}"`).join(',\n')}
+${ultracitePresets.map((p) => `    "${p}"`).join(',\n')}
   ]
 }
 `;
@@ -115,7 +112,9 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Handle errors appropriately in async code with try-catch blocks
 - Don't use async functions as Promise executors
 
-${ultracitePresets.includes('ultracite/react') ? `### React & JSX
+${
+  ultracitePresets.includes('ultracite/react')
+    ? `### React & JSX
 
 - Use function components over class components
 - Call hooks at the top level only, never conditionally
@@ -130,7 +129,9 @@ ${ultracitePresets.includes('ultracite/react') ? `### React & JSX
   - Include keyboard event handlers alongside mouse events
   - Use semantic elements (\`<button>\`, \`<nav>\`, etc.) instead of divs with roles
 
-${ultracitePresets.includes('ultracite/next') ? `### Next.js Specific
+${
+  ultracitePresets.includes('ultracite/next')
+    ? `### Next.js Specific
 
 - Use Next.js \`<Image>\` component for images
 - Use \`next/head\` or App Router metadata API for head elements
@@ -139,7 +140,11 @@ ${ultracitePresets.includes('ultracite/next') ? `### Next.js Specific
 - Add \`'use client'\` only when needed (hooks, browser APIs, interactivity)
 - Use descriptive variable names (no \`c\`, \`ctx\`, \`req\`, \`res\`)
 
-` : ''}` : ''}### Error Handling & Debugging
+`
+    : ''
+}`
+    : ''
+}### Error Handling & Debugging
 
 - Remove \`console.log\`, \`debugger\`, and \`alert\` statements from production code
 - Throw \`Error\` objects with descriptive messages, not strings or other values
@@ -167,16 +172,20 @@ ${ultracitePresets.includes('ultracite/next') ? `### Next.js Specific
 - Use top-level regex literals instead of creating them in loops
 - Prefer specific imports over namespace imports
 - Avoid barrel files (index files that re-export everything)
-${ultracitePresets.includes('ultracite/next') ? '- Use proper image components (e.g., Next.js \`<Image>\`) over \`<img>\` tags' : ''}
+${ultracitePresets.includes('ultracite/next') ? '- Use proper image components (e.g., Next.js `<Image>`) over `<img>` tags' : ''}
 
-${context.database && context.database !== 'none' ? `### Database (${context.database})
+${
+  context.database && context.database !== 'none'
+    ? `### Database (${context.database})
 
 - Always use type-safe queries (Drizzle ORM or Prisma ORM)
 - Define schema in separate files by domain
 - Use transactions for multi-step operations
 - Always handle database errors gracefully
 
-` : ''}### Variable Naming (CRITICAL)
+`
+    : ''
+}### Variable Naming (CRITICAL)
 
 ❌ NEVER use: \`c\`, \`ctx\`, \`e\`, \`req\`, \`res\`, \`data\`, \`temp\`
 ✅ ALWAYS use: \`context\`, \`error\`, \`request\`, \`response\`, \`userData\`, \`temporaryBuffer\`
@@ -236,7 +245,9 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Handle errors appropriately in async code with try-catch blocks
 - Don't use async functions as Promise executors
 
-${ultracitePresets.includes('ultracite/react') ? `### React & JSX
+${
+  ultracitePresets.includes('ultracite/react')
+    ? `### React & JSX
 
 - Use function components over class components
 - Call hooks at the top level only, never conditionally
@@ -246,14 +257,20 @@ ${ultracitePresets.includes('ultracite/react') ? `### React & JSX
 - Don't define components inside other components
 - Use semantic HTML and ARIA attributes for accessibility
 
-${ultracitePresets.includes('ultracite/next') ? `### Next.js Specific
+${
+  ultracitePresets.includes('ultracite/next')
+    ? `### Next.js Specific
 
 - Use Next.js \`<Image>\` component for images
 - Use Server Components for async data fetching
 - Always \`await params\` and \`await searchParams\` in Next.js 16
 - Add \`'use client'\` only when needed
 
-` : ''}` : ''}### Variable Naming (CRITICAL)
+`
+    : ''
+}`
+    : ''
+}### Variable Naming (CRITICAL)
 
 ❌ NEVER use: \`c\`, \`ctx\`, \`e\`, \`req\`, \`res\`, \`data\`, \`temp\`
 ✅ ALWAYS use: \`context\`, \`error\`, \`request\`, \`response\`, \`userData\`, \`temporaryBuffer\`
@@ -306,7 +323,9 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Handle errors appropriately in async code with try-catch blocks
 - Don't use async functions as Promise executors
 
-${ultracitePresets.includes('ultracite/react') ? `### React & JSX
+${
+  ultracitePresets.includes('ultracite/react')
+    ? `### React & JSX
 
 - Use function components over class components
 - Call hooks at the top level only, never conditionally
@@ -316,14 +335,20 @@ ${ultracitePresets.includes('ultracite/react') ? `### React & JSX
 - Don't define components inside other components
 - Use semantic HTML and ARIA attributes for accessibility
 
-${ultracitePresets.includes('ultracite/next') ? `### Next.js Specific
+${
+  ultracitePresets.includes('ultracite/next')
+    ? `### Next.js Specific
 
 - Use Next.js \`<Image>\` component for images
 - Use Server Components for async data fetching
 - Always \`await params\` and \`await searchParams\` in Next.js 16
 - Add \`'use client'\` only when needed
 
-` : ''}` : ''}### Variable Naming (CRITICAL)
+`
+    : ''
+}`
+    : ''
+}### Variable Naming (CRITICAL)
 
 ❌ NEVER use: \`c\`, \`ctx\`, \`e\`, \`req\`, \`res\`, \`data\`, \`temp\`
 ✅ ALWAYS use: \`context\`, \`error\`, \`request\`, \`response\`, \`userData\`, \`temporaryBuffer\`
@@ -343,10 +368,7 @@ ${context.cssFramework === 'tailwind' ? '- **Styling**: Tailwind CSS 4\n' : ''}$
 /**
  * Setup standard Biome (without Ultracite)
  */
-export async function setupBiome(
-  projectPath: string,
-  context: TemplateContext
-): Promise<void> {
+export async function setupBiome(projectPath: string, _context: TemplateContext): Promise<void> {
   const biomeConfig = {
     $schema: 'https://biomejs.dev/schemas/1.9.4/schema.json',
     vcs: {
@@ -355,14 +377,7 @@ export async function setupBiome(
       useIgnoreFile: true,
     },
     files: {
-      ignore: [
-        'node_modules',
-        'dist',
-        'build',
-        '.next',
-        '.turbo',
-        'coverage',
-      ],
+      ignore: ['node_modules', 'dist', 'build', '.next', '.turbo', 'coverage'],
     },
     formatter: {
       enabled: true,
@@ -385,10 +400,7 @@ export async function setupBiome(
     },
   };
 
-  await writeFile(
-    join(projectPath, 'biome.json'),
-    JSON.stringify(biomeConfig, null, 2)
-  );
+  await writeFile(join(projectPath, 'biome.json'), JSON.stringify(biomeConfig, null, 2));
 }
 
 /**
@@ -397,7 +409,7 @@ export async function setupBiome(
 export function getCodeQualityDependencies(codeQuality: string): Record<string, string> {
   if (codeQuality === 'ultracite') {
     return {
-      'ultracite': '^6.3.4',
+      ultracite: '^6.3.4',
       '@biomejs/biome': '^2.3.6',
     };
   }

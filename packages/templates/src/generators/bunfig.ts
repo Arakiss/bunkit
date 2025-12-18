@@ -44,7 +44,9 @@ exact = false
 # Text lockfiles are easier to review in git diffs (default: true since Bun v1.2)
 saveTextLockfile = true
 
-${isMonorepo ? `# Monorepo: Use isolated installs for better dependency isolation
+${
+  isMonorepo
+    ? `# Monorepo: Use isolated installs for better dependency isolation
 # Options: "hoisted" | "isolated"
 # - "hoisted": Shared node_modules (faster, less disk space)
 # - "isolated": Per-package node_modules (better isolation, more disk space)
@@ -52,7 +54,9 @@ linker = "isolated"
 
 # Link workspace packages to node_modules (default: true)
 linkWorkspacePackages = true
-` : ''}
+`
+    : ''
+}
 
 # ========================================
 # Runtime Configuration
@@ -72,7 +76,9 @@ telemetry = true
 [console]
 depth = 2
 
-${hasTesting ? `# ========================================
+${
+  hasTesting
+    ? `# ========================================
 # Test Runner Configuration
 # ========================================
 [test]
@@ -131,7 +137,9 @@ onlyFailures = false
 
 # Generate JUnit XML report for CI/CD
 # junit = "test-results.xml"
-` : ''}
+`
+    : ''
+}
 
 # ========================================
 # Script Execution (bun run)
@@ -169,4 +177,3 @@ bun = true
 #   Use bun --inspect script.ts for Node.js-compatible debugging
 `;
 }
-

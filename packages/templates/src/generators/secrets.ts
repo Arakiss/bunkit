@@ -1,5 +1,5 @@
+import { ensureDirectory, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import { writeFile, ensureDirectory, type TemplateContext } from '@bunkit/core';
 
 /**
  * Setup Bun.secrets for secure credential management
@@ -284,4 +284,3 @@ If you're migrating from \`.env\` files:
 
   await writeFile(join(secretsPath, 'README.md'), secretsReadme);
 }
-

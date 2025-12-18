@@ -1,5 +1,5 @@
-import type { PresetConfig } from './types';
 import type { PresetType } from '@bunkit/core';
+import type { PresetConfig } from './types';
 
 /**
  * Normalize preset name (handle aliases to primary names)
@@ -8,13 +8,13 @@ import type { PresetType } from '@bunkit/core';
 function normalizePreset(preset: PresetType): PresetType {
   // Map aliases to primary names
   const aliasMap: Record<string, PresetType> = {
-    'web': 'nextjs',
-    'api': 'hono-api',
-    'full': 'nextjs-monorepo',
+    web: 'nextjs',
+    api: 'hono-api',
+    full: 'nextjs-monorepo',
     'monorepo-nextjs': 'nextjs-monorepo',
     'monorepo-bun': 'bun-monorepo',
   };
-  
+
   return (aliasMap[preset] || preset) as PresetType;
 }
 
@@ -23,7 +23,7 @@ function normalizePreset(preset: PresetType): PresetType {
  */
 export function getPresetConfig(preset: PresetType): PresetConfig {
   const normalized = normalizePreset(preset);
-  
+
   switch (normalized) {
     case 'minimal':
       return getMinimalPreset();

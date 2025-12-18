@@ -1,15 +1,12 @@
+import { ensureDirectory, logger, writeFile } from '@bunkit/core';
 import { execa } from 'execa';
 import { join } from 'pathe';
-import { logger, writeFile, ensureDirectory } from '@bunkit/core';
 
 /**
  * Default components to install when shadcn/ui is configured
  * These are the most commonly used components that provide immediate value
  */
-export const DEFAULT_SHADCN_COMPONENTS = [
-  'button',
-  'card',
-] as const;
+export const DEFAULT_SHADCN_COMPONENTS = ['button', 'card'] as const;
 
 /**
  * Install shadcn/ui components using the official CLI
@@ -28,9 +25,7 @@ export async function installShadcnComponents(
   const stdio = options.silent ? 'pipe' : 'inherit';
 
   // Ensure we're in the correct directory (packages/ui for monorepo)
-  const targetCwd = options.isMonorepo 
-    ? join(projectPath, 'packages/ui')
-    : cwd;
+  const targetCwd = options.isMonorepo ? join(projectPath, 'packages/ui') : cwd;
 
   // CRITICAL: Install dependencies with Bun first to resolve catalog: references
   // shadcn CLI internally uses npm which doesn't understand Bun's catalog: protocol
@@ -69,7 +64,7 @@ export async function installShadcnComponents(
     if (options.isMonorepo) {
       await updateComponentsIndex(join(targetCwd, 'src/components'));
     }
-  } catch (error) {
+  } catch (_error) {
     // If bunx fails, try with npx as fallback
     // But note: npx will fail if catalog: dependencies aren't resolved
     try {
@@ -97,21 +92,21 @@ export async function installShadcnComponents(
 async function updateComponentsIndex(componentsDir: string): Promise<void> {
   const indexPath = join(componentsDir, 'index.ts');
   const uiDir = join(componentsDir, 'ui');
-  
+
   try {
     // Check if ui directory exists
-    const { existsSync } = await import('fs');
+    const { existsSync } = await import('node:fs');
     if (!existsSync(uiDir)) {
       logger.debug(`UI directory does not exist: ${uiDir}`);
       return;
     }
 
     // Find all component files (.tsx) in ui directory
-    const { readdir } = await import('fs/promises');
+    const { readdir } = await import('node:fs/promises');
     const entries = await readdir(uiDir, { withFileTypes: true });
     const componentFiles = entries
-      .filter(entry => entry.isFile() && entry.name.endsWith('.tsx'))
-      .map(entry => entry.name.replace('.tsx', ''))
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.tsx'))
+      .map((entry) => entry.name.replace('.tsx', ''))
       .sort(); // Sort alphabetically for consistent output
 
     if (componentFiles.length === 0) {
@@ -120,9 +115,7 @@ async function updateComponentsIndex(componentsDir: string): Promise<void> {
     }
 
     // Generate exports
-    const exports = componentFiles
-      .map(comp => `export * from './ui/${comp}';`)
-      .join('\n');
+    const exports = componentFiles.map((comp) => `export * from './ui/${comp}';`).join('\n');
 
     // Update index file
     const newContent = `// Auto-generated exports for shadcn/ui components
@@ -157,24 +150,22 @@ export async function installDefaultShadcnComponents(
   }
 
   // Auto-detect monorepo if not explicitly set
-  const isMonorepo = options.isMonorepo ?? (await import('fs')).existsSync(
-    (await import('pathe')).join(projectPath, 'packages/ui/components.json')
-  );
+  const isMonorepo =
+    options.isMonorepo ??
+    (await import('node:fs')).existsSync(
+      (await import('pathe')).join(projectPath, 'packages/ui/components.json')
+    );
 
   logger.step('Installing default shadcn/ui components...');
 
   try {
-    await installShadcnComponents(
-      projectPath,
-      [...DEFAULT_SHADCN_COMPONENTS],
-      {
-        silent: options.silent,
-        cwd: projectPath,
-        isMonorepo,
-      }
-    );
+    await installShadcnComponents(projectPath, [...DEFAULT_SHADCN_COMPONENTS], {
+      silent: options.silent,
+      cwd: projectPath,
+      isMonorepo,
+    });
     logger.success('Default components installed');
-  } catch (error) {
+  } catch (_error) {
     // Non-critical - user can install manually
     const manualCommand = isMonorepo
       ? 'cd packages/ui && bunx shadcn@latest add button card'
@@ -192,7 +183,7 @@ export async function installDefaultShadcnComponents(
 export async function createShadcnExample(
   projectPath: string,
   isMonorepo: boolean = false,
-  packageName?: string
+  _packageName?: string
 ): Promise<void> {
   const examplePath = isMonorepo
     ? join(projectPath, 'apps/web/src/components/example.tsx')
@@ -202,7 +193,7 @@ export async function createShadcnExample(
   const buttonImport = isMonorepo
     ? `import { Button } from "@workspace/ui/components/ui/button"`
     : `import { Button } from "@/components/ui/button"`;
-  
+
   const cardImport = isMonorepo
     ? `import {
   Card,
@@ -250,9 +241,11 @@ export function ExampleComponent() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            ${isMonorepo 
-              ? 'Components are shared via @workspace/ui package. Add more components with: bunkit add component --components [name]'
-              : 'You can start building your UI by importing components from @/components/ui'}
+            ${
+              isMonorepo
+                ? 'Components are shared via @workspace/ui package. Add more components with: bunkit add component --components [name]'
+                : 'You can start building your UI by importing components from @/components/ui'
+            }
           </p>
         </CardContent>
         <CardFooter className="flex gap-2">
@@ -268,8 +261,7 @@ export function ExampleComponent() {
   try {
     await ensureDirectory(join(examplePath, '..'));
     await writeFile(examplePath, exampleContent);
-  } catch (error) {
+  } catch (_error) {
     // Non-critical - skip if fails
   }
 }
-
