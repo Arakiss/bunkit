@@ -111,12 +111,15 @@ export async function buildUiPackage(
       prefix: '',
     },
     iconLibrary,
+    // IMPORTANT: shadcn CLI v3.6+ uses tsconfig-paths to resolve these aliases
+    // They MUST use the @/ format that matches tsconfig.json paths configuration
+    // The CLI will then resolve @/components -> ./src/components via tsconfig
     aliases: {
-      components: './src/components',
-      utils: './src/lib/utils',
-      ui: './src/components/ui',
-      lib: './src/lib',
-      hooks: './src/hooks',
+      components: '@/components',
+      utils: '@/lib/utils',
+      ui: '@/components/ui',
+      lib: '@/lib',
+      hooks: '@/hooks',
     },
   };
 
