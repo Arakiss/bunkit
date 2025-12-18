@@ -1,0 +1,187 @@
+# bunkit
+
+> Modern CLI for scaffolding production-ready Bun-powered projects. Supports 8 presets from minimal scripts to enterprise monorepos, with full shadcn/ui December 2025 integration.
+
+## Overview
+
+bunkit is a CLI tool that generates Bun 1.3+ projects with enterprise patterns built-in. It uses dependency catalogs, isolated installs, and workspace protocols for monorepo management. All generated projects include TypeScript strict mode, Tailwind CSS 4, and modern tooling.
+
+## Installation & Quick Start
+
+```bash
+# Interactive mode (recommended)
+bunx bunkit-cli init
+
+# Direct creation
+bunx bunkit-cli create nextjs my-app
+bunx bunkit-cli create nextjs-monorepo my-saas
+```
+
+## Commands
+
+```bash
+bunkit init                    # Interactive project creation
+bunkit create <preset> <name>  # Quick project creation
+bunkit add workspace           # Add app to monorepo
+bunkit add package             # Add shared package
+bunkit add component           # Add shadcn/ui components
+bunkit catalog add             # Manage dependency versions
+bunkit preset list             # List saved configurations
+```
+
+## Presets
+
+| Preset | Description |
+|--------|-------------|
+| `minimal` | Single-file Bun project |
+| `nextjs` | Next.js 16 + React 19 web app |
+| `hono-api` | Hono API server |
+| `bun-api` | Bun.serve() native API (zero deps) |
+| `bun-fullstack` | Bun.serve() + React (no Next.js) |
+| `nextjs-monorepo` | Monorepo with Next.js + Hono |
+| `bun-monorepo` | Monorepo with pure Bun |
+| `enterprise-monorepo` | Multi-app enterprise platform |
+
+## shadcn/ui Integration (v1.3.0)
+
+Supports shadcn/ui December 2025 "create" feature with all customization options:
+
+### Modern Styles
+- `radix-maia` - Clean, minimal design (default)
+- `radix-vega` - Bold, expressive style
+- `radix-nova` - Sleek, futuristic look
+- `radix-lyra` - Soft, rounded aesthetic
+- `radix-mira` - Sharp, professional feel
+- `new-york` - Classic shadcn/ui style (legacy)
+- `default` - Original shadcn/ui style (legacy)
+
+### Customization Options
+- **Base**: `radix` (Radix UI) or `base-ui` (Base UI)
+- **Icon Library**: `phosphor` (default), `lucide`, or `iconoir`
+- **Menu Accent**: `subtle` or `bold`
+- **Menu Color**: `default` or `muted`
+- **Radius**: Customizable border radius (e.g., `0.625rem`)
+- **Base Color**: `zinc`, `slate`, `stone`, `gray`, `neutral`, etc.
+
+### Generated CSS Structure
+
+Modern styles generate CSS with:
+```css
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@source "../**/*";
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --font-sans: var(--font-sans);
+  --radius-xl: calc(var(--radius) + 4px);
+  /* ... extended theme variables */
+}
+```
+
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Runtime | Bun 1.3+ |
+| Frontend | Next.js 16, React 19 |
+| Backend | Hono 4, Bun.serve() |
+| Database | Drizzle ORM, Prisma, Supabase |
+| Styling | Tailwind CSS 4, shadcn/ui |
+| UI Components | Radix UI, Base UI |
+| Icons | Phosphor, Iconoir, Lucide |
+| Language | TypeScript 5.9+ |
+| Quality | Biome, Ultracite |
+
+## Database Options
+
+- **PostgreSQL** with Drizzle ORM or Prisma
+- **MySQL** with Drizzle ORM or Prisma
+- **SQLite** with Drizzle ORM or Prisma
+- **Supabase** with native client or Drizzle adapter
+
+## Authentication Options
+
+- **better-auth** - Modern auth library
+- **NextAuth.js** - Next.js authentication
+- **Supabase Auth** - Supabase authentication
+
+## Monorepo Structure (nextjs-monorepo)
+
+```
+my-app/
+├── apps/
+│   ├── web/              # Customer-facing Next.js app
+│   ├── platform/         # Admin dashboard
+│   └── api/              # Hono API backend
+├── packages/
+│   ├── ui/               # Shared shadcn/ui components
+│   ├── types/            # Shared TypeScript types
+│   └── utils/            # Shared utilities
+├── tooling/
+│   └── typescript/       # Shared TS configs
+├── package.json          # Root with dependency catalogs
+└── bunfig.toml           # Bun configuration
+```
+
+## Bun Features Used
+
+- **Dependency Catalogs**: Centralize versions in root package.json
+- **Isolated Installs**: Prevent phantom dependencies
+- **Workspace Protocol**: `workspace:*` for local packages
+- **Hot Module Replacement**: `bun --hot` for instant updates
+- **Native Database Drivers**: bun:postgres, bun:mysql, bun:sqlite
+
+## Requirements
+
+- Bun v1.3.0+
+- Node.js v20.9.0+ (for Next.js)
+
+## Package Structure
+
+bunkit is a monorepo with 4 packages:
+
+1. **bunkit-cli**: Main CLI with commands (init, create, add)
+2. **@bunkit/core**: Types, utilities, PresetRegistry
+3. **@bunkit/templates**: Project generators and builders
+4. **@bunkit/generators**: Feature-specific code generators
+
+## Key Implementation Details
+
+### PresetRegistry
+
+Single source of truth for preset metadata and dependency catalogs:
+- Defines all presets with descriptions and features
+- Contains catalog entries (dependency versions)
+- Used by init command and builders
+
+### Init Command Flow
+
+1. User runs `bunkit init` or `bunkit create <preset> <name>`
+2. Interactive prompts collect configuration (21+ options)
+3. PresetRegistry provides preset metadata
+4. Template builder generates project structure
+5. Dependencies installed via `bun install`
+6. Git initialized (optional)
+
+### CSS Generation
+
+For modern styles (radix-*):
+- Uses `@import "shadcn/tailwind.css"`
+- Generates `@theme inline` block with OKLCH colors
+- Includes extended radius variables
+- Uses `@custom-variant dark` for dark mode
+
+For legacy styles (new-york, default):
+- Uses traditional `@tailwind` directives
+- Generates HSL color variables
+- Standard shadcn/ui CSS structure
+
+## Version History
+
+- **v1.3.0**: shadcn/ui December 2025 support (5 new styles, new options)
+- **v1.2.1**: Bug fix for monorepo preset generation
+- **v1.2.0**: Development tooling, dead code cleanup
+- **v1.1.x**: Initial release with 8 presets

@@ -1,0 +1,41 @@
+# bunkit
+
+> Modern CLI for scaffolding production-ready Bun-powered projects. Supports 8 presets from minimal scripts to enterprise monorepos, with full shadcn/ui December 2025 integration.
+
+bunkit is a CLI tool that generates Bun 1.3+ projects with enterprise patterns built-in. It uses dependency catalogs, isolated installs, and workspace protocols for monorepo management. All generated projects include TypeScript strict mode, Tailwind CSS 4, and modern tooling (Biome or Ultracite).
+
+Key capabilities:
+- Scaffold 8 project types: minimal, nextjs, hono-api, bun-api, bun-fullstack, nextjs-monorepo, bun-monorepo, enterprise-monorepo
+- shadcn/ui integration with 5 modern styles (radix-maia, radix-vega, radix-nova, radix-lyra, radix-mira)
+- Database setup: PostgreSQL, MySQL, SQLite with Drizzle ORM or Prisma, Supabase integration
+- Authentication: better-auth, NextAuth.js, or Supabase Auth
+- DevOps: Docker multi-stage builds, GitHub Actions CI/CD
+
+Tech stack: Bun 1.3+, Next.js 16, React 19, Hono 4, TypeScript 5.9+, Tailwind CSS 4, Radix UI/Base UI, Phosphor/Iconoir icons.
+
+## Documentation
+
+- [README](https://github.com/Arakiss/bunkit/blob/main/README.md): Project overview, quick start guide, and feature list
+- [CLI Reference](https://github.com/Arakiss/bunkit/blob/main/docs/CLI.md): Complete command documentation with all flags and options
+- [Presets Reference](https://github.com/Arakiss/bunkit/blob/main/docs/PRESETS.md): Detailed descriptions of all 8 project presets
+- [Changelog](https://github.com/Arakiss/bunkit/blob/main/packages/cli/CHANGELOG.md): Version history and release notes
+
+## Source Code
+
+- [CLI Package](https://github.com/Arakiss/bunkit/tree/main/packages/cli): Main CLI implementation with commands
+- [Core Package](https://github.com/Arakiss/bunkit/tree/main/packages/core): Shared types, utilities, and PresetRegistry
+- [Templates Package](https://github.com/Arakiss/bunkit/tree/main/packages/templates): Project generators and builders
+- [Generators Package](https://github.com/Arakiss/bunkit/tree/main/packages/generators): Code generators for specific features
+
+## Key Files
+
+- [PresetRegistry](https://github.com/Arakiss/bunkit/blob/main/packages/core/src/presets/registry.ts): Single source of truth for preset metadata and dependency catalogs
+- [Init Command](https://github.com/Arakiss/bunkit/blob/main/packages/cli/src/commands/init.enhanced.ts): Interactive project creation with 21+ prompts
+- [UI Package Builder](https://github.com/Arakiss/bunkit/blob/main/packages/templates/src/shared/ui-package.ts): shadcn/ui package generation with modern CSS
+- [Theme Generator](https://github.com/Arakiss/bunkit/blob/main/packages/templates/src/generators/shadcn-themes.ts): CSS theme generation for all shadcn/ui styles
+
+## Optional
+
+- [Contributing Guide](https://github.com/Arakiss/bunkit/blob/main/CONTRIBUTING.md): How to contribute to bunkit
+- [Roadmap](https://github.com/Arakiss/bunkit/blob/main/ROADMAP.md): Planned features and future direction
+- [npm Package](https://www.npmjs.com/package/bunkit-cli): Published package on npm registry

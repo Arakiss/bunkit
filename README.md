@@ -6,9 +6,12 @@
 [![npm downloads](https://img.shields.io/npm/dm/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
 [![Bun](https://img.shields.io/badge/bun-1.3+-orange.svg)](https://bun.sh)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
-[![Test Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen.svg)](./packages/core)
+[![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-December%202025-black.svg)](https://ui.shadcn.com)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 
 Modern CLI for scaffolding Bun-powered projects with enterprise patterns built-in.
+
+**v1.3.0** - Now with full support for [shadcn/ui December 2025 "create" feature](https://ui.shadcn.com) including 5 new modern styles!
 
 ## Quick Start
 
@@ -27,6 +30,32 @@ bunx bunkit-cli create nextjs my-app
 - **Modern stack** - Next.js 16, React 19, Hono, Tailwind CSS 4, shadcn/ui
 - **Zero config** - Production-ready TypeScript, linting, and testing out of the box
 - **Monorepo expertise** - Workspace management, shared packages, dependency catalogs
+
+## shadcn/ui Integration (v1.3.0)
+
+bunkit now supports the **shadcn/ui December 2025 "create" feature** with all new customization options:
+
+**Modern Styles**
+- `radix-maia` - Clean, minimal design (default)
+- `radix-vega` - Bold, expressive style
+- `radix-nova` - Sleek, futuristic look
+- `radix-lyra` - Soft, rounded aesthetic
+- `radix-mira` - Sharp, professional feel
+
+**Customization Options**
+- **Base**: Radix UI (default) or Base UI
+- **Icon Library**: Phosphor (default), Lucide, or Iconoir
+- **Menu Accent**: Subtle or Bold
+- **Menu Color**: Default or Muted
+- **Radius**: Customizable border radius
+
+```bash
+# Interactive mode lets you choose style, icons, colors
+bunx bunkit-cli init
+
+# Modern monorepo with all latest features
+bunx bunkit-cli create nextjs-monorepo my-app
+```
 
 ## Presets
 
@@ -115,6 +144,8 @@ This creates:
 - [Roadmap](./ROADMAP.md) - Planned features
 - [Contributing](./CONTRIBUTING.md) - How to contribute
 
+**For AI/LLM Integration**: See [llms.txt](./llms.txt) for AI-friendly project context.
+
 ## Tech Stack
 
 | Category | Technology |
@@ -123,7 +154,9 @@ This creates:
 | Frontend | Next.js 16, React 19 |
 | Backend | Hono 4, Bun.serve() |
 | Database | Drizzle ORM, Prisma, Supabase |
-| Styling | Tailwind CSS 4, shadcn/ui |
+| Styling | Tailwind CSS 4, shadcn/ui (Dec 2025) |
+| UI Components | Radix UI, Base UI |
+| Icons | Phosphor, Iconoir, Lucide |
 | Language | TypeScript 5.9+ |
 | Quality | Biome, Ultracite |
 
