@@ -1105,14 +1105,20 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         break;
       case 'full':
       case 'monorepo-nextjs':
+      case 'nextjs-monorepo':
         await buildFullPreset(projectPath, context);
         break;
       case 'monorepo-bun':
+      case 'bun-monorepo':
         await buildMonorepoBunPreset(projectPath, context);
         break;
       case 'enterprise-monorepo':
         await buildEnterprisePreset(projectPath, context);
         break;
+      default:
+        throw new Error(
+          `Unknown preset: ${preset}. Valid presets are: minimal, nextjs, hono-api, bun-api, bun-fullstack, nextjs-monorepo, bun-monorepo, enterprise-monorepo`
+        );
     }
 
     // Additional setup based on options
@@ -1153,9 +1159,14 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     s.stop(`${chalk.green('✅')} Project structure created successfully!`);
 
     // Calculate additional dependencies based on configuration
-    // NOTE: For 'full' preset (monorepo), dependencies are handled by workspace catalog
+    // NOTE: For monorepo presets, dependencies are handled by workspace catalog
     // Only install additional deps for single-repo presets
-    if (shouldInstall && preset !== 'full') {
+    const isMonorepoPreset =
+      normalizedPreset === 'nextjs-monorepo' ||
+      normalizedPreset === 'bun-monorepo' ||
+      normalizedPreset === 'enterprise-monorepo';
+
+    if (shouldInstall && !isMonorepoPreset) {
       const additionalDeps: Record<string, string> = {};
 
       // Database dependencies
@@ -1187,10 +1198,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       } else {
         await installDependencies(projectPath);
       }
-    } else if (
-      shouldInstall &&
-      (normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'enterprise-monorepo')
-    ) {
+    } else if (shouldInstall && isMonorepoPreset) {
       // For monorepo, just run bun install to install from catalog
       await installDependencies(projectPath);
     }
@@ -1199,11 +1207,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     if (
       shouldInstall &&
       uiLibrary === 'shadcn' &&
-      (normalizedPreset === 'nextjs' ||
-        normalizedPreset === 'bun-fullstack' ||
-        normalizedPreset === 'nextjs-monorepo' ||
-        normalizedPreset === 'bun-monorepo' ||
-        normalizedPreset === 'enterprise-monorepo')
+      (normalizedPreset === 'nextjs' || normalizedPreset === 'bun-fullstack' || isMonorepoPreset)
     ) {
       const componentSpinner = p.spinner();
       componentSpinner.start(
