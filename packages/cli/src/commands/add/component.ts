@@ -28,7 +28,7 @@ async function getPackageName(cwd: string): Promise<string | null> {
 /**
  * Options for adding shadcn/ui components
  */
-export interface AddComponentOptions {
+interface AddComponentOptions {
   components?: string[];
   cwd?: string;
   all?: boolean;

@@ -75,14 +75,14 @@ function getWebPreset(): PresetConfig {
     description: 'Next.js 16 + React 19 - Production-ready web application',
     files: [],
     dependencies: {
-      react: '^19.1.0',
-      'react-dom': '^19.1.0',
-      next: '^16.0.0',
+      react: '^19.2.3',
+      'react-dom': '^19.2.3',
+      next: '^16.0.10',
     },
     devDependencies: {
-      '@types/react': '^19.1.0',
-      '@types/react-dom': '^19.1.0',
-      '@types/node': '^22.10.6',
+      '@types/react': '^19.2.7',
+      '@types/react-dom': '^19.2.3',
+      '@types/node': '^25.0.3',
       typescript: '^5.9.3',
     },
     scripts: {
@@ -99,7 +99,7 @@ function getApiPreset(): PresetConfig {
     description: 'Hono 4 + Bun.serve() - Full-featured API with middleware ecosystem',
     files: [],
     dependencies: {
-      hono: '^4.7.12',
+      hono: '^4.11.1',
     },
     devDependencies: {
       '@types/bun': 'latest',
@@ -135,12 +135,12 @@ function getBunFullstackPreset(): PresetConfig {
     description: 'Bun.serve() + HTML imports - Full-stack app without Next.js',
     files: [],
     dependencies: {
-      react: '^19.1.0',
-      'react-dom': '^19.1.0',
+      react: '^19.2.3',
+      'react-dom': '^19.2.3',
     },
     devDependencies: {
-      '@types/react': '^19.1.0',
-      '@types/react-dom': '^19.1.0',
+      '@types/react': '^19.2.7',
+      '@types/react-dom': '^19.2.3',
       '@types/bun': 'latest',
       typescript: '^5.9.3',
     },

@@ -39,6 +39,7 @@ import { setupGitHubActions } from '../generators/cicd';
 import { setupShadcnMonorepo } from '../generators/shadcn';
 import { setupVSCodeDebug } from '../generators/debug';
 import { setupTooling } from '../generators/tooling';
+import { generateMonorepoReadme } from '../generators/readme';
 
 /**
  * Build full-stack monorepo preset files
@@ -86,45 +87,46 @@ export async function buildFullPreset(
     },
     catalog: {
       // Frontend
-      react: '^19.1.0',
-      'react-dom': '^19.1.0',
-      next: '^16.0.0',
+      react: '^19.2.3',
+      'react-dom': '^19.2.3',
+      next: '^16.0.10',
 
       // Backend
-      hono: '^4.7.12',
+      hono: '^4.11.1',
 
       // Database
-      'drizzle-orm': '^0.38.0',
-      'drizzle-kit': '^0.30.1',
-      'postgres': '^3.4.5',
-      '@supabase/supabase-js': '^2.48.1',
+      'drizzle-orm': '^0.45.1',
+      'drizzle-kit': '^0.31.8',
+      'postgres': '^3.4.7',
+      '@supabase/supabase-js': '^2.88.0',
 
       // Styling
-      tailwindcss: '^4.1.7',
-      autoprefixer: '^10.4.20',
-      postcss: '^8.5.1',
-      '@tailwindcss/postcss': '^4.1.7',
+      tailwindcss: '^4.1.18',
+      autoprefixer: '^10.4.23',
+      postcss: '^8.5.6',
+      '@tailwindcss/postcss': '^4.1.18',
 
       // UI
-      '@radix-ui/react-slot': '^1.2.3',
+      '@radix-ui/react-slot': '^1.2.4',
       'class-variance-authority': '^0.7.1',
       clsx: '^2.1.1',
-      'tailwind-merge': '^3.3.1',
+      'tailwind-merge': '^3.4.0',
       'iconoir-react': '^7.11.0',
-      'lucide-react': '^0.468.0',
+      'lucide-react': '^0.562.0',
+      'tw-animate-css': '^1.2.9',
 
       // Code Quality
-      ...(context.codeQuality === 'biome' ? { '@biomejs/biome': '^2.3.6' } : {}),
-      ...(context.codeQuality === 'ultracite' ? { ultracite: '^6.3.4', '@biomejs/biome': '^2.3.6' } : {}),
+      ...(context.codeQuality === 'biome' ? { '@biomejs/biome': '^2.3.10' } : {}),
+      ...(context.codeQuality === 'ultracite' ? { ultracite: '^6.4.2', '@biomejs/biome': '^2.3.10' } : {}),
 
       // Testing
-      vitest: '^2.0.0',
-      '@vitest/ui': '^2.0.0',
+      vitest: '^4.0.16',
+      '@vitest/ui': '^4.0.16',
 
       // Types
-      '@types/react': '^19.1.0',
-      '@types/react-dom': '^19.1.0',
-      '@types/node': '^22.10.6',
+      '@types/react': '^19.2.7',
+      '@types/react-dom': '^19.2.3',
+      '@types/node': '^25.0.3',
       typescript: '^5.9.3',
     },
   };
@@ -668,78 +670,8 @@ console.log('🚀 ${context.projectName} API running on http://localhost:3001');
     JSON.stringify(apiTsconfigContent, null, 2)
   );
 
-  // Root README
-  const readmeContent = `# ${context.projectName}
-
-Enterprise-grade SaaS monorepo created with [bunkit](https://github.com/Arakiss/bunkit) 🍞
-
-## Structure
-
-\`\`\`
-${context.projectName}/
-├── apps/
-│   ├── web/        # Customer-facing app (landing, marketing)
-│   ├── platform/  # Dashboard/Admin panel (port 3001)
-│   └── api/       # Backend API (Hono)
-├── packages/
-│   ├── types/     # Shared TypeScript types
-│   └── utils/     # Shared utilities
-└── tooling/
-    └── typescript/ # Shared TypeScript configurations
-\`\`\`
-
-## The Enterprise SaaS Trifecta
-
-This monorepo follows the proven enterprise pattern:
-
-1. **web** (\`localhost:3000\`) - Public-facing customer app
-   - Landing pages, marketing content, blog
-   - Optimized for SEO and conversion
-
-2. **platform** (\`localhost:3001\`) - Internal dashboard
-   - Admin panel, user management
-   - Analytics, settings, configuration
-   - Authenticated access only
-
-3. **api** (\`localhost:3001/api\`) - Backend services
-   - REST API with Hono
-   - Database operations, business logic
-   - Shared across web and platform
-
-## Getting Started
-
-\`\`\`bash
-bun install
-bun dev
-\`\`\`
-
-## Development
-
-- \`bun dev\` - Start all apps in development mode
-- \`bun build\` - Build all apps for production
-- \`bun lint\` - Lint all code with Biome
-- \`bun format\` - Format all code with Biome
-
-## Individual Apps
-
-\`\`\`bash
-# Start individual apps (from root)
-bun run dev:web       # Start customer-facing app
-bun run dev:platform  # Start admin dashboard
-bun run dev:api       # Start backend API
-
-# Or from individual directories
-cd apps/web && bun dev
-cd apps/platform && bun dev
-cd apps/api && bun dev
-\`\`\`
-
----
-
-Built with ❤️ using Bun monorepo features
-`;
-
-  await writeFile(join(projectPath, 'README.md'), readmeContent);
+  // Generate README.md with author attribution
+  await generateMonorepoReadme(projectPath, context, 'nextjs');
 
   // Root tsconfig.json (references tooling)
   const tsconfigContent = {

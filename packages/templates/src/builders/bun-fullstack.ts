@@ -23,6 +23,7 @@ import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
 import { setupVSCodeDebug } from '../generators/debug';
+import { generateBunFullstackReadme } from '../generators/readme';
 
 // Database setup function map
 const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
@@ -105,12 +106,12 @@ export async function buildBunFullstackPreset(
       'debug:wait': 'bun --inspect-wait src/index.ts',
     },
     dependencies: {
-      react: '^19.1.0',
-      'react-dom': '^19.1.0',
+      react: '^19.2.3',
+      'react-dom': '^19.2.3',
     },
     devDependencies: {
-      '@types/react': '^19.1.0',
-      '@types/react-dom': '^19.1.0',
+      '@types/react': '^19.2.7',
+      '@types/react-dom': '^19.2.3',
       '@types/bun': 'latest',
       typescript: '^5.9.3',
     },
@@ -125,78 +126,7 @@ export async function buildBunFullstackPreset(
   const bunfigContent = generateBunfigContent(context);
   await writeFile(join(projectPath, 'bunfig.toml'), bunfigContent);
 
-  // Create README
-  const readmeContent = `# ${context.projectName}
-
-Full-stack application built with Bun.serve() + HTML imports.
-
-## Features
-
-- ⚡ **Zero framework overhead** - No Next.js, just Bun
-- 🔥 **Hot Module Replacement** - Native HMR with \`bun --hot\`
-- 📦 **HTML imports** - Full-stack bundling with Bun
-- 🚀 **Ultra-fast** - Native Bun performance
-- 🛡️ **Type-safe** - Full TypeScript support
-
-## Getting Started
-
-\`\`\`bash
-# Development with hot reload
-bun run dev
-
-# Build for production
-bun run build
-
-# Production
-bun run start
-
-# Debugging
-bun run debug
-\`\`\`
-
-## Project Structure
-
-\`\`\`
-src/
-├── index.ts          # Main server entry point
-├── app/
-│   ├── index.html   # HTML entry point
-│   └── client.tsx   # React client code
-├── routes/           # API route handlers
-├── middleware/       # Middleware functions
-└── utils/            # Utility functions
-\`\`\`
-
-## Development vs Production
-
-**Development (\`bun --hot\`):**
-- Assets bundled on-demand at runtime
-- Hot module replacement enabled
-- Fast iterative development
-
-**Production (\`bun build\`):**
-- Pre-built manifest with optimized assets
-- Zero runtime bundling overhead
-- Ideal for deployment
-
-## API Routes
-
-- \`GET /\` - Serves the React app
-- \`GET /health\` - Health check
-- \`GET /api/version\` - API version info
-${context.database && context.database !== 'none' ? '- `GET /api/users` - List users' : ''}
-
-## Environment Variables
-
-\`\`\`bash
-PORT=3000              # Server port (default: 3000)
-HOSTNAME=0.0.0.0       # Server hostname (default: 0.0.0.0)
-NODE_ENV=development   # Environment mode
-\`\`\`
-
-Built with [bunkit](https://github.com/Arakiss/bunkit) 🍞
-`;
-
-  await writeFile(join(projectPath, 'README.md'), readmeContent);
+  // Generate README.md with author attribution
+  await generateBunFullstackReadme(projectPath, context);
 }
 

@@ -215,7 +215,7 @@ curl http://localhost:3001
 /**
  * Build library workspace (shared package)
  */
-export async function buildLibraryWorkspace(
+async function buildLibraryWorkspace(
   workspacePath: string,
   workspaceName: string
 ): Promise<void> {

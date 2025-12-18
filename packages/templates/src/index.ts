@@ -55,3 +55,12 @@ export {
   DEFAULT_SHADCN_COMPONENTS,
 } from './generators/shadcn-components';
 export { createShadcnDocs } from './generators/shadcn-docs';
+export {
+  generateReadmeFooter,
+  generateMinimalReadme,
+  generateNextjsReadme,
+  generateHonoApiReadme,
+  generateBunApiReadme,
+  generateBunFullstackReadme,
+  generateMonorepoReadme,
+} from './generators/readme';

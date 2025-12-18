@@ -51,7 +51,7 @@ const VERSIONS = {
 /**
  * Enhanced options for fully customizable init command
  */
-export interface EnhancedInitOptions {
+interface EnhancedInitOptions {
   name?: string;
   preset?: PresetType;
   database?: DatabaseType;

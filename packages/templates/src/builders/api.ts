@@ -23,6 +23,7 @@ import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
 import { setupVSCodeDebug } from '../generators/debug';
+import { generateHonoApiReadme } from '../generators/readme';
 
 // Database setup function map
 const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
@@ -274,12 +275,36 @@ export default users;
   // Setup VSCode debugging configuration
   await setupVSCodeDebug(projectPath, context, 'api');
 
-  // Update package.json with Hono dependency
+  // Update package.json with Hono dependency and scripts
   const packageJsonPath = join(projectPath, 'package.json');
   const existingPackageJson = JSON.parse(await Bun.file(packageJsonPath).text());
   existingPackageJson.dependencies = {
-    hono: '^4.7.12',
+    hono: '^4.11.1',
     ...existingPackageJson.dependencies,
   };
+  // Ensure all scripts are present
+  if (!existingPackageJson.scripts) {
+    existingPackageJson.scripts = {};
+  }
+  // Standard Hono API scripts
+  if (!existingPackageJson.scripts.dev) {
+    existingPackageJson.scripts.dev = 'bun run --hot src/index.ts';
+  }
+  if (!existingPackageJson.scripts.start) {
+    existingPackageJson.scripts.start = 'bun run src/index.ts';
+  }
+  // Debug scripts
+  if (!existingPackageJson.scripts.debug) {
+    existingPackageJson.scripts.debug = 'bun --inspect src/index.ts';
+  }
+  if (!existingPackageJson.scripts['debug:brk']) {
+    existingPackageJson.scripts['debug:brk'] = 'bun --inspect-brk src/index.ts';
+  }
+  if (!existingPackageJson.scripts['debug:wait']) {
+    existingPackageJson.scripts['debug:wait'] = 'bun --inspect-wait src/index.ts';
+  }
   await writeFile(packageJsonPath, JSON.stringify(existingPackageJson, null, 2));
+
+  // Generate README.md with author attribution
+  await generateHonoApiReadme(projectPath, context);
 }

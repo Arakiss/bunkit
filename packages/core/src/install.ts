@@ -1,6 +1,6 @@
 import { execa } from 'execa';
 import { join } from 'pathe';
-import fs from 'fs-extra';
+import { readFile, writeFile } from 'node:fs/promises';
 import { logger } from './logger';
 
 /**
@@ -41,7 +41,8 @@ async function addDependenciesToPackageJson(
   dependencies: Record<string, string>
 ): Promise<void> {
   const packageJsonPath = join(cwd, 'package.json');
-  const packageJson = await fs.readJson(packageJsonPath);
+  const content = await readFile(packageJsonPath, 'utf-8');
+  const packageJson = JSON.parse(content);
 
   // Merge dependencies
   packageJson.dependencies = {
@@ -49,7 +50,7 @@ async function addDependenciesToPackageJson(
     ...dependencies,
   };
 
-  await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+  await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 }
 
 /**

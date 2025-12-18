@@ -17,13 +17,12 @@
   "dependencies": {
     "@bunkit/core": "workspace:*",
     "ejs": "catalog:",
-    "fs-extra": "catalog:",
+    "execa": "catalog:",
     "pathe": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/ejs": "^3.1.5",
-    "@types/fs-extra": "^11.0.4",
-    "typescript": "^5.7.2"
+    "typescript": "^5.9.3"
   }
 }

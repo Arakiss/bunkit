@@ -6,7 +6,7 @@ import { addComponentCommand } from './add/component';
 /**
  * Feature types that can be added
  */
-export type FeatureType = 'workspace' | 'package' | 'component';
+type FeatureType = 'workspace' | 'package' | 'component';
 
 /**
  * Add command - routes to appropriate subcommand

@@ -3,6 +3,7 @@ import { writeFile, type TemplateContext } from '@bunkit/core';
 import { generateBunfigContent } from '../generators/bunfig';
 import { setupVSCodeDebug } from '../generators/debug';
 import { setupUltracite, setupBiome } from '../generators/ultracite';
+import { generateMinimalReadme } from '../generators/readme';
 
 /**
  * Build minimal preset files
@@ -65,4 +66,7 @@ greet('Bun');
 
   // Setup VSCode debugging configuration
   await setupVSCodeDebug(projectPath, context, 'minimal');
+
+  // Generate README.md with author attribution
+  await generateMinimalReadme(projectPath, context);
 }

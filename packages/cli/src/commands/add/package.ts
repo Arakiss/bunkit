@@ -14,7 +14,7 @@ import {
 /**
  * Options for package command
  */
-export interface PackageOptions {
+interface PackageOptions {
   name?: string;
   type?: PackageType;
   cwd?: string;

@@ -25,6 +25,7 @@ import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
 import { setupVSCodeDebug } from '../generators/debug';
 import { setupTooling } from '../generators/tooling';
+import { generateMonorepoReadme } from '../generators/readme';
 
 // Database setup function map
 const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
@@ -84,33 +85,33 @@ export async function buildMonorepoBunPreset(
     },
     catalog: {
       // Frontend
-      react: '^19.1.0',
-      'react-dom': '^19.1.0',
+      react: '^19.2.3',
+      'react-dom': '^19.2.3',
 
       // Database
-      'drizzle-orm': '^0.38.0',
-      'drizzle-kit': '^0.30.1',
-      'postgres': '^3.4.5',
-      '@supabase/supabase-js': '^2.48.1',
-      '@prisma/client': '^6.19.0',
-      prisma: '^6.19.0',
-      mysql2: '^3.11.5',
+      'drizzle-orm': '^0.45.1',
+      'drizzle-kit': '^0.31.8',
+      'postgres': '^3.4.7',
+      '@supabase/supabase-js': '^2.88.0',
+      '@prisma/client': '^7.2.0',
+      prisma: '^7.2.0',
+      mysql2: '^3.16.0',
 
       // Auth
-      'better-auth': '^1.3.34',
+      'better-auth': '^1.4.7',
       'next-auth': '^4.24.13',
-      '@auth/drizzle-adapter': '^2.4.0',
+      '@auth/drizzle-adapter': '^1.11.1',
 
       // Styling
-      tailwindcss: '^4.1.7',
-      autoprefixer: '^10.4.20',
-      postcss: '^8.5.1',
+      tailwindcss: '^4.1.18',
+      autoprefixer: '^10.4.23',
+      postcss: '^8.5.6',
 
       // TypeScript
       typescript: '^5.9.3',
-      '@types/react': '^19.1.0',
-      '@types/react-dom': '^19.1.0',
-      '@types/node': '^22.10.6',
+      '@types/react': '^19.2.7',
+      '@types/react-dom': '^19.2.3',
+      '@types/node': '^25.0.3',
     },
   };
 
@@ -302,79 +303,8 @@ export function capitalize(str: string): string {
 
   await writeFile(join(projectPath, 'packages/utils/index.ts'), utilsIndex);
 
-  // Create README
-  const readmeContent = `# ${context.projectName}
-
-Full-stack monorepo built with Bun.serve() - no Next.js, just pure Bun performance.
-
-## Structure
-
-\`\`\`
-apps/
-├── api/          # Bun.serve() native API server
-└── web/          # Bun.serve() + HTML imports frontend
-
-packages/
-├── types/        # Shared TypeScript types
-├── utils/        # Shared utilities
-${context.database && context.database !== 'none' ? '└── db/          # Shared database schema' : ''}
-
-tooling/
-└── typescript/   # Shared TypeScript configurations
-\`\`\`
-
-## Features
-
-- ⚡ **Zero framework overhead** - No Next.js, just Bun
-- 🔥 **Hot Module Replacement** - Native HMR with \`bun --hot\`
-- 📦 **HTML imports** - Full-stack bundling with Bun
-- 🚀 **Ultra-fast** - Native Bun performance
-- 🛡️ **Type-safe** - Shared types across workspaces
-
-## Getting Started
-
-\`\`\`bash
-# Install dependencies
-bun install
-
-# Run all apps in development
-bun dev
-
-# Start individual apps
-bun run dev:web    # Start web app
-bun run dev:api    # Start API server
-
-# Build all apps
-bun build
-
-# Debug API
-bun run debug
-\`\`\`
-
-## Apps
-
-### API (\`apps/api\`)
-
-Bun.serve() native API server with zero dependencies.
-
-\`\`\`bash
-bun run dev:api
-# Or: cd apps/api && bun dev
-\`\`\`
-
-### Web (\`apps/web\`)
-
-Full-stack app with HTML imports and React.
-
-\`\`\`bash
-bun run dev:web
-# Or: cd apps/web && bun dev
-\`\`\`
-
-Built with [bunkit](https://github.com/Arakiss/bunkit) 🍞
-`;
-
-  await writeFile(join(projectPath, 'README.md'), readmeContent);
+  // Generate README.md with author attribution
+  await generateMonorepoReadme(projectPath, context, 'bun');
 
   // Root tsconfig.json (references tooling)
   const tsconfigContent = {

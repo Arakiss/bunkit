@@ -6,6 +6,7 @@ import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
 import { setupShadcnWeb } from '../generators/shadcn';
 import { setupVSCodeDebug } from '../generators/debug';
+import { generateNextjsReadme } from '../generators/readme';
 
 /**
  * Build web (Next.js) preset files
@@ -195,21 +196,32 @@ export default config;
   const packageJsonPath = join(projectPath, 'package.json');
   const existingPackageJson = JSON.parse(await Bun.file(packageJsonPath).text());
   existingPackageJson.dependencies = {
-    react: '^19.1.0',
-    'react-dom': '^19.1.0',
-    next: '^16.0.0',
+    react: '^19.2.3',
+    'react-dom': '^19.2.3',
+    next: '^16.0.10',
     ...existingPackageJson.dependencies,
   };
   existingPackageJson.devDependencies = {
     ...existingPackageJson.devDependencies,
-    '@types/react': '^19.1.0',
-    '@types/react-dom': '^19.1.0',
-    '@types/node': '^22.10.6',
+    '@types/react': '^19.2.7',
+    '@types/react-dom': '^19.2.3',
+    '@types/node': '^25.0.3',
   };
-  // Ensure debug scripts are present (they should already be from createPackageJson)
+  // Ensure all scripts are present
   if (!existingPackageJson.scripts) {
     existingPackageJson.scripts = {};
   }
+  // Standard Next.js scripts
+  if (!existingPackageJson.scripts.dev) {
+    existingPackageJson.scripts.dev = 'bun run --bun next dev --turbopack';
+  }
+  if (!existingPackageJson.scripts.build) {
+    existingPackageJson.scripts.build = 'bun run --bun next build';
+  }
+  if (!existingPackageJson.scripts.start) {
+    existingPackageJson.scripts.start = 'bun run --bun next start';
+  }
+  // Debug scripts
   if (!existingPackageJson.scripts.debug) {
     existingPackageJson.scripts.debug = 'bun --inspect node_modules/.bin/next dev --turbopack';
   }
@@ -220,4 +232,7 @@ export default config;
     existingPackageJson.scripts['debug:wait'] = 'bun --inspect-wait node_modules/.bin/next dev --turbopack';
   }
   await writeFile(packageJsonPath, JSON.stringify(existingPackageJson, null, 2));
+
+  // Generate README.md with author attribution
+  await generateNextjsReadme(projectPath, context);
 }

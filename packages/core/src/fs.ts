@@ -1,6 +1,6 @@
-import fs from 'fs-extra';
 import { glob } from 'fast-glob';
 import { join, resolve, dirname, basename } from 'pathe';
+import { mkdir, stat, readdir, readFile as nodeReadFile, writeFile as nodeWriteFile, cp } from 'node:fs/promises';
 import type { FileOperationResult } from './types';
 
 /**
@@ -8,7 +8,7 @@ import type { FileOperationResult } from './types';
  */
 export async function directoryExists(path: string): Promise<boolean> {
   try {
-    const stats = await fs.stat(path);
+    const stats = await stat(path);
     return stats.isDirectory();
   } catch {
     return false;
@@ -20,7 +20,7 @@ export async function directoryExists(path: string): Promise<boolean> {
  */
 export async function fileExists(path: string): Promise<boolean> {
   try {
-    const stats = await fs.stat(path);
+    const stats = await stat(path);
     return stats.isFile();
   } catch {
     return false;
@@ -31,15 +31,16 @@ export async function fileExists(path: string): Promise<boolean> {
  * Ensure directory exists, create if it doesn't
  */
 export async function ensureDirectory(path: string): Promise<void> {
-  await fs.ensureDir(path);
+  await mkdir(path, { recursive: true });
 }
 
 /**
  * Copy file or directory recursively
  */
 export async function copyPath(source: string, destination: string): Promise<void> {
-  await fs.copy(source, destination, {
-    overwrite: false,
+  await cp(source, destination, {
+    recursive: true,
+    force: false,
     errorOnExist: false,
   });
 }
@@ -53,7 +54,7 @@ export async function writeFile(
 ): Promise<FileOperationResult> {
   try {
     await ensureDirectory(dirname(path));
-    await fs.writeFile(path, content, 'utf-8');
+    await nodeWriteFile(path, content, 'utf-8');
     return { path, success: true };
   } catch (error) {
     return {
@@ -68,7 +69,7 @@ export async function writeFile(
  * Read file content
  */
 export async function readFile(path: string): Promise<string> {
-  return fs.readFile(path, 'utf-8');
+  return nodeReadFile(path, 'utf-8');
 }
 
 /**
@@ -112,6 +113,6 @@ export async function isDirectoryEmpty(path: string): Promise<boolean> {
     return true;
   }
 
-  const files = await fs.readdir(path);
+  const files = await readdir(path);
   return files.length === 0;
 }

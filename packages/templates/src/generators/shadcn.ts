@@ -90,11 +90,12 @@ export function cn(...inputs: ClassValue[]) {
     packageJson.catalog = {};
   }
 
-  packageJson.catalog['@radix-ui/react-slot'] = '^1.2.3';
+  packageJson.catalog['@radix-ui/react-slot'] = '^1.2.4';
   packageJson.catalog['class-variance-authority'] = '^0.7.1';
   packageJson.catalog['clsx'] = '^2.1.1';
-  packageJson.catalog['tailwind-merge'] = '^3.3.1';
-  packageJson.catalog['lucide-react'] = '^0.468.0';
+  packageJson.catalog['tailwind-merge'] = '^3.4.0';
+  packageJson.catalog['lucide-react'] = '^0.562.0';
+  packageJson.catalog['tw-animate-css'] = '^1.2.9';
 
   await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
@@ -528,13 +529,14 @@ export default nextConfig;
   // These versions are referenced in packages/ui/package.json with catalog:
   // IMPORTANT: Keep these versions in sync with root package.json catalog
   const shadcnDependencies = {
-    '@radix-ui/react-slot': '^1.2.3',
+    '@radix-ui/react-slot': '^1.2.4',
     'class-variance-authority': '^0.7.1',
     clsx: '^2.1.1',
-    'tailwind-merge': '^3.3.1',
-    'lucide-react': '^0.468.0', // Note: lucide-react is used by shadcn/ui components
-    '@types/react': '^19.2.2',
-    '@types/react-dom': '^19.2.2',
+    'tailwind-merge': '^3.4.0',
+    'lucide-react': '^0.562.0', // Note: lucide-react is used by shadcn/ui components
+    'tw-animate-css': '^1.2.9', // Replaces tailwindcss-animate in Tailwind v4
+    '@types/react': '^19.2.7',
+    '@types/react-dom': '^19.2.3',
     typescript: '^5.9.3',
   };
 

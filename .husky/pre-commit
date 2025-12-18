@@ -1,0 +1,8 @@
+# Pre-commit hook
+# Runs quick checks before allowing commits
+
+# Run typecheck (can be commented out for speed)
+# bun run typecheck
+
+# Run biome check on staged files (optional)
+# bun run lint

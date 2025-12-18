@@ -4,7 +4,7 @@
  * All colors use OKLCH color space for better color consistency
  */
 
-export interface ShadcnTheme {
+interface ShadcnTheme {
   light: {
     radius: string;
     background: string;
@@ -79,7 +79,7 @@ export interface ShadcnTheme {
 /**
  * Neutral theme (default)
  */
-export const neutralTheme: ShadcnTheme = {
+const neutralTheme: ShadcnTheme = {
   light: {
     radius: '0.625rem',
     background: 'oklch(1 0 0)',
@@ -154,7 +154,7 @@ export const neutralTheme: ShadcnTheme = {
 /**
  * Gray theme
  */
-export const grayTheme: ShadcnTheme = {
+const grayTheme: ShadcnTheme = {
   light: {
     radius: '0.625rem',
     background: 'oklch(1 0 0)',
@@ -229,7 +229,7 @@ export const grayTheme: ShadcnTheme = {
 /**
  * Zinc theme (recommended default)
  */
-export const zincTheme: ShadcnTheme = {
+const zincTheme: ShadcnTheme = {
   light: {
     radius: '0.625rem',
     background: 'oklch(1 0 0)',
@@ -304,7 +304,7 @@ export const zincTheme: ShadcnTheme = {
 /**
  * Stone theme
  */
-export const stoneTheme: ShadcnTheme = {
+const stoneTheme: ShadcnTheme = {
   light: {
     radius: '0.625rem',
     background: 'oklch(1 0 0)',
@@ -379,7 +379,7 @@ export const stoneTheme: ShadcnTheme = {
 /**
  * Slate theme
  */
-export const slateTheme: ShadcnTheme = {
+const slateTheme: ShadcnTheme = {
   light: {
     radius: '0.625rem',
     background: 'oklch(1 0 0)',

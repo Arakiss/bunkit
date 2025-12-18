@@ -23,6 +23,7 @@ import { setupUltracite, setupBiome } from '../generators/ultracite';
 import { setupDocker } from '../generators/docker';
 import { setupGitHubActions } from '../generators/cicd';
 import { setupVSCodeDebug } from '../generators/debug';
+import { generateBunApiReadme } from '../generators/readme';
 
 // Database setup function map
 const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
@@ -119,60 +120,7 @@ export async function buildBunApiPreset(
   const bunfigContent = generateBunfigContent(context);
   await writeFile(join(projectPath, 'bunfig.toml'), bunfigContent);
 
-  // Create README
-  const readmeContent = `# ${context.projectName}
-
-Ultra-fast API server built with Bun.serve() native routing.
-
-## Features
-
-- ⚡ **Zero dependencies** - Uses Bun's native routing
-- 🚀 **Ultra-fast** - SIMD-accelerated route parameter decoding
-- 🔥 **Hot reload** - Native HMR with \`bun --hot\`
-- 📊 **Built-in metrics** - Request/WebSocket counters
-- 🛡️ **Type-safe** - Full TypeScript support
-
-## Getting Started
-
-\`\`\`bash
-# Development with hot reload
-bun run dev
-
-# Production
-bun run start
-
-# Debugging
-bun run debug
-\`\`\`
-
-## Project Structure
-
-\`\`\`
-src/
-├── index.ts          # Main server entry point
-├── routes/           # Route handlers
-├── middleware/       # Middleware functions
-└── utils/            # Utility functions
-\`\`\`
-
-## API Routes
-
-- \`GET /\` - Welcome message
-- \`GET /health\` - Health check
-- \`GET /api/version\` - API version info
-${context.database && context.database !== 'none' ? '- `GET /api/users` - List users\n- `GET /api/users/:id` - Get user by ID' : ''}
-
-## Environment Variables
-
-\`\`\`bash
-PORT=3000              # Server port (default: 3000)
-HOSTNAME=0.0.0.0       # Server hostname (default: 0.0.0.0)
-NODE_ENV=development   # Environment mode
-\`\`\`
-
-Built with [bunkit](https://github.com/Arakiss/bunkit) 🍞
-`;
-
-  await writeFile(join(projectPath, 'README.md'), readmeContent);
+  // Generate README.md with author attribution
+  await generateBunApiReadme(projectPath, context);
 }
 

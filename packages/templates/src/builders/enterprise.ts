@@ -27,6 +27,7 @@ import { setupVSCodeDebug } from '../generators/debug';
 import { setupTooling } from '../generators/tooling';
 import { buildNextJsWorkspace } from './workspace';
 import { buildHonoWorkspace } from './workspace';
+import { generateMonorepoReadme } from '../generators/readme';
 
 // Database setup function map
 const databaseSetupMap: Record<DatabaseType, (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>> = {
@@ -91,45 +92,46 @@ export async function buildEnterprisePreset(
     },
     catalog: {
       // Frontend
-      react: '^19.1.0',
-      'react-dom': '^19.1.0',
-      next: '^16.0.0',
+      react: '^19.2.3',
+      'react-dom': '^19.2.3',
+      next: '^16.0.10',
 
       // Backend
-      hono: '^4.7.12',
+      hono: '^4.11.1',
 
       // Database
-      'drizzle-orm': '^0.38.0',
-      'drizzle-kit': '^0.30.1',
-      postgres: '^3.4.5',
-      '@supabase/supabase-js': '^2.48.1',
+      'drizzle-orm': '^0.45.1',
+      'drizzle-kit': '^0.31.8',
+      postgres: '^3.4.7',
+      '@supabase/supabase-js': '^2.88.0',
 
       // Styling
-      tailwindcss: '^4.1.7',
-      autoprefixer: '^10.4.20',
-      postcss: '^8.5.1',
-      '@tailwindcss/postcss': '^4.1.7',
+      tailwindcss: '^4.1.18',
+      autoprefixer: '^10.4.23',
+      postcss: '^8.5.6',
+      '@tailwindcss/postcss': '^4.1.18',
 
       // UI
-      '@radix-ui/react-slot': '^1.2.3',
+      '@radix-ui/react-slot': '^1.2.4',
       'class-variance-authority': '^0.7.1',
       clsx: '^2.1.1',
-      'tailwind-merge': '^3.3.1',
+      'tailwind-merge': '^3.4.0',
       'iconoir-react': '^7.11.0',
-      'lucide-react': '^0.468.0',
+      'lucide-react': '^0.562.0',
+      'tw-animate-css': '^1.2.9',
 
       // Code Quality
-      '@biomejs/biome': '^2.3.0',
-      ultracite: '^6.3.4',
+      '@biomejs/biome': '^2.3.10',
+      ultracite: '^6.4.2',
 
       // Testing
-      vitest: '^2.0.0',
-      '@vitest/ui': '^2.0.0',
+      vitest: '^4.0.16',
+      '@vitest/ui': '^4.0.16',
 
       // Types
-      '@types/react': '^19.1.0',
-      '@types/react-dom': '^19.1.0',
-      '@types/node': '^22.10.6',
+      '@types/react': '^19.2.7',
+      '@types/react-dom': '^19.2.3',
+      '@types/node': '^25.0.3',
       typescript: '^5.9.3',
     },
   };
@@ -462,171 +464,8 @@ export default {
 
   await writeFile(join(projectPath, 'apps/service-identity/src/index.ts'), serviceIdentityIndex);
 
-  // Create README
-  const readmeContent = `# ${context.projectName}
-
-Enterprise monorepo created with [bunkit](https://github.com/Arakiss/bunkit) 🍞
-
-## Architecture
-
-This monorepo follows enterprise patterns with multiple applications and services:
-
-\`\`\`
-${context.projectName}/
-├── apps/
-│   ├── web/               # Marketing/Landing site (port 3000)
-│   ├── app/               # Main SaaS product (port 3002)
-│   ├── platform/          # Admin/Dashboard (port 3001)
-│   └── service-identity/  # Identity service API (port 3003)
-├── packages/
-│   ├── types/             # Shared TypeScript types
-│   ├── utils/             # Shared utilities
-│   ├── ui/                # Shared UI components (shadcn/ui)
-│   ${context.database && context.database !== 'none' ? '└── db/                # Shared database schema' : ''}
-└── tooling/
-    └── typescript/        # Shared TypeScript configurations
-\`\`\`
-
-## Applications
-
-### Web (\`apps/web\`) - Port 3000
-
-Marketing site and landing pages - your public-facing website.
-
-- Landing pages, blog, marketing content
-- Optimized for SEO and conversion
-- Public access
-
-\`\`\`bash
-bun run dev:web
-# Or: cd apps/web && bun dev
-\`\`\`
-
-### App (\`apps/app\`) - Port 3002
-
-Main SaaS product application - your core product.
-
-- Customer-facing features
-- User dashboard and functionality
-- Authenticated user access
-
-\`\`\`bash
-bun run dev:app
-# Or: cd apps/app && bun dev
-\`\`\`
-
-### Platform (\`apps/platform\`) - Port 3001
-
-Admin dashboard and internal tools for managing the platform.
-
-- User management
-- Analytics and reporting
-- System configuration
-- Authenticated admin access only
-
-\`\`\`bash
-bun run dev:platform
-# Or: cd apps/platform && bun dev
-\`\`\`
-
-### Service Identity (\`apps/service-identity\`) - Port 3003
-
-Identity and authentication service API.
-
-- User authentication
-- User management endpoints
-- Identity verification
-- Shared across web, app, and platform
-
-\`\`\`bash
-bun run dev:identity
-# Or: cd apps/service-identity && bun dev
-\`\`\`
-
-## Getting Started
-
-\`\`\`bash
-# Install all dependencies
-bun install
-
-# Start all apps in development
-bun dev
-
-# Start individual apps
-bun run dev:web         # Start marketing site (port 3000)
-bun run dev:app         # Start main product app (port 3002)
-bun run dev:platform    # Start admin dashboard (port 3001)
-bun run dev:identity    # Start identity service (port 3003)
-
-# Use custom ports if defaults are in use
-PORT=3004 bun run dev:app    # Run app on port 3004
-PORT=3005 bun run dev:web    # Run web on port 3005
-
-# Build all apps
-bun build
-
-# Lint and format
-bun lint
-bun format
-\`\`\`
-
-### Port Configuration
-
-All apps support the \`PORT\` environment variable to override the default port:
-
-- **apps/web**: Default port 3000
-- **apps/platform**: Default port 3001  
-- **apps/app**: Default port 3002
-- **apps/service-identity**: Default port 3003
-
-If a port is already in use, you can easily change it:
-
-\`\`\`bash
-# Example: Run app on a different port
-PORT=4000 cd apps/app && bun dev
-
-# Or set it globally for the session
-export PORT=4000
-cd apps/app && bun dev
-\`\`\`
-
-## Adding More Services
-
-You can easily add more services using bunkit:
-
-\`\`\`bash
-# Add a new service API
-bunkit add workspace --name apps/service-payments --preset hono
-
-# Add a new Next.js app
-bunkit add workspace --name apps/docs --preset nextjs
-
-# Add shared packages
-bunkit add package --name @${context.packageName}/email --type library
-\`\`\`
-
-## Development Workflow
-
-1. **Shared Code**: Place shared types, utilities, and components in \`packages/\`
-2. **Service Communication**: Services communicate via HTTP APIs
-3. **Type Safety**: Use shared types from \`@${context.packageName}/types\`
-4. **UI Components**: Use shared components from \`@${context.packageName}/ui\`
-
-## Production Deployment
-
-Each app and service can be deployed independently:
-
-- \`apps/web\` → Deploy to your marketing domain (e.g., www.example.com)
-- \`apps/app\` → Deploy to your main product domain (e.g., app.example.com)
-- \`apps/platform\` → Deploy to your admin subdomain (e.g., admin.example.com)
-- \`apps/service-identity\` → Deploy as microservice (e.g., api.example.com)
-
----
-
-Built with ❤️ using Bun monorepo features
-`;
-
-  await writeFile(join(projectPath, 'README.md'), readmeContent);
+  // Generate README.md with author attribution
+  await generateMonorepoReadme(projectPath, context, 'enterprise');
 
   // Root tsconfig.json (references tooling)
   const tsconfigContent = {

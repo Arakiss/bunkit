@@ -7,7 +7,7 @@ export interface PresetConfig {
   scripts: Record<string, string>;
 }
 
-export interface TemplateFile {
+interface TemplateFile {
   path: string;
   content: string;
   template?: boolean;

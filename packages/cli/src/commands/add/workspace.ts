@@ -16,7 +16,7 @@ import { buildWorkspace } from '@bunkit/templates';
 /**
  * Options for workspace command
  */
-export interface WorkspaceOptions {
+interface WorkspaceOptions {
   name?: string;
   preset?: WorkspacePreset;
   cwd?: string;

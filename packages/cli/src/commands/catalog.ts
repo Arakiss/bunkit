@@ -7,7 +7,7 @@ import { existsSync } from 'fs';
 /**
  * Options for catalog commands
  */
-export interface CatalogOptions {
+interface CatalogOptions {
   package?: string;
   version?: string;
   cwd?: string;

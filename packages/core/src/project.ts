@@ -1,11 +1,11 @@
 import { join, basename, resolve } from 'pathe';
-import fs from 'fs-extra';
 import type { ProjectConfig, TemplateContext } from './types';
 import {
   ensureDirectory,
   writeFile,
   isDirectoryEmpty,
   createPackageName,
+  directoryExists,
 } from './fs';
 import { initGit, isGitAvailable, getGitUser } from './git';
 import { logger } from './logger';
@@ -41,7 +41,7 @@ export async function createProject(config: ProjectConfig): Promise<void> {
   }
 
   // Validate directory - check if target directory already exists
-  const targetExists = await fs.pathExists(projectPath);
+  const targetExists = await directoryExists(projectPath);
   if (targetExists && !(await isDirectoryEmpty(projectPath))) {
     throw new Error(`Directory "${config.path}" already exists and is not empty`);
   }
