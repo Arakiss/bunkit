@@ -70,11 +70,12 @@ export async function setupTooling(projectPath: string, context: TemplateContext
   };
 
   // Library/package base config
+  // IMPORTANT: UI packages need DOM types for React components (HTMLButtonElement, etc.)
   const libraryBaseConfig = {
     extends: '../../tooling/typescript/base.json',
     compilerOptions: {
       target: 'ESNext',
-      lib: ['ESNext'],
+      lib: ['ESNext', 'DOM', 'DOM.Iterable'],
       module: 'ESNext',
       moduleResolution: 'bundler',
       declaration: true,

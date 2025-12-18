@@ -265,14 +265,21 @@ export async function writeUiPackageJson(
       lint: 'tsc --noEmit',
     },
     dependencies: {
-      // Radix UI primitives
+      // Radix UI - unified package (shadcn components use `import { X } from "radix-ui"`)
+      'radix-ui': 'catalog:',
+      // Legacy Radix slot (still used by some components)
       '@radix-ui/react-slot': 'catalog:',
       // Styling utilities
       'class-variance-authority': 'catalog:',
       clsx: 'catalog:',
       'tailwind-merge': 'catalog:',
-      // Icons - ONLY iconoir, NOT lucide
+      // Icons - Phosphor (default for modern shadcn styles) + iconoir
+      '@phosphor-icons/react': 'catalog:',
       'iconoir-react': 'catalog:',
+      // Animation library (used in globals.css: @import "tw-animate-css")
+      'tw-animate-css': 'catalog:',
+      // shadcn theme package (used in globals.css: @import "shadcn/tailwind.css")
+      shadcn: 'catalog:',
       // Tailwind CSS 4
       tailwindcss: 'catalog:',
       '@tailwindcss/postcss': 'catalog:',
