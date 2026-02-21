@@ -97,12 +97,21 @@ export type UILibrary = 'shadcn' | 'none';
 /**
  * shadcn/ui style options
  *
- * As of December 2025, shadcn/ui offers 5 visual styles with Radix UI or Base UI:
+ * As of February 2026, shadcn/ui offers visual styles for both Radix UI and Base UI:
+ *
+ * Radix UI styles:
  * - radix-maia: Modern, clean design with soft shadows
  * - radix-vega: Bold, vibrant design with stronger colors
  * - radix-nova: Minimalist design with subtle accents
  * - radix-lyra: Elegant design with refined typography
  * - radix-mira: Playful design with rounded elements
+ *
+ * Base UI styles (January 2026+):
+ * - base-maia: Modern, clean design using Base UI primitives
+ * - base-vega: Bold, vibrant design using Base UI primitives
+ * - base-nova: Minimalist design using Base UI primitives
+ * - base-lyra: Elegant design using Base UI primitives
+ * - base-mira: Playful design using Base UI primitives
  *
  * Legacy styles (still supported):
  * - new-york: Modern aesthetic with rounded corners
@@ -114,6 +123,11 @@ export type ShadcnStyle =
   | 'radix-nova'
   | 'radix-lyra'
   | 'radix-mira'
+  | 'base-maia'
+  | 'base-vega'
+  | 'base-nova'
+  | 'base-lyra'
+  | 'base-mira'
   | 'new-york'
   | 'default';
 
@@ -129,9 +143,9 @@ export type ShadcnBase = 'radix' | 'base-ui';
 /**
  * shadcn/ui icon library options
  *
- * - phosphor: Phosphor Icons (default in new projects)
+ * - iconoir: Iconoir Icons (bunkit default - 1600+ icons, tree-shakeable)
+ * - phosphor: Phosphor Icons (shadcn/ui default for modern styles)
  * - lucide: Lucide Icons (classic shadcn/ui)
- * - iconoir: Iconoir Icons (alternative)
  */
 export type ShadcnIconLibrary = 'phosphor' | 'lucide' | 'iconoir';
 
@@ -229,7 +243,20 @@ export const ProjectConfigSchema = z.object({
 
   // shadcn/ui specific options (December 2025 - new create feature)
   shadcnStyle: z
-    .enum(['radix-maia', 'radix-vega', 'radix-nova', 'radix-lyra', 'radix-mira', 'new-york', 'default'])
+    .enum([
+      'radix-maia',
+      'radix-vega',
+      'radix-nova',
+      'radix-lyra',
+      'radix-mira',
+      'base-maia',
+      'base-vega',
+      'base-nova',
+      'base-lyra',
+      'base-mira',
+      'new-york',
+      'default',
+    ])
     .optional(),
   shadcnBase: z.enum(['radix', 'base-ui']).optional(),
   shadcnBaseColor: z.enum(['neutral', 'gray', 'zinc', 'stone', 'slate']).optional(),
@@ -237,6 +264,7 @@ export const ProjectConfigSchema = z.object({
   shadcnMenuAccent: z.enum(['subtle', 'bold']).optional(),
   shadcnMenuColor: z.enum(['default', 'muted']).optional(),
   shadcnRadius: z.string().optional(), // e.g., "0.5rem", "0.625rem"
+  shadcnRtl: z.boolean().optional(), // RTL support (February 2026+)
 
   // Testing
   testing: z.enum(['bun-test', 'vitest', 'none']).default('bun-test'),
@@ -296,6 +324,7 @@ export interface TemplateContext {
   shadcnMenuAccent?: ShadcnMenuAccent;
   shadcnMenuColor?: ShadcnMenuColor;
   shadcnRadius?: string;
+  shadcnRtl?: boolean;
 
   // Supabase specific options
   supabasePreset?: SupabasePreset;
@@ -303,6 +332,26 @@ export interface TemplateContext {
   supabaseWithDrizzle?: boolean;
 
   [key: string]: unknown;
+}
+
+/**
+ * Infer the shadcn base (radix or base-ui) from a style name.
+ * Styles prefixed with "base-" use Base UI; everything else uses Radix.
+ */
+export function inferShadcnBase(style: ShadcnStyle | undefined): 'radix' | 'base-ui' {
+  if (style?.startsWith('base-')) {
+    return 'base-ui';
+  }
+  return 'radix';
+}
+
+/**
+ * Check if a style is a modern shadcn/ui style (December 2025+ radix-* or January 2026+ base-*).
+ * Modern styles use tw-animate-css, shadcn/tailwind.css, and support menuColor/menuAccent.
+ */
+export function isModernShadcnStyle(style: ShadcnStyle | undefined): boolean {
+  if (!style) return false;
+  return style.startsWith('radix-') || style.startsWith('base-');
 }
 
 /**

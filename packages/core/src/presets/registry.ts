@@ -291,18 +291,18 @@ export const PRESET_DEFINITIONS: Record<PrimaryPresetType, PresetDefinition> = {
       '@tailwindcss/postcss': '^4.1.18',
       postcss: '^8.5.6',
       autoprefixer: '^10.4.23',
-      // shadcn/ui dependencies (December 2025 - new create feature)
+      // shadcn/ui dependencies (February 2026 - unified radix-ui, Base UI styles, RTL)
       'radix-ui': '^1.4.3', // Unified Radix UI package (replaces @radix-ui/react-*)
-      '@radix-ui/react-slot': '^1.2.4', // Legacy support
-      '@base-ui/react': '^1.0.0', // Base UI alternative to Radix
-      shadcn: '^3.6.2', // shadcn package for CSS/theming
+      '@radix-ui/react-slot': '^1.2.4', // Legacy backward compat
+      '@base-ui/react': '^1.2.0', // Base UI alternative to Radix (January 2026+)
+      shadcn: '^3.8.5', // shadcn package for CSS/theming + migrate CLI
       'class-variance-authority': '^0.7.1',
       clsx: '^2.1.1',
       'tailwind-merge': '^3.4.0',
       'tw-animate-css': '^1.4.0', // Animation library
-      // Icons - Multiple options for shadcn/ui
-      '@phosphor-icons/react': '^2.1.10', // Default for modern styles
-      'iconoir-react': '^7.11.0', // Alternative option
+      // Icons - iconoir is bunkit default, phosphor is shadcn default
+      'iconoir-react': '^7.11.0', // bunkit default
+      '@phosphor-icons/react': '^2.1.10', // shadcn default for modern styles
       // Code quality
       ultracite: '^6.4.2',
       '@biomejs/biome': '^2.3.10',
@@ -361,18 +361,18 @@ export const PRESET_DEFINITIONS: Record<PrimaryPresetType, PresetDefinition> = {
       '@tailwindcss/postcss': '^4.1.18',
       postcss: '^8.5.6',
       autoprefixer: '^10.4.23',
-      // shadcn/ui dependencies (December 2025 - new create feature)
+      // shadcn/ui dependencies (February 2026 - unified radix-ui, Base UI styles, RTL)
       'radix-ui': '^1.4.3', // Unified Radix UI package
-      '@radix-ui/react-slot': '^1.2.4', // Legacy support
-      '@base-ui/react': '^1.0.0', // Base UI alternative
-      shadcn: '^3.6.2', // shadcn package
+      '@radix-ui/react-slot': '^1.2.4', // Legacy backward compat
+      '@base-ui/react': '^1.2.0', // Base UI alternative (January 2026+)
+      shadcn: '^3.8.5', // shadcn package + migrate CLI
       'class-variance-authority': '^0.7.1',
       clsx: '^2.1.1',
       'tailwind-merge': '^3.4.0',
       'tw-animate-css': '^1.4.0', // Animation library
-      // Icons
-      '@phosphor-icons/react': '^2.1.10', // Default for modern styles
-      'iconoir-react': '^7.11.0', // Alternative
+      // Icons - iconoir is bunkit default
+      'iconoir-react': '^7.11.0', // bunkit default
+      '@phosphor-icons/react': '^2.1.10', // shadcn default for modern styles
       // Code quality
       ultracite: '^6.4.2',
       '@biomejs/biome': '^2.3.10',
@@ -434,18 +434,18 @@ export const PRESET_DEFINITIONS: Record<PrimaryPresetType, PresetDefinition> = {
       '@tailwindcss/postcss': '^4.1.18',
       postcss: '^8.5.6',
       autoprefixer: '^10.4.23',
-      // shadcn/ui dependencies (December 2025 - new create feature)
+      // shadcn/ui dependencies (February 2026 - unified radix-ui, Base UI styles, RTL)
       'radix-ui': '^1.4.3', // Unified Radix UI package
-      '@radix-ui/react-slot': '^1.2.4', // Legacy support
-      '@base-ui/react': '^1.0.0', // Base UI alternative
-      shadcn: '^3.6.2', // shadcn package
+      '@radix-ui/react-slot': '^1.2.4', // Legacy backward compat
+      '@base-ui/react': '^1.2.0', // Base UI alternative (January 2026+)
+      shadcn: '^3.8.5', // shadcn package + migrate CLI
       'class-variance-authority': '^0.7.1',
       clsx: '^2.1.1',
       'tailwind-merge': '^3.4.0',
       'tw-animate-css': '^1.4.0', // Animation library
-      // Icons
-      '@phosphor-icons/react': '^2.1.10', // Default for modern styles
-      'iconoir-react': '^7.11.0', // Alternative
+      // Icons - iconoir is bunkit default
+      'iconoir-react': '^7.11.0', // bunkit default
+      '@phosphor-icons/react': '^2.1.10', // shadcn default for modern styles
       // Code quality
       ultracite: '^6.4.2',
       '@biomejs/biome': '^2.3.10',
@@ -469,25 +469,25 @@ export class PresetRegistry {
    * Build alias map lazily
    */
   private static getAliasMap(): Map<string, PrimaryPresetType> {
-    if (!this.aliasMap) {
-      this.aliasMap = new Map();
+    if (!PresetRegistry.aliasMap) {
+      PresetRegistry.aliasMap = new Map();
       for (const [name, definition] of Object.entries(PRESET_DEFINITIONS)) {
         // Map canonical name to itself
-        this.aliasMap.set(name, name as PrimaryPresetType);
+        PresetRegistry.aliasMap.set(name, name as PrimaryPresetType);
         // Map all aliases to canonical name
         for (const alias of definition.aliases) {
-          this.aliasMap.set(alias, name as PrimaryPresetType);
+          PresetRegistry.aliasMap.set(alias, name as PrimaryPresetType);
         }
       }
     }
-    return this.aliasMap;
+    return PresetRegistry.aliasMap;
   }
 
   /**
    * Normalize any preset name/alias to canonical (primary) name
    */
   static normalize(input: string): PrimaryPresetType | null {
-    const map = this.getAliasMap();
+    const map = PresetRegistry.getAliasMap();
     return map.get(input) || null;
   }
 
@@ -495,7 +495,7 @@ export class PresetRegistry {
    * Get preset definition by name or alias
    */
   static get(input: string): PresetDefinition | null {
-    const normalized = this.normalize(input);
+    const normalized = PresetRegistry.normalize(input);
     if (!normalized) return null;
     return PRESET_DEFINITIONS[normalized];
   }
@@ -503,11 +503,8 @@ export class PresetRegistry {
   /**
    * Check if a preset supports a capability
    */
-  static hasCapability(
-    input: string,
-    capability: keyof PresetCapabilities
-  ): boolean {
-    const preset = this.get(input);
+  static hasCapability(input: string, capability: keyof PresetCapabilities): boolean {
+    const preset = PresetRegistry.get(input);
     if (!preset) return false;
     return preset.capabilities[capability];
   }
@@ -516,7 +513,7 @@ export class PresetRegistry {
    * Check if preset is a monorepo
    */
   static isMonorepo(input: string): boolean {
-    return this.hasCapability(input, 'isMonorepo');
+    return PresetRegistry.hasCapability(input, 'isMonorepo');
   }
 
   /**
@@ -537,25 +534,21 @@ export class PresetRegistry {
   /**
    * Get all presets that support a capability
    */
-  static getPresetsWithCapability(
-    capability: keyof PresetCapabilities
-  ): PresetDefinition[] {
-    return Object.values(PRESET_DEFINITIONS).filter(
-      (preset) => preset.capabilities[capability]
-    );
+  static getPresetsWithCapability(capability: keyof PresetCapabilities): PresetDefinition[] {
+    return Object.values(PRESET_DEFINITIONS).filter((preset) => preset.capabilities[capability]);
   }
 
   /**
    * Validate that a preset name/alias is valid
    */
   static isValid(input: string): boolean {
-    return this.normalize(input) !== null;
+    return PresetRegistry.normalize(input) !== null;
   }
 
   /**
    * Get all valid preset names and aliases
    */
   static getAllValidNames(): string[] {
-    return Array.from(this.getAliasMap().keys());
+    return Array.from(PresetRegistry.getAliasMap().keys());
   }
 }

@@ -26,7 +26,6 @@ import {
   buildBunApiPreset,
   buildBunFullstackPreset,
   buildEnterprisePreset,
-  buildFullPreset,
   buildFullPresetV2,
   buildMinimalPreset,
   buildMonorepoBunPreset,
@@ -81,6 +80,7 @@ interface EnhancedInitOptions {
   shadcnMenuAccent?: ShadcnMenuAccent;
   shadcnMenuColor?: ShadcnMenuColor;
   shadcnRadius?: string;
+  shadcnRtl?: boolean;
 
   // Supabase specific options
   supabasePreset?: SupabasePreset;
@@ -602,28 +602,53 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         options: [
           {
             value: 'radix-maia',
-            label: 'Maia (Recommended)',
+            label: 'Maia — Radix (Recommended)',
             hint: 'Modern, clean design with soft shadows and refined aesthetics',
           },
           {
             value: 'radix-vega',
-            label: 'Vega',
+            label: 'Vega — Radix',
             hint: 'Bold, vibrant design with stronger colors and contrast',
           },
           {
             value: 'radix-nova',
-            label: 'Nova',
+            label: 'Nova — Radix',
             hint: 'Minimalist design with subtle accents and clean lines',
           },
           {
             value: 'radix-lyra',
-            label: 'Lyra',
+            label: 'Lyra — Radix',
             hint: 'Elegant design with refined typography and spacing',
           },
           {
             value: 'radix-mira',
-            label: 'Mira',
+            label: 'Mira — Radix',
             hint: 'Playful design with rounded elements and soft colors',
+          },
+          {
+            value: 'base-maia',
+            label: 'Maia — Base UI',
+            hint: 'Clean design using Base UI primitives (alternative to Radix)',
+          },
+          {
+            value: 'base-vega',
+            label: 'Vega — Base UI',
+            hint: 'Bold design using Base UI primitives',
+          },
+          {
+            value: 'base-nova',
+            label: 'Nova — Base UI',
+            hint: 'Minimalist design using Base UI primitives',
+          },
+          {
+            value: 'base-lyra',
+            label: 'Lyra — Base UI',
+            hint: 'Elegant design using Base UI primitives',
+          },
+          {
+            value: 'base-mira',
+            label: 'Mira — Base UI',
+            hint: 'Playful design using Base UI primitives',
           },
           {
             value: 'new-york',
@@ -742,13 +767,8 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     options.shadcnIconLibrary
   );
 
-  // Determine if using modern style
-  const isModernShadcnStyle =
-    shadcnStyle === 'radix-maia' ||
-    shadcnStyle === 'radix-vega' ||
-    shadcnStyle === 'radix-nova' ||
-    shadcnStyle === 'radix-lyra' ||
-    shadcnStyle === 'radix-mira';
+  // Determine if using modern style (radix-* or base-*)
+  const isModernStyle = shadcnStyle?.startsWith('radix-') || shadcnStyle?.startsWith('base-');
 
   if (!shadcnIconLibrary && uiLibrary === 'shadcn') {
     if (!isNonInteractive) {
@@ -756,14 +776,14 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         message: '🔣 Icon library',
         options: [
           {
-            value: 'phosphor',
-            label: isModernShadcnStyle ? 'Phosphor Icons (Recommended)' : 'Phosphor Icons',
-            hint: 'Modern icon library with consistent design - default for new shadcn/ui styles',
+            value: 'iconoir',
+            label: 'Iconoir (Recommended)',
+            hint: 'bunkit default - 1600+ lightweight, tree-shakeable icons',
           },
           {
-            value: 'iconoir',
-            label: !isModernShadcnStyle ? 'Iconoir (Recommended)' : 'Iconoir',
-            hint: 'Lightweight icons with great variety - alternative choice',
+            value: 'phosphor',
+            label: 'Phosphor Icons',
+            hint: 'Modern icon library with consistent design - shadcn/ui default for new styles',
           },
           {
             value: 'lucide',
@@ -778,8 +798,8 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         process.exit(0);
       }
     } else {
-      // Default based on style
-      shadcnIconLibrary = isModernShadcnStyle ? 'phosphor' : 'iconoir';
+      // bunkit always defaults to iconoir
+      shadcnIconLibrary = 'iconoir';
     }
   }
 
@@ -792,33 +812,14 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     options.shadcnBase
   );
 
-  if (!shadcnBase && uiLibrary === 'shadcn' && isModernShadcnStyle) {
-    if (!isNonInteractive) {
-      shadcnBase = (await p.select({
-        message: '🧱 Component foundation',
-        options: [
-          {
-            value: 'radix',
-            label: 'Radix UI (Recommended)',
-            hint: 'Battle-tested accessibility primitives - industry standard',
-          },
-          {
-            value: 'base-ui',
-            label: 'Base UI',
-            hint: 'Modern alternative with similar API - newer, experimental',
-          },
-        ],
-      })) as ShadcnBase;
-
-      if (p.isCancel(shadcnBase)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
+  // Auto-infer base from style name (base-* → base-ui, radix-* → radix)
+  // Skip the interactive prompt since the style already encodes the base
+  if (!shadcnBase && uiLibrary === 'shadcn') {
+    if (shadcnStyle?.startsWith('base-')) {
+      shadcnBase = 'base-ui';
     } else {
       shadcnBase = 'radix';
     }
-  } else if (!shadcnBase) {
-    shadcnBase = 'radix'; // Default for legacy styles
   }
 
   // ====================
@@ -830,7 +831,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     options.shadcnMenuAccent
   );
 
-  if (!shadcnMenuAccent && uiLibrary === 'shadcn' && isModernShadcnStyle) {
+  if (!shadcnMenuAccent && uiLibrary === 'shadcn' && isModernStyle) {
     if (!isNonInteractive) {
       shadcnMenuAccent = (await p.select({
         message: '✨ Menu accent style',
@@ -868,7 +869,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     options.shadcnMenuColor
   );
 
-  if (!shadcnMenuColor && uiLibrary === 'shadcn' && isModernShadcnStyle) {
+  if (!shadcnMenuColor && uiLibrary === 'shadcn' && isModernStyle) {
     if (!isNonInteractive) {
       shadcnMenuColor = (await p.select({
         message: '🎯 Menu color scheme',
@@ -895,6 +896,32 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     }
   } else if (!shadcnMenuColor) {
     shadcnMenuColor = 'default'; // Default for legacy styles
+  }
+
+  // ====================
+  // 7h. SHADCN/UI RTL SUPPORT (only for modern styles)
+  // February 2026: RTL support via components.json
+  // ====================
+  let shadcnRtl: boolean | undefined = getOptionValue<boolean>(
+    'BUNKIT_SHADCN_RTL',
+    options.shadcnRtl,
+    false
+  );
+
+  if (shadcnRtl === undefined && uiLibrary === 'shadcn' && isModernStyle) {
+    if (!isNonInteractive) {
+      shadcnRtl = (await p.confirm({
+        message: '🔄 Enable RTL (right-to-left) support',
+        initialValue: false,
+      })) as boolean;
+
+      if (p.isCancel(shadcnRtl)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    } else {
+      shadcnRtl = false;
+    }
   }
 
   // ====================
@@ -1274,6 +1301,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       shadcnMenuAccent,
       shadcnMenuColor,
       shadcnRadius,
+      shadcnRtl: shadcnRtl || false,
 
       // Supabase specific options
       supabasePreset,

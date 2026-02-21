@@ -1,8 +1,9 @@
-import type { ShadcnBaseColor } from '@bunkit/core';
 import {
   directoryExists,
   ensureDirectory,
   fileExists,
+  inferShadcnBase,
+  type ShadcnBaseColor,
   type TemplateContext,
   writeFile,
 } from '@bunkit/core';
@@ -21,13 +22,14 @@ export async function setupShadcnWeb(projectPath: string, context: TemplateConte
   await ensureDirectory(join(projectPath, 'src/lib'));
 
   // Get theme configuration from context
-  const style = context.shadcnStyle || 'new-york';
+  const style = context.shadcnStyle || 'radix-maia';
   const baseColor = (context.shadcnBaseColor || 'zinc') as ShadcnBaseColor;
   const radius = context.shadcnRadius || '0.625rem';
+  const iconLibrary = context.shadcnIconLibrary || 'iconoir';
 
   // components.json for single-repo web project
   // Note: For Tailwind CSS v4, config should be empty string ""
-  const componentsJson = {
+  const componentsJson: Record<string, unknown> = {
     $schema: 'https://ui.shadcn.com/schema.json',
     style,
     rsc: true,
@@ -38,7 +40,7 @@ export async function setupShadcnWeb(projectPath: string, context: TemplateConte
       baseColor,
       cssVariables: true,
     },
-    iconLibrary: 'lucide', // Official docs use "lucide" not "lucide-react"
+    iconLibrary, // bunkit defaults to iconoir
     aliases: {
       components: '@/components',
       utils: '@/lib/utils',
@@ -47,6 +49,11 @@ export async function setupShadcnWeb(projectPath: string, context: TemplateConte
       hooks: '@/hooks',
     },
   };
+
+  // Add RTL support if enabled (February 2026+)
+  if (context.shadcnRtl) {
+    componentsJson.rtl = true;
+  }
 
   await writeFile(join(projectPath, 'components.json'), JSON.stringify(componentsJson, null, 2));
 
@@ -76,23 +83,49 @@ export function cn(...inputs: ClassValue[]) {
     packageJson.dependencies = {};
   }
 
-  packageJson.dependencies['@radix-ui/react-slot'] = 'catalog:';
+  // Add UI foundation based on shadcn base
+  const shadcnBase = inferShadcnBase(context.shadcnStyle);
+  if (shadcnBase === 'base-ui') {
+    packageJson.dependencies['@base-ui/react'] = 'catalog:';
+  } else {
+    packageJson.dependencies['radix-ui'] = 'catalog:';
+  }
   packageJson.dependencies['class-variance-authority'] = 'catalog:';
   packageJson.dependencies.clsx = 'catalog:';
   packageJson.dependencies['tailwind-merge'] = 'catalog:';
-  packageJson.dependencies['lucide-react'] = 'catalog:';
+
+  // Add icon library dependency based on selection
+  const iconPackageName =
+    iconLibrary === 'iconoir'
+      ? 'iconoir-react'
+      : iconLibrary === 'phosphor'
+        ? '@phosphor-icons/react'
+        : 'lucide-react';
+  packageJson.dependencies[iconPackageName] = 'catalog:';
 
   // Add catalog if it doesn't exist
   if (!packageJson.catalog) {
     packageJson.catalog = {};
   }
 
-  packageJson.catalog['@radix-ui/react-slot'] = '^1.2.4';
+  if (shadcnBase === 'base-ui') {
+    packageJson.catalog['@base-ui/react'] = '^1.2.0';
+  } else {
+    packageJson.catalog['radix-ui'] = '^1.4.3';
+  }
   packageJson.catalog['class-variance-authority'] = '^0.7.1';
   packageJson.catalog.clsx = '^2.1.1';
   packageJson.catalog['tailwind-merge'] = '^3.4.0';
-  packageJson.catalog['lucide-react'] = '^0.562.0';
   packageJson.catalog['tw-animate-css'] = '^1.2.9';
+
+  // Add icon catalog entry
+  if (iconLibrary === 'iconoir') {
+    packageJson.catalog['iconoir-react'] = '^7.11.0';
+  } else if (iconLibrary === 'phosphor') {
+    packageJson.catalog['@phosphor-icons/react'] = '^2.1.10';
+  } else {
+    packageJson.catalog['lucide-react'] = '^0.562.0';
+  }
 
   await writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
@@ -154,9 +187,11 @@ export async function setupShadcnMonorepo(
   const uiPackageName = `@${packageName}/ui`;
 
   // Get theme configuration from context
-  const style = context.shadcnStyle || 'new-york';
+  const style = context.shadcnStyle || 'radix-maia';
   const baseColor = (context.shadcnBaseColor || 'zinc') as ShadcnBaseColor;
   const radius = context.shadcnRadius || '0.625rem';
+  const iconLibrary = context.shadcnIconLibrary || 'iconoir';
+  const shadcnBase = inferShadcnBase(context.shadcnStyle);
 
   // Create packages/ui structure
   await ensureDirectory(join(projectPath, 'packages/ui/src/components'));
@@ -184,11 +219,15 @@ export async function setupShadcnMonorepo(
       './components/ui/*': './src/components/ui/*/index.ts',
     },
     dependencies: {
-      '@radix-ui/react-slot': 'catalog:',
+      ...(shadcnBase === 'base-ui' ? { '@base-ui/react': 'catalog:' } : { 'radix-ui': 'catalog:' }),
       'class-variance-authority': 'catalog:',
       clsx: 'catalog:',
       'tailwind-merge': 'catalog:',
-      'lucide-react': 'catalog:',
+      ...(iconLibrary === 'iconoir'
+        ? { 'iconoir-react': 'catalog:' }
+        : iconLibrary === 'phosphor'
+          ? { '@phosphor-icons/react': 'catalog:' }
+          : { 'lucide-react': 'catalog:' }),
       tailwindcss: 'catalog:',
       '@tailwindcss/postcss': 'catalog:',
     },
@@ -210,7 +249,7 @@ export async function setupShadcnMonorepo(
   //    Using @ aliases causes shadcn CLI to create literal @ directories (e.g., packages/ui/@/components)
   // 2. Import paths in generated components (utils, lib, hooks) - CAN use @ aliases
   //    These are resolved by tsconfig.json which has baseUrl and paths configured
-  const uiComponentsJson = {
+  const uiComponentsJson: Record<string, unknown> = {
     $schema: 'https://ui.shadcn.com/schema.json',
     style,
     rsc: true,
@@ -221,7 +260,7 @@ export async function setupShadcnMonorepo(
       baseColor,
       cssVariables: true,
     },
-    iconLibrary: 'lucide', // Official docs use "lucide" not "lucide-react"
+    iconLibrary, // bunkit defaults to iconoir
     aliases: {
       // Installation paths: Use relative paths (shadcn CLI interprets these as file paths)
       components: './src/components',
@@ -232,6 +271,11 @@ export async function setupShadcnMonorepo(
       lib: '@/lib',
     },
   };
+
+  // Add RTL support if enabled (February 2026+)
+  if (context.shadcnRtl) {
+    uiComponentsJson.rtl = true;
+  }
 
   await writeFile(
     join(projectPath, 'packages/ui/components.json'),
@@ -353,7 +397,7 @@ export default config;
     await ensureDirectory(join(appPath, 'src/components'));
     await ensureDirectory(join(appPath, 'src/lib'));
 
-    const appComponentsJson = {
+    const appComponentsJson: Record<string, unknown> = {
       $schema: 'https://ui.shadcn.com/schema.json',
       style,
       rsc: true,
@@ -364,7 +408,7 @@ export default config;
         baseColor,
         cssVariables: true,
       },
-      iconLibrary: 'lucide',
+      iconLibrary,
       aliases: {
         components: '@/components',
         hooks: '@/hooks',
@@ -374,6 +418,11 @@ export default config;
         ui: '@workspace/ui/components/ui',
       },
     };
+
+    // Add RTL support if enabled
+    if (context.shadcnRtl) {
+      appComponentsJson.rtl = true;
+    }
 
     await writeFile(join(appPath, 'components.json'), JSON.stringify(appComponentsJson, null, 2));
 
@@ -525,17 +574,31 @@ export default nextConfig;
   // Add shadcn/ui dependencies to catalog for centralized version management
   // These versions are referenced in packages/ui/package.json with catalog:
   // IMPORTANT: Keep these versions in sync with root package.json catalog
-  const shadcnDependencies = {
-    '@radix-ui/react-slot': '^1.2.4',
+  const shadcnDependencies: Record<string, string> = {
     'class-variance-authority': '^0.7.1',
     clsx: '^2.1.1',
     'tailwind-merge': '^3.4.0',
-    'lucide-react': '^0.562.0', // Note: lucide-react is used by shadcn/ui components
     'tw-animate-css': '^1.2.9', // Replaces tailwindcss-animate in Tailwind v4
     '@types/react': '^19.2.7',
     '@types/react-dom': '^19.2.3',
     typescript: '^5.9.3',
   };
+
+  // Add UI foundation to catalog
+  if (shadcnBase === 'base-ui') {
+    shadcnDependencies['@base-ui/react'] = '^1.2.0';
+  } else {
+    shadcnDependencies['radix-ui'] = '^1.4.3';
+  }
+
+  // Add icon library to catalog
+  if (iconLibrary === 'iconoir') {
+    shadcnDependencies['iconoir-react'] = '^7.11.0';
+  } else if (iconLibrary === 'phosphor') {
+    shadcnDependencies['@phosphor-icons/react'] = '^2.1.10';
+  } else {
+    shadcnDependencies['lucide-react'] = '^0.562.0';
+  }
 
   // Merge catalog entries (don't overwrite existing)
   Object.assign(rootPackageJson.catalog, shadcnDependencies);

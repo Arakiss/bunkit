@@ -8,30 +8,21 @@
  * - Uses iconoir-react (NOT lucide-react)
  */
 
-import {
-  ensureDirectory,
-  PresetRegistry,
-  type TemplateContext,
-  writeFile,
-} from '@bunkit/core';
+import { ensureDirectory, PresetRegistry, type TemplateContext, writeFile } from '@bunkit/core';
 import { join } from 'pathe';
-import {
-  writeMonorepoRootPackageJson,
-  writeNextjsAppPackageJson,
-  writeHonoApiPackageJson,
-} from '../shared/package-json';
-import {
-  buildUiPackage,
-  buildTypesPackage,
-  buildUtilsPackage,
-} from '../shared/ui-package';
 import { generateBunfigContent } from '../generators/bunfig';
+import { setupGitHubActions } from '../generators/cicd';
+import { setupVSCodeDebug } from '../generators/debug';
+import { setupDocker } from '../generators/docker';
 import { generateMonorepoReadme } from '../generators/readme';
 import { setupTooling } from '../generators/tooling';
-import { setupVSCodeDebug } from '../generators/debug';
-import { setupUltracite, setupBiome } from '../generators/ultracite';
-import { setupDocker } from '../generators/docker';
-import { setupGitHubActions } from '../generators/cicd';
+import { setupBiome, setupUltracite } from '../generators/ultracite';
+import {
+  writeHonoApiPackageJson,
+  writeMonorepoRootPackageJson,
+  writeNextjsAppPackageJson,
+} from '../shared/package-json';
+import { buildTypesPackage, buildUiPackage, buildUtilsPackage } from '../shared/ui-package';
 
 /**
  * Build full-stack Next.js monorepo (nextjs-monorepo preset)
@@ -99,12 +90,11 @@ export async function buildFullPresetV2(
   // ========================================
   // 4. APPS - NEXT.JS WEB
   // ========================================
-  await writeNextjsAppPackageJson(
-    join(projectPath, 'apps/web'),
-    scopeName,
-    'web',
-    { usesUi: true, usesTypes: true }
-  );
+  await writeNextjsAppPackageJson(join(projectPath, 'apps/web'), scopeName, 'web', {
+    usesUi: true,
+    usesTypes: true,
+    shadcnIconLibrary: context.shadcnIconLibrary || 'iconoir',
+  });
 
   // apps/web/src/app/layout.tsx
   await writeFile(
@@ -218,12 +208,11 @@ export default nextConfig;
   // ========================================
   // 5. APPS - NEXT.JS PLATFORM (ADMIN)
   // ========================================
-  await writeNextjsAppPackageJson(
-    join(projectPath, 'apps/platform'),
-    scopeName,
-    'platform',
-    { usesUi: true, usesTypes: true }
-  );
+  await writeNextjsAppPackageJson(join(projectPath, 'apps/platform'), scopeName, 'platform', {
+    usesUi: true,
+    usesTypes: true,
+    shadcnIconLibrary: context.shadcnIconLibrary || 'iconoir',
+  });
 
   // apps/platform/src/app/layout.tsx
   await writeFile(
@@ -434,13 +423,14 @@ export default app;
   // ========================================
   await buildUiPackage(join(projectPath, 'packages'), {
     scopeName,
-    shadcnStyle: context.shadcnStyle || 'radix-maia', // Default to modern style
+    shadcnStyle: context.shadcnStyle || 'radix-maia',
     shadcnBase: context.shadcnBase || 'radix',
     shadcnBaseColor: context.shadcnBaseColor || 'zinc',
-    shadcnIconLibrary: context.shadcnIconLibrary || 'phosphor', // Modern default
+    shadcnIconLibrary: context.shadcnIconLibrary || 'iconoir', // bunkit default
     shadcnMenuAccent: context.shadcnMenuAccent || 'subtle',
     shadcnMenuColor: context.shadcnMenuColor || 'default',
     shadcnRadius: context.shadcnRadius || '0.625rem',
+    shadcnRtl: context.shadcnRtl,
     appsToScan: ['web', 'platform'],
   });
 

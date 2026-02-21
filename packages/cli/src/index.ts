@@ -7,6 +7,7 @@ import { addCommand } from './commands/add';
 import { catalogAddCommand, catalogListCommand, catalogSyncCommand } from './commands/catalog';
 import { createCommand } from './commands/create';
 import { enhancedInitCommand } from './commands/init.enhanced';
+import { migrateCommand } from './commands/migrate';
 import { deletePresetCommand, listPresetsCommand } from './commands/preset';
 
 // Read version from package.json
@@ -28,6 +29,7 @@ Examples:
   $ bunkit create nextjs my-app   Create a Next.js web application
   $ bunkit add workspace           Add a new workspace to monorepo
   $ bunkit add component --all     Browse and add shadcn/ui components
+  $ bunkit migrate radix           Migrate to unified radix-ui package
   $ bunkit catalog add zod ^3.24.1 Add package to dependency catalog
   $ bunkit preset list             List all custom presets
 
@@ -65,20 +67,18 @@ program
   .option('--css-framework <framework>', 'CSS framework: tailwind | vanilla | css-modules')
   .option(
     '--shadcn-style <style>',
-    'shadcn/ui style: radix-maia | radix-vega | radix-nova | radix-lyra | radix-mira | new-york | default'
+    'shadcn/ui style: radix-maia | radix-vega | radix-nova | radix-lyra | radix-mira | base-maia | base-vega | base-nova | base-lyra | base-mira | new-york | default'
   )
   .option('--shadcn-base <base>', 'shadcn/ui component foundation: radix | base-ui')
   .option(
     '--shadcn-base-color <color>',
     'shadcn/ui base color theme: zinc | slate | stone | gray | neutral'
   )
-  .option(
-    '--shadcn-icon-library <library>',
-    'shadcn/ui icon library: phosphor | lucide | iconoir'
-  )
+  .option('--shadcn-icon-library <library>', 'shadcn/ui icon library: phosphor | lucide | iconoir')
   .option('--shadcn-menu-accent <accent>', 'shadcn/ui menu accent style: subtle | bold')
   .option('--shadcn-menu-color <color>', 'shadcn/ui menu color: default | muted')
   .option('--shadcn-radius <radius>', 'shadcn/ui border radius (CSS value, e.g., 0.5rem, 0.625rem)')
+  .option('--shadcn-rtl', 'Enable RTL (right-to-left) support for shadcn/ui components')
   .option('--testing <framework>', 'Testing framework: bun-test | vitest | none')
   .option('--docker', 'Include Docker configuration files')
   .option('--cicd', 'Include GitHub Actions CI/CD workflow')
@@ -266,6 +266,37 @@ Features:
     } catch (error) {
       log.error((error as Error).message);
       outro(pc.red('❌ Feature installation failed'));
+      process.exit(1);
+    }
+  });
+
+program
+  .command('migrate')
+  .argument('[type]', 'Migration type: radix | rtl | icons')
+  .description('Run shadcn/ui migrations (unified radix-ui, RTL, icon library)')
+  .addHelpText(
+    'after',
+    `
+Examples:
+  $ bunkit migrate             Interactive migration selection
+  $ bunkit migrate radix       Migrate to unified radix-ui package
+  $ bunkit migrate rtl         Enable RTL support in components
+  $ bunkit migrate icons       Migrate icon library
+
+Migrations:
+  radix    Replace @radix-ui/react-* packages with unified radix-ui
+  rtl      Add RTL class transforms to installed components
+  icons    Migrate between icon libraries (lucide, iconoir, phosphor)
+  `
+  )
+  .action(async (migrationType) => {
+    showBanner(VERSION);
+    try {
+      await migrateCommand(migrationType);
+      outro(pc.green('Migration completed successfully!'));
+    } catch (error) {
+      log.error((error as Error).message);
+      outro(pc.red('Migration failed'));
       process.exit(1);
     }
   });

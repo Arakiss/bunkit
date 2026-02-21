@@ -107,12 +107,16 @@ export async function buildFullPreset(
       postcss: '^8.5.6',
       '@tailwindcss/postcss': '^4.1.18',
 
-      // UI
+      // UI (February 2026 - unified radix-ui, Base UI, shadcn CLI v3.8.5)
+      'radix-ui': '^1.4.3',
       '@radix-ui/react-slot': '^1.2.4',
+      '@base-ui/react': '^1.2.0',
+      shadcn: '^3.8.5',
       'class-variance-authority': '^0.7.1',
       clsx: '^2.1.1',
       'tailwind-merge': '^3.4.0',
       'iconoir-react': '^7.11.0',
+      '@phosphor-icons/react': '^2.1.10',
       'lucide-react': '^0.562.0',
       'tw-animate-css': '^1.2.9',
 
@@ -1116,9 +1120,11 @@ networks:
     const fullContext = {
       ...context,
       uiLibrary: 'shadcn' as const,
-      shadcnStyle: context.shadcnStyle || 'new-york',
+      shadcnStyle: context.shadcnStyle || 'radix-maia',
       shadcnBaseColor: context.shadcnBaseColor || 'zinc',
       shadcnRadius: context.shadcnRadius || '0.625rem',
+      shadcnIconLibrary: context.shadcnIconLibrary || 'iconoir',
+      shadcnRtl: context.shadcnRtl,
     };
     await setupShadcnMonorepo(projectPath, fullContext);
   }

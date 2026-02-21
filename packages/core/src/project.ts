@@ -234,6 +234,7 @@ export function createTemplateContext(config: ProjectConfig): TemplateContext {
     shadcnMenuAccent: config.shadcnMenuAccent,
     shadcnMenuColor: config.shadcnMenuColor,
     shadcnRadius: config.shadcnRadius,
+    shadcnRtl: config.shadcnRtl,
 
     // Supabase specific options
     supabasePreset: config.supabasePreset,

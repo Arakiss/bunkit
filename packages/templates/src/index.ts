@@ -8,16 +8,12 @@ export { buildBunApiPreset } from './builders/bun-api';
 export { buildBunFullstackPreset } from './builders/bun-fullstack';
 export { buildEnterprisePreset } from './builders/enterprise';
 export { buildFullPreset } from './builders/full';
+// Builders - V2 (Clean Architecture)
+export { buildFullPresetV2 } from './builders/full-v2';
 export { buildMinimalPreset } from './builders/minimal';
 export { buildMonorepoBunPreset } from './builders/monorepo-bun';
 export { buildWebPreset } from './builders/web';
 export { buildWorkspace } from './builders/workspace';
-
-// Builders - V2 (Clean Architecture)
-export { buildFullPresetV2 } from './builders/full-v2';
-
-// Shared Utilities (New Architecture)
-export * from './shared';
 export {
   getAuthDependencies,
   setupBetterAuth,
@@ -70,4 +66,6 @@ export {
 } from './generators/ultracite';
 export { getPresetConfig } from './presets';
 export { renderTemplate } from './render';
+// Shared Utilities (New Architecture)
+export * from './shared';
 export type { PresetConfig } from './types';

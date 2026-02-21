@@ -1,175 +1,146 @@
-# bunkit 🍞
+# bunkit
 
-> Bake production-ready Bun apps in seconds
+> Production-ready Bun projects in seconds.
 
 [![npm version](https://img.shields.io/npm/v/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
 [![npm downloads](https://img.shields.io/npm/dm/bunkit-cli.svg)](https://www.npmjs.com/package/bunkit-cli)
-[![Bun](https://img.shields.io/badge/bun-1.3+-orange.svg)](https://bun.sh)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue.svg)](https://www.typescriptlang.org/)
-[![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-December%202025-black.svg)](https://ui.shadcn.com)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![CI](https://github.com/Arakiss/bunkit/actions/workflows/ci.yml/badge.svg)](https://github.com/Arakiss/bunkit/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-Modern CLI for scaffolding Bun-powered projects with enterprise patterns built-in.
-
-**v1.3.0** - Now with full support for [shadcn/ui December 2025 "create" feature](https://ui.shadcn.com) including 5 new modern styles!
-
-## Quick Start
+bunkit is a CLI that scaffolds Bun-powered projects with the right defaults. Pick a preset, answer a few questions, and get a working project with TypeScript, linting, testing, and your choice of database, auth, and UI already wired up.
 
 ```bash
-# Interactive mode (recommended)
 bunx bunkit-cli init
-
-# Or create directly
-bunx bunkit-cli create nextjs my-app
-```
-
-## Why bunkit?
-
-- **Bun-native** - Built for Bun 1.3+ with catalogs, isolated installs, and HMR
-- **8 presets** - From minimal scripts to enterprise monorepos
-- **Modern stack** - Next.js 16, React 19, Hono, Tailwind CSS 4, shadcn/ui
-- **Zero config** - Production-ready TypeScript, linting, and testing out of the box
-- **Monorepo expertise** - Workspace management, shared packages, dependency catalogs
-
-## shadcn/ui Integration (v1.3.0)
-
-bunkit now supports the **shadcn/ui December 2025 "create" feature** with all new customization options:
-
-**Modern Styles**
-- `radix-maia` - Clean, minimal design (default)
-- `radix-vega` - Bold, expressive style
-- `radix-nova` - Sleek, futuristic look
-- `radix-lyra` - Soft, rounded aesthetic
-- `radix-mira` - Sharp, professional feel
-
-**Customization Options**
-- **Base**: Radix UI (default) or Base UI
-- **Icon Library**: Phosphor (default), Lucide, or Iconoir
-- **Menu Accent**: Subtle or Bold
-- **Menu Color**: Default or Muted
-- **Radius**: Customizable border radius
-
-```bash
-# Interactive mode lets you choose style, icons, colors
-bunx bunkit-cli init
-
-# Modern monorepo with all latest features
-bunx bunkit-cli create nextjs-monorepo my-app
 ```
 
 ## Presets
 
-| Preset | Description |
-|--------|-------------|
-| `minimal` | Single-file Bun project |
-| `nextjs` | Next.js 16 + React 19 web app |
-| `hono-api` | Hono API server |
-| `bun-api` | Bun.serve() native API (zero deps) |
-| `bun-fullstack` | Bun.serve() + React (no Next.js) |
-| `nextjs-monorepo` | Monorepo with Next.js + Hono |
-| `bun-monorepo` | Monorepo with pure Bun |
-| `enterprise-monorepo` | Multi-app enterprise platform |
+bunkit ships 8 presets covering single apps through enterprise monorepos.
 
-See [Presets Reference](./docs/PRESETS.md) for detailed descriptions.
+### Single-app
 
-## Features
+| Preset | Stack | Use case |
+|--------|-------|----------|
+| `minimal` | Bun + TypeScript | CLIs, scripts, utilities |
+| `nextjs` | Next.js 16 + React 19 + Tailwind CSS 4 | Web apps, landing pages |
+| `hono-api` | Hono 4 + Bun.serve() | REST APIs with middleware |
+| `bun-api` | Bun.serve() native routing | Zero-dependency APIs |
+| `bun-fullstack` | Bun.serve() + React 19 + Tailwind CSS 4 | Full-stack without Next.js |
 
-**Database & Auth**
-- PostgreSQL, MySQL, SQLite with Drizzle or Prisma
-- Supabase integration with presets
-- better-auth, NextAuth.js, or Supabase Auth
-- Redis for caching and sessions
+### Monorepo
 
-**Developer Experience**
-- Beautiful interactive CLI (21+ prompts)
-- Hot reload with `bun --hot`
-- VSCode debugging configured
-- shadcn/ui with customizable themes
-- Biome or Ultracite for code quality
+| Preset | Structure | Use case |
+|--------|-----------|----------|
+| `nextjs-monorepo` | 2 Next.js apps + Hono API + shared packages | SaaS products |
+| `bun-monorepo` | Bun.serve() web + API + shared packages | Full-stack without Next.js |
+| `enterprise-monorepo` | 3 Next.js apps + identity service + shared packages | Multi-product platforms |
 
-**DevOps**
-- Docker with multi-stage builds
-- GitHub Actions CI/CD
-- Bun Test or Vitest
-- TypeScript strict mode
+Monorepo presets generate a complete workspace structure:
 
-## Commands
-
-```bash
-bunkit init                    # Interactive project creation
-bunkit create <preset> <name>  # Quick project creation
-bunkit add workspace           # Add app to monorepo
-bunkit add package             # Add shared package
-bunkit add component           # Add shadcn/ui components
-bunkit catalog add             # Manage dependency versions
-bunkit preset list             # List saved configurations
+```
+my-app/
+  apps/
+    web/           # Customer-facing app
+    platform/      # Admin dashboard
+    api/           # Backend API
+  packages/
+    ui/            # Shared shadcn/ui components
+    types/         # Shared TypeScript types
+    utils/         # Shared utilities
 ```
 
-See [CLI Reference](./docs/CLI.md) for all options.
-
-## Example: Create a SaaS
+## Quick start
 
 ```bash
-# Create monorepo with database and auth
+# Interactive — walks you through every option
+bunx bunkit-cli init
+
+# Direct — skip prompts, use sensible defaults
+bunx bunkit-cli create nextjs my-app
+bunx bunkit-cli create nextjs-monorepo my-saas
+```
+
+### Example: SaaS with database and auth
+
+```bash
 bunkit init \
   --name my-saas \
   --preset nextjs-monorepo \
   --database supabase-drizzle \
   --auth better-auth \
-  --docker \
-  --cicd
-
-cd my-saas
-bun install
-bun dev
+  --docker --cicd
 ```
 
-This creates:
-- `apps/web` - Customer-facing Next.js app
-- `apps/platform` - Admin dashboard
-- `apps/api` - Hono API backend
-- `packages/types` - Shared TypeScript types
-- `packages/utils` - Shared utilities
+## Commands
+
+```
+bunkit init                        Interactive project creation
+bunkit create <preset> <name>      Quick creation with defaults
+bunkit add workspace               Add an app to a monorepo
+bunkit add package                 Add a shared package
+bunkit add component               Add shadcn/ui components
+bunkit migrate <type>              Run shadcn/ui migrations (radix, rtl, icons)
+bunkit catalog add <pkg> [version] Add a package to the dependency catalog
+bunkit catalog sync                Sync catalog versions across workspaces
+bunkit preset list                 List saved custom presets
+```
+
+Full CLI reference: [docs/CLI.md](./docs/CLI.md)
+
+## What you can configure
+
+Every option below is available as an interactive prompt or a CLI flag.
+
+**Database** — Postgres, MySQL, or SQLite with Drizzle ORM or Prisma. Supabase with optional Drizzle overlay.
+
+**Auth** — better-auth, NextAuth.js, or Supabase Auth.
+
+**UI** — [shadcn/ui](https://ui.shadcn.com) with 10 visual styles across Radix UI and Base UI foundations. Default: `radix-maia` with [Iconoir](https://iconoir.com) icons.
+
+**Code quality** — Biome or Ultracite. TypeScript strict mode by default.
+
+**Testing** — Bun Test or Vitest.
+
+**Infrastructure** — Docker multi-stage builds, GitHub Actions CI/CD, Redis caching, `.env` templates.
+
+## shadcn/ui integration
+
+bunkit generates a fully configured [shadcn/ui](https://ui.shadcn.com) setup with the February 2026 features:
+
+- **10 styles** — 5 Radix UI (`radix-maia`, `radix-vega`, `radix-nova`, `radix-lyra`, `radix-mira`) and 5 Base UI variants
+- **Unified `radix-ui` package** — no more 20+ individual `@radix-ui/react-*` imports
+- **RTL support** — optional right-to-left layout for all components
+- **Iconoir icons** — 1,600+ tree-shakeable icons as the default library
+- **Monorepo-ready** — shared `packages/ui` with centralized components.json
+
+Migrate existing projects:
+
+```bash
+bunkit migrate radix    # Upgrade to unified radix-ui package
+bunkit migrate rtl      # Enable RTL support
+bunkit migrate icons    # Switch icon library
+```
+
+## Bun monorepo features
+
+bunkit takes advantage of Bun 1.3+ workspace features:
+
+- **Dependency catalogs** — centralize versions in root `package.json`, reference with `"catalog:"` in workspaces
+- **Isolated installs** — each workspace only accesses its declared dependencies
+- **Workspace protocol** — `"workspace:*"` for local package linking
 
 ## Requirements
 
-- [Bun](https://bun.sh) v1.3.0+
-- Node.js v20.9.0+ (for Next.js)
+- [Bun](https://bun.sh) 1.3.0+
+- Node.js 20.9.0+ (for Next.js presets)
 
 ## Documentation
 
-- [CLI Reference](./docs/CLI.md) - Complete command documentation
-- [Presets Reference](./docs/PRESETS.md) - Detailed preset descriptions
-- [Changelog](./packages/cli/CHANGELOG.md) - Version history
-- [Roadmap](./ROADMAP.md) - Planned features
-- [Contributing](./CONTRIBUTING.md) - How to contribute
-
-**For AI/LLM Integration**: See [llms.txt](./llms.txt) for AI-friendly project context.
-
-## Tech Stack
-
-| Category | Technology |
-|----------|------------|
-| Runtime | Bun 1.3+ |
-| Frontend | Next.js 16, React 19 |
-| Backend | Hono 4, Bun.serve() |
-| Database | Drizzle ORM, Prisma, Supabase |
-| Styling | Tailwind CSS 4, shadcn/ui (Dec 2025) |
-| UI Components | Radix UI, Base UI |
-| Icons | Phosphor, Iconoir, Lucide |
-| Language | TypeScript 5.9+ |
-| Quality | Biome, Ultracite |
-
-## Contributing
-
-Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [CLI Reference](./docs/CLI.md) — all commands and flags
+- [Presets Reference](./docs/PRESETS.md) — detailed preset descriptions
+- [Changelog](./packages/cli/CHANGELOG.md) — version history
+- [Contributing](./CONTRIBUTING.md) — how to contribute
 
 ## License
 
-MIT © [Arakiss](https://github.com/Arakiss)
-
----
-
-**Made with ❤️ for the indie hacker community**
-
-[GitHub](https://github.com/Arakiss/bunkit) · [Issues](https://github.com/Arakiss/bunkit/issues) · [npm](https://www.npmjs.com/package/bunkit-cli)
+[MIT](./LICENSE)

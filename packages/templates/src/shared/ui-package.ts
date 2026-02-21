@@ -3,18 +3,16 @@
  *
  * Generates the packages/ui structure for monorepo presets.
  *
- * Updated December 2025 for new shadcn/ui "create" feature:
- * - New visual styles: radix-maia, radix-vega, radix-nova, radix-lyra, radix-mira
- * - Base UI support (alternative to Radix UI)
- * - Phosphor icons as default (also supports lucide, iconoir)
+ * Updated February 2026 for shadcn/ui integration:
+ * - Radix UI styles: radix-maia, radix-vega, radix-nova, radix-lyra, radix-mira
+ * - Base UI styles: base-maia, base-vega, base-nova, base-lyra, base-mira
+ * - Unified radix-ui package (replaces @radix-ui/react-*)
+ * - Iconoir as bunkit default icon library
+ * - RTL support via components.json
  * - New CSS imports: tw-animate-css, shadcn/tailwind.css
  * - OKLCH color values
  */
 
-import { ensureDirectory, writeFile } from '@bunkit/core';
-import { join } from 'pathe';
-import { writeUiPackageJson } from './package-json';
-import { generateThemeCSS, themes, generateModernThemeCSS } from '../generators/shadcn-themes';
 import type {
   ShadcnBase,
   ShadcnBaseColor,
@@ -23,6 +21,10 @@ import type {
   ShadcnMenuColor,
   ShadcnStyle,
 } from '@bunkit/core';
+import { ensureDirectory, inferShadcnBase, isModernShadcnStyle, writeFile } from '@bunkit/core';
+import { join } from 'pathe';
+import { generateModernThemeCSS, generateThemeCSS, themes } from '../generators/shadcn-themes';
+import { writeUiPackageJson } from './package-json';
 
 export interface UiPackageOptions {
   scopeName: string;
@@ -33,20 +35,8 @@ export interface UiPackageOptions {
   shadcnMenuAccent?: ShadcnMenuAccent;
   shadcnMenuColor?: ShadcnMenuColor;
   shadcnRadius?: string;
+  shadcnRtl?: boolean;
   appsToScan?: string[];
-}
-
-/**
- * Check if the style is a modern (December 2025+) shadcn style
- */
-function isModernStyle(style: ShadcnStyle | undefined): boolean {
-  return (
-    style === 'radix-maia' ||
-    style === 'radix-vega' ||
-    style === 'radix-nova' ||
-    style === 'radix-lyra' ||
-    style === 'radix-mira'
-  );
 }
 
 /**
@@ -64,8 +54,17 @@ export async function buildUiPackage(
   await ensureDirectory(join(uiPath, 'src/lib'));
   await ensureDirectory(join(uiPath, 'src/styles'));
 
-  // Write package.json
-  await writeUiPackageJson(uiPath, options.scopeName);
+  // Determine default values based on style
+  const style = options.shadcnStyle || 'radix-maia';
+  const useModernStyle = isModernShadcnStyle(style);
+  const shadcnBase = options.shadcnBase || inferShadcnBase(style);
+  const iconLibrary = options.shadcnIconLibrary || 'iconoir'; // bunkit default
+
+  // Write package.json with parameterized deps
+  await writeUiPackageJson(uiPath, options.scopeName, {
+    shadcnBase,
+    shadcnIconLibrary: iconLibrary,
+  });
 
   // Write tsconfig.json
   // IMPORTANT: Must override rootDir since inherited paths are resolved relative to the config that defines them
@@ -90,11 +89,6 @@ export async function buildUiPackage(
       2
     )
   );
-
-  // Determine default values based on style
-  const style = options.shadcnStyle || 'radix-maia';
-  const useModernStyle = isModernStyle(style);
-  const iconLibrary = options.shadcnIconLibrary || (useModernStyle ? 'phosphor' : 'iconoir');
 
   // Write components.json for shadcn CLI
   // December 2025: Added menuColor, menuAccent, registries for new shadcn/ui features
@@ -123,11 +117,16 @@ export async function buildUiPackage(
     },
   };
 
-  // Add new December 2025 options for modern styles
+  // Add options for modern styles
   if (useModernStyle) {
     componentsJson.menuColor = options.shadcnMenuColor || 'default';
     componentsJson.menuAccent = options.shadcnMenuAccent || 'subtle';
     componentsJson.registries = {};
+  }
+
+  // Add RTL support if enabled (February 2026+)
+  if (options.shadcnRtl) {
+    componentsJson.rtl = true;
   }
 
   await writeFile(join(uiPath, 'components.json'), JSON.stringify(componentsJson, null, 2));
@@ -145,7 +144,9 @@ export async function buildUiPackage(
 
   // Generate globals.css with theme
   const appsToScan = options.appsToScan || ['web', 'platform'];
-  const appSourcePaths = appsToScan.map((app) => `@source "../../../apps/${app}/src/**/*.{ts,tsx}";`);
+  const appSourcePaths = appsToScan.map(
+    (app) => `@source "../../../apps/${app}/src/**/*.{ts,tsx}";`
+  );
 
   // Look up theme by baseColor (zinc, gray, slate, stone, neutral)
   const baseColor = options.shadcnBaseColor || 'zinc';
@@ -154,13 +155,14 @@ export async function buildUiPackage(
   let globalsCss: string;
 
   if (useModernStyle) {
-    // Modern approach (December 2025+): Use tw-animate-css and shadcn/tailwind.css
-    // This provides consistent theming with the new shadcn/ui visual styles
+    // Modern approach: Use tw-animate-css and (for Radix) shadcn/tailwind.css
+    // Base UI styles don't use shadcn/tailwind.css — they have their own theming
     const modernThemeCSS = generateModernThemeCSS(baseColor, customRadius);
 
+    const shadcnImport = shadcnBase === 'base-ui' ? '' : '\n@import "shadcn/tailwind.css";';
+
     globalsCss = `@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "tw-animate-css";${shadcnImport}
 ${appSourcePaths.join('\n')}
 @source "../**/*.{ts,tsx}";
 
@@ -259,10 +261,7 @@ export * from './components';
 /**
  * Build the types package
  */
-export async function buildTypesPackage(
-  packagesPath: string,
-  scopeName: string
-): Promise<void> {
+export async function buildTypesPackage(packagesPath: string, scopeName: string): Promise<void> {
   const typesPath = join(packagesPath, 'types');
 
   await ensureDirectory(join(typesPath, 'src'));
@@ -333,10 +332,7 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 /**
  * Build the utils package
  */
-export async function buildUtilsPackage(
-  packagesPath: string,
-  scopeName: string
-): Promise<void> {
+export async function buildUtilsPackage(packagesPath: string, scopeName: string): Promise<void> {
   const utilsPath = join(packagesPath, 'utils');
 
   await ensureDirectory(join(utilsPath, 'src'));

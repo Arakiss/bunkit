@@ -145,15 +145,25 @@ export async function writeNextjsAppPackageJson(
   options: {
     usesUi?: boolean;
     usesTypes?: boolean;
+    shadcnIconLibrary?: 'iconoir' | 'phosphor' | 'lucide';
   } = {}
 ): Promise<void> {
+  // Determine icon package — iconoir is bunkit default
+  const iconLibrary = options.shadcnIconLibrary || 'iconoir';
+  const iconPackageName =
+    iconLibrary === 'iconoir'
+      ? 'iconoir-react'
+      : iconLibrary === 'phosphor'
+        ? '@phosphor-icons/react'
+        : 'lucide-react';
+
   const dependencies: Record<string, string> = {
     react: 'catalog:',
     'react-dom': 'catalog:',
     next: 'catalog:',
-    // CRITICAL: Must include iconoir-react here for Bun isolated installs
+    // CRITICAL: Must include icon library here for Bun isolated installs
     // since the app imports icons directly (not through @scope/ui)
-    'iconoir-react': 'catalog:',
+    [iconPackageName]: 'catalog:',
   };
 
   // Add workspace dependencies
@@ -240,12 +250,39 @@ export async function writeHonoApiPackageJson(
  * Generate UI package package.json for monorepo
  *
  * This is the shared shadcn/ui component library.
- * USES iconoir-react, NOT lucide-react.
+ * Dependencies are parameterized based on shadcn base (radix vs base-ui)
+ * and icon library selection (iconoir default).
  */
 export async function writeUiPackageJson(
   packagePath: string,
-  scopeName: string
+  scopeName: string,
+  options: {
+    shadcnBase?: 'radix' | 'base-ui';
+    shadcnIconLibrary?: 'iconoir' | 'phosphor' | 'lucide';
+  } = {}
 ): Promise<void> {
+  const shadcnBase = options.shadcnBase || 'radix';
+  const iconLibrary = options.shadcnIconLibrary || 'iconoir';
+
+  // Build UI foundation dependencies based on shadcn base
+  const uiFoundationDeps: Record<string, string> = {};
+  if (shadcnBase === 'base-ui') {
+    uiFoundationDeps['@base-ui/react'] = 'catalog:';
+  } else {
+    // Unified radix-ui package (February 2026+)
+    uiFoundationDeps['radix-ui'] = 'catalog:';
+  }
+
+  // Build icon dependencies based on selection
+  const iconDeps: Record<string, string> = {};
+  if (iconLibrary === 'iconoir') {
+    iconDeps['iconoir-react'] = 'catalog:';
+  } else if (iconLibrary === 'phosphor') {
+    iconDeps['@phosphor-icons/react'] = 'catalog:';
+  } else {
+    iconDeps['lucide-react'] = 'catalog:';
+  }
+
   await writePackageJson(packagePath, {
     name: `@${scopeName}/ui`,
     version: '0.0.0',
@@ -265,17 +302,12 @@ export async function writeUiPackageJson(
       lint: 'tsc --noEmit',
     },
     dependencies: {
-      // Radix UI - unified package (shadcn components use `import { X } from "radix-ui"`)
-      'radix-ui': 'catalog:',
-      // Legacy Radix slot (still used by some components)
-      '@radix-ui/react-slot': 'catalog:',
+      ...uiFoundationDeps,
       // Styling utilities
       'class-variance-authority': 'catalog:',
       clsx: 'catalog:',
       'tailwind-merge': 'catalog:',
-      // Icons - Phosphor (default for modern shadcn styles) + iconoir
-      '@phosphor-icons/react': 'catalog:',
-      'iconoir-react': 'catalog:',
+      ...iconDeps,
       // Animation library (used in globals.css: @import "tw-animate-css")
       'tw-animate-css': 'catalog:',
       // shadcn theme package (used in globals.css: @import "shadcn/tailwind.css")
@@ -300,10 +332,7 @@ export async function writeUiPackageJson(
 /**
  * Generate types package package.json for monorepo
  */
-export async function writeTypesPackageJson(
-  packagePath: string,
-  scopeName: string
-): Promise<void> {
+export async function writeTypesPackageJson(packagePath: string, scopeName: string): Promise<void> {
   await writePackageJson(packagePath, {
     name: `@${scopeName}/types`,
     version: '0.0.0',
@@ -326,10 +355,7 @@ export async function writeTypesPackageJson(
 /**
  * Generate utils package package.json for monorepo
  */
-export async function writeUtilsPackageJson(
-  packagePath: string,
-  scopeName: string
-): Promise<void> {
+export async function writeUtilsPackageJson(packagePath: string, scopeName: string): Promise<void> {
   await writePackageJson(packagePath, {
     name: `@${scopeName}/utils`,
     version: '0.0.0',
