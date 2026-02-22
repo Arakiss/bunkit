@@ -8,13 +8,33 @@
  * - Uses iconoir-react (NOT lucide-react)
  */
 
-import { ensureDirectory, PresetRegistry, type TemplateContext, writeFile } from '@bunkit/core';
+import {
+  type DatabaseType,
+  ensureDirectory,
+  PresetRegistry,
+  type TemplateContext,
+  writeFile,
+} from '@bunkit/core';
 import { join } from 'pathe';
+import { setupBetterAuth, setupNextAuth } from '../generators/auth';
 import { generateBunfigContent } from '../generators/bunfig';
 import { setupGitHubActions } from '../generators/cicd';
+import {
+  setupMySQLDrizzle,
+  setupMySQLPrisma,
+  setupPostgresDrizzle,
+  setupPostgresPrisma,
+  setupRedis,
+  setupSQLiteDrizzle,
+  setupSQLitePrisma,
+  setupSupabaseDrizzle,
+  setupSupabaseOnly,
+  setupSupabasePrisma,
+} from '../generators/database';
 import { setupVSCodeDebug } from '../generators/debug';
 import { setupDocker } from '../generators/docker';
 import { generateMonorepoReadme } from '../generators/readme';
+import { setupBunSecrets } from '../generators/secrets';
 import { setupTooling } from '../generators/tooling';
 import { setupBiome, setupUltracite } from '../generators/ultracite';
 import {
@@ -23,6 +43,23 @@ import {
   writeNextjsAppPackageJson,
 } from '../shared/package-json';
 import { buildTypesPackage, buildUiPackage, buildUtilsPackage } from '../shared/ui-package';
+
+// Database setup function map (used by enterprise mode)
+const databaseSetupMap: Record<
+  DatabaseType,
+  (path: string, context: TemplateContext, isMonorepo: boolean) => Promise<void>
+> = {
+  'postgres-drizzle': setupPostgresDrizzle,
+  'postgres-prisma': setupPostgresPrisma,
+  'mysql-drizzle': setupMySQLDrizzle,
+  'mysql-prisma': setupMySQLPrisma,
+  supabase: setupSupabaseOnly,
+  'supabase-drizzle': setupSupabaseDrizzle,
+  'supabase-prisma': setupSupabasePrisma,
+  'sqlite-drizzle': setupSQLiteDrizzle,
+  'sqlite-prisma': setupSQLitePrisma,
+  none: async () => {}, // No-op
+};
 
 /**
  * Build full-stack Next.js monorepo (nextjs-monorepo preset)
@@ -466,7 +503,15 @@ export default app;
   );
 
   // ========================================
-  // 12. CODE QUALITY
+  // 12. ENTERPRISE MODE (OPTIONAL)
+  // When --enterprise flag is used, add extra apps and services
+  // ========================================
+  if (context.enterprise) {
+    await buildEnterpriseExtensions(projectPath, context, scopeName);
+  }
+
+  // ========================================
+  // 13. CODE QUALITY
   // ========================================
   if (context.codeQuality === 'ultracite') {
     await setupUltracite(projectPath, context);
@@ -475,26 +520,223 @@ export default app;
   }
 
   // ========================================
-  // 13. DOCKER (OPTIONAL)
+  // 14. DOCKER (OPTIONAL)
   // ========================================
   if (context.docker) {
     await setupDocker(projectPath, context);
   }
 
   // ========================================
-  // 14. CI/CD (OPTIONAL)
+  // 15. CI/CD (OPTIONAL)
   // ========================================
   if (context.cicd) {
     await setupGitHubActions(projectPath, context);
   }
 
   // ========================================
-  // 15. VSCODE DEBUG CONFIG
+  // 16. VSCODE DEBUG CONFIG
   // ========================================
   await setupVSCodeDebug(projectPath, context, 'full');
 
   // ========================================
-  // 16. README
+  // 17. README
   // ========================================
-  await generateMonorepoReadme(projectPath, context, 'nextjs');
+  await generateMonorepoReadme(projectPath, context, context.enterprise ? 'enterprise' : 'nextjs');
+}
+
+/**
+ * Build enterprise extensions for the nextjs-monorepo preset.
+ *
+ * Adds:
+ * - apps/app (Next.js SaaS product on port 3003)
+ * - apps/service-identity (Hono identity service on port 3004)
+ * - packages/db (if database configured)
+ * - Database, auth, redis, Bun.secrets setup
+ */
+async function buildEnterpriseExtensions(
+  projectPath: string,
+  context: TemplateContext,
+  scopeName: string
+): Promise<void> {
+  // Create enterprise-specific directories
+  await ensureDirectory(join(projectPath, 'apps/app/src/app'));
+  await ensureDirectory(join(projectPath, 'apps/app/src/components'));
+  await ensureDirectory(join(projectPath, 'apps/app/src/lib'));
+  await ensureDirectory(join(projectPath, 'apps/service-identity/src/routes'));
+  await ensureDirectory(join(projectPath, 'apps/service-identity/src/middleware'));
+
+  if (context.database && context.database !== 'none') {
+    await ensureDirectory(join(projectPath, 'packages/db'));
+  }
+
+  // apps/app - Next.js SaaS product
+  await writeNextjsAppPackageJson(join(projectPath, 'apps/app'), scopeName, 'app', {
+    usesUi: true,
+    usesTypes: true,
+    shadcnIconLibrary: context.shadcnIconLibrary || 'iconoir',
+  });
+
+  await writeFile(
+    join(projectPath, 'apps/app/src/app/layout.tsx'),
+    `import type { Metadata } from 'next';
+import '@${scopeName}/ui/globals.css';
+
+export const metadata: Metadata = {
+  title: '${context.projectName} - App',
+  description: '${context.projectName} application',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body className="antialiased">{children}</body>
+    </html>
+  );
+}
+`
+  );
+
+  await writeFile(
+    join(projectPath, 'apps/app/src/app/page.tsx'),
+    `export default function AppPage() {
+  return (
+    <main className="min-h-screen flex items-center justify-center bg-background">
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl font-bold">${context.projectName} App</h1>
+        <p className="text-muted-foreground">Your SaaS product goes here</p>
+      </div>
+    </main>
+  );
+}
+`
+  );
+
+  await writeFile(
+    join(projectPath, 'apps/app/next.config.ts'),
+    `import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  transpilePackages: ['@${scopeName}/ui'],
+};
+
+export default nextConfig;
+`
+  );
+
+  await writeFile(
+    join(projectPath, 'apps/app/tsconfig.json'),
+    JSON.stringify(
+      {
+        extends: '../../tooling/typescript/nextjs.json',
+        compilerOptions: { paths: { '@/*': ['./src/*'] } },
+        include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+        exclude: ['node_modules'],
+      },
+      null,
+      2
+    )
+  );
+
+  await writeFile(
+    join(projectPath, 'apps/app/postcss.config.mjs'),
+    `export default {
+  plugins: {
+    '@tailwindcss/postcss': {},
+  },
+};
+`
+  );
+
+  // apps/service-identity - Hono identity service
+  await writeHonoApiPackageJson(join(projectPath, 'apps/service-identity'), scopeName, {
+    usesTypes: true,
+  });
+
+  await writeFile(
+    join(projectPath, 'apps/service-identity/src/index.ts'),
+    `import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { logger } from 'hono/logger';
+import { prettyJSON } from 'hono/pretty-json';
+
+const app = new Hono();
+
+// Middleware
+app.use('*', logger());
+app.use('*', cors({
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
+  credentials: true,
+}));
+app.use('*', prettyJSON());
+
+// Health check
+app.get('/health', (context) => {
+  return context.json({ status: 'ok', service: 'identity' });
+});
+
+// Identity routes
+app.get('/api/identity/users', async (context) => {
+  // TODO: Implement user listing
+  return context.json({ users: [] });
+});
+
+app.get('/api/identity/users/:id', async (context) => {
+  const userId = context.req.param('id');
+  // TODO: Implement user retrieval
+  return context.json({ id: userId, user: null });
+});
+
+const server = Bun.serve({
+  fetch: app.fetch,
+  port: 3004,
+  development: { hmr: true },
+});
+
+console.log(\`🔐 Identity service running on \${server.url}\`);
+
+export default app;
+`
+  );
+
+  await writeFile(
+    join(projectPath, 'apps/service-identity/tsconfig.json'),
+    JSON.stringify(
+      {
+        extends: '../../tooling/typescript/api.json',
+        compilerOptions: { types: ['bun-types'] },
+        include: ['src/**/*'],
+        exclude: ['node_modules'],
+      },
+      null,
+      2
+    )
+  );
+
+  // Database setup
+  if (context.database && context.database !== 'none') {
+    await databaseSetupMap[context.database](projectPath, context, true);
+  }
+
+  // Redis setup
+  if (context.redis) {
+    await setupRedis(projectPath, context, true);
+  }
+
+  // Auth setup
+  if (context.auth && context.auth !== 'none' && context.auth !== 'supabase') {
+    if (context.auth === 'better-auth') {
+      await setupBetterAuth(projectPath, context, true);
+    } else if (context.auth === 'nextauth') {
+      await setupNextAuth(projectPath, context, true);
+    }
+  }
+
+  // Bun.secrets setup
+  if (context.useBunSecrets) {
+    await setupBunSecrets(projectPath, context);
+  }
 }

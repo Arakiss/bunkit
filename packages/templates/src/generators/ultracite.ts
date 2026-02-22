@@ -13,24 +13,17 @@ function getUltracitePresets(preset: string | undefined): string[] {
   const usesReact = [
     'nextjs',
     'web',
-    'bun-fullstack',
     'nextjs-monorepo',
     'full',
     'monorepo-nextjs',
     'bun-monorepo',
     'monorepo-bun',
-    'enterprise-monorepo',
   ].includes(presetStr);
 
   // Determine if Next.js is used
-  const usesNext = [
-    'nextjs',
-    'web',
-    'nextjs-monorepo',
-    'full',
-    'monorepo-nextjs',
-    'enterprise-monorepo',
-  ].includes(presetStr);
+  const usesNext = ['nextjs', 'web', 'nextjs-monorepo', 'full', 'monorepo-nextjs'].includes(
+    presetStr
+  );
 
   if (usesReact) {
     presets.push('ultracite/react');
@@ -356,7 +349,7 @@ ${
 ## Tech Stack
 
 - **Runtime**: Bun
-- **Framework**: ${context.preset === 'nextjs' || context.preset === 'web' || context.preset === 'nextjs-monorepo' || context.preset === 'full' || context.preset === 'enterprise-monorepo' ? 'Next.js 16 + React 19' : context.preset === 'hono-api' || context.preset === 'api' ? 'Hono' : context.preset === 'bun-fullstack' || context.preset === 'bun-monorepo' ? 'Bun.serve() + React' : 'Minimal'}
+- **Framework**: ${context.preset === 'nextjs' || context.preset === 'web' || context.preset === 'nextjs-monorepo' || context.preset === 'full' ? 'Next.js 16 + React 19' : context.preset === 'hono-api' || context.preset === 'api' ? 'Hono' : context.preset === 'bun-monorepo' ? 'Bun.serve() + React' : 'Minimal'}
 ${context.cssFramework === 'tailwind' ? '- **Styling**: Tailwind CSS 4\n' : ''}${context.database && context.database !== 'none' ? `- **Database**: ${context.database}\n` : ''}${context.uiLibrary === 'shadcn' ? '- **UI**: shadcn/ui\n' : ''}- **Code Quality**: Ultracite (Biome)
 - **Testing**: ${context.testing}
 `;

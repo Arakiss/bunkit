@@ -31,16 +31,10 @@ export function getPresetConfig(preset: PresetType): PresetConfig {
       return getWebPreset();
     case 'hono-api':
       return getApiPreset();
-    case 'bun-api':
-      return getBunApiPreset();
-    case 'bun-fullstack':
-      return getBunFullstackPreset();
     case 'nextjs-monorepo':
       return getFullPreset();
     case 'bun-monorepo':
       return getMonorepoBunPreset();
-    case 'enterprise-monorepo':
-      return getEnterprisePreset();
     default:
       throw new Error(`Unknown preset: ${preset} (normalized: ${normalized})`);
   }
@@ -112,46 +106,6 @@ function getApiPreset(): PresetConfig {
   };
 }
 
-function getBunApiPreset(): PresetConfig {
-  return {
-    name: 'bun-api',
-    description: 'Bun.serve() native routing - Ultra-fast API with zero dependencies',
-    files: [],
-    dependencies: {},
-    devDependencies: {
-      '@types/bun': 'latest',
-      typescript: '^5.9.3',
-    },
-    scripts: {
-      dev: 'bun run --hot src/index.ts',
-      start: 'bun run src/index.ts',
-    },
-  };
-}
-
-function getBunFullstackPreset(): PresetConfig {
-  return {
-    name: 'bun-fullstack',
-    description: 'Bun.serve() + HTML imports - Full-stack app without Next.js',
-    files: [],
-    dependencies: {
-      react: '^19.2.3',
-      'react-dom': '^19.2.3',
-    },
-    devDependencies: {
-      '@types/react': '^19.2.7',
-      '@types/react-dom': '^19.2.3',
-      '@types/bun': 'latest',
-      typescript: '^5.9.3',
-    },
-    scripts: {
-      dev: 'bun run --hot src/index.ts',
-      build: 'bun build src/index.ts --outdir ./dist --target bun',
-      start: 'bun run dist/index.js',
-    },
-  };
-}
-
 function getFullPreset(): PresetConfig {
   return {
     name: 'nextjs-monorepo',
@@ -173,23 +127,6 @@ function getMonorepoBunPreset(): PresetConfig {
   return {
     name: 'bun-monorepo',
     description: 'Monorepo with Bun.serve() - Full-stack without Next.js',
-    files: [],
-    dependencies: {},
-    devDependencies: {
-      '@types/bun': 'latest',
-      typescript: '^5.9.3',
-    },
-    scripts: {
-      dev: 'bun run --filter "*" dev',
-      build: 'bun run --filter "*" build',
-    },
-  };
-}
-
-function getEnterprisePreset(): PresetConfig {
-  return {
-    name: 'enterprise-monorepo',
-    description: 'Enterprise monorepo with multiple Next.js apps and services',
     files: [],
     dependencies: {},
     devDependencies: {

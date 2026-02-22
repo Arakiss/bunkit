@@ -196,10 +196,10 @@ describe('createProject', () => {
       expect(packageJson.type).toBe('module');
     });
 
-    it('should create project with web preset scripts', async () => {
+    it('should create project with nextjs preset scripts', async () => {
       const config: ProjectConfig = {
         name: 'web-project',
-        preset: 'web',
+        preset: 'nextjs',
         path: 'web-project',
         git: false,
         install: false,
@@ -224,10 +224,10 @@ describe('createProject', () => {
       expect(packageJson.scripts.build).toBe('next build');
     });
 
-    it('should create project with api preset scripts', async () => {
+    it('should create project with hono-api preset scripts', async () => {
       const config: ProjectConfig = {
         name: 'api-project',
-        preset: 'api',
+        preset: 'hono-api',
         path: 'api-project',
         git: false,
         install: false,
@@ -252,10 +252,10 @@ describe('createProject', () => {
       expect(packageJson.scripts.test).toBe('bun test');
     });
 
-    it('should create project with full preset scripts', async () => {
+    it('should create project with nextjs-monorepo preset scripts', async () => {
       const config: ProjectConfig = {
         name: 'full-project',
-        preset: 'full',
+        preset: 'nextjs-monorepo',
         path: 'full-project',
         git: false,
         install: false,
@@ -475,6 +475,58 @@ describe('createProject', () => {
       expect(context.redis).toBe(false);
       expect(context.useBunSecrets).toBe(false);
       expect(context.features).toEqual([]);
+    });
+
+    it('should include enterprise flag in context', () => {
+      const config: ProjectConfig = {
+        name: 'enterprise-project',
+        preset: 'nextjs-monorepo',
+        path: 'enterprise-project',
+        git: false,
+        install: false,
+        enterprise: true,
+        database: 'postgres-drizzle',
+        redis: false,
+        useBunSecrets: false,
+        codeQuality: 'ultracite',
+        tsStrictness: 'strict',
+        testing: 'bun-test',
+        docker: false,
+        cicd: false,
+        envExample: true,
+        pathAliases: true,
+      };
+
+      const context = createTemplateContext(config);
+
+      expect(context.enterprise).toBe(true);
+      expect(context.preset).toBe('nextjs-monorepo');
+    });
+
+    it('should include theme in context and default enterprise to undefined', () => {
+      const config: ProjectConfig = {
+        name: 'themed-project',
+        preset: 'nextjs',
+        path: 'themed-project',
+        git: false,
+        install: false,
+        theme: 'modern-clean',
+        database: 'none',
+        redis: false,
+        useBunSecrets: false,
+        codeQuality: 'ultracite',
+        tsStrictness: 'strict',
+        testing: 'bun-test',
+        docker: false,
+        cicd: false,
+        envExample: true,
+        pathAliases: true,
+      };
+
+      const context = createTemplateContext(config);
+
+      expect(context.theme).toBe('modern-clean');
+      expect(context.enterprise).toBeUndefined();
     });
 
     it('should handle undefined optional fields', () => {

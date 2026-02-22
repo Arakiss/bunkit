@@ -2,13 +2,8 @@
  * Template rendering and management for bunkit
  */
 
-// Builders - Legacy (to be replaced)
+// Builders
 export { buildApiPreset } from './builders/api';
-export { buildBunApiPreset } from './builders/bun-api';
-export { buildBunFullstackPreset } from './builders/bun-fullstack';
-export { buildEnterprisePreset } from './builders/enterprise';
-export { buildFullPreset } from './builders/full';
-// Builders - V2 (Clean Architecture)
 export { buildFullPresetV2 } from './builders/full-v2';
 export { buildMinimalPreset } from './builders/minimal';
 export { buildMonorepoBunPreset } from './builders/monorepo-bun';

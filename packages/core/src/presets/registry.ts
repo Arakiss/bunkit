@@ -13,11 +13,8 @@ export type PrimaryPresetType =
   | 'minimal'
   | 'nextjs'
   | 'hono-api'
-  | 'bun-api'
-  | 'bun-fullstack'
   | 'nextjs-monorepo'
-  | 'bun-monorepo'
-  | 'enterprise-monorepo';
+  | 'bun-monorepo';
 
 // Import the full PresetType for external use
 import type { PresetType } from '../types';
@@ -185,68 +182,11 @@ export const PRESET_DEFINITIONS: Record<PrimaryPresetType, PresetDefinition> = {
     },
   },
 
-  'bun-api': {
-    name: 'bun-api',
-    displayName: 'Bun Native API',
-    description: 'Bun.serve() native routing',
-    hint: 'Bun.serve() native routing - ultra-fast API with zero dependencies (single repo)',
-    emoji: '⚡',
-    aliases: [],
-    capabilities: {
-      database: true,
-      cssFramework: false,
-      uiLibrary: false,
-      auth: true,
-      redis: true,
-      docker: true,
-      cicd: true,
-      isMonorepo: false,
-      hasApi: true,
-      hasWeb: false,
-    },
-    devCommand: 'bun run dev',
-    rootDependencies: {},
-    rootDevDependencies: {
-      '@types/bun': 'latest',
-      typescript: '^5.9.3',
-    },
-  },
-
-  'bun-fullstack': {
-    name: 'bun-fullstack',
-    displayName: 'Bun Full-Stack',
-    description: 'Bun.serve() + HTML imports',
-    hint: 'Bun.serve() + HTML imports - full-stack app without Next.js (single repo)',
-    emoji: '🔥',
-    aliases: [],
-    capabilities: {
-      database: true,
-      cssFramework: true,
-      uiLibrary: true,
-      auth: true,
-      redis: true,
-      docker: true,
-      cicd: true,
-      isMonorepo: false,
-      hasApi: true,
-      hasWeb: true,
-    },
-    devCommand: 'bun run dev',
-    rootDependencies: {},
-    rootDevDependencies: {
-      '@types/bun': 'latest',
-      typescript: '^5.9.3',
-      tailwindcss: '^4.1.18',
-      '@tailwindcss/postcss': '^4.1.18',
-      postcss: '^8.5.6',
-    },
-  },
-
   'nextjs-monorepo': {
     name: 'nextjs-monorepo',
     displayName: 'Next.js Monorepo',
     description: 'Next.js + Hono + shared packages',
-    hint: 'Next.js + Hono + shared packages - enterprise SaaS architecture',
+    hint: 'Next.js + Hono + shared packages - SaaS architecture (use --enterprise for additional apps/services)',
     emoji: '📦',
     aliases: ['full', 'monorepo-nextjs'],
     capabilities: {
@@ -351,79 +291,6 @@ export const PRESET_DEFINITIONS: Record<PrimaryPresetType, PresetDefinition> = {
       'react-dom': '^19.2.3',
       '@types/react': '^19.2.7',
       '@types/react-dom': '^19.2.3',
-      // Database
-      'drizzle-orm': '^0.45.1',
-      'drizzle-kit': '^0.31.8',
-      postgres: '^3.4.7',
-      '@supabase/supabase-js': '^2.88.0',
-      // Styling - Tailwind CSS 4
-      tailwindcss: '^4.1.18',
-      '@tailwindcss/postcss': '^4.1.18',
-      postcss: '^8.5.6',
-      autoprefixer: '^10.4.23',
-      // shadcn/ui dependencies (February 2026 - unified radix-ui, Base UI styles, RTL)
-      'radix-ui': '^1.4.3', // Unified Radix UI package
-      '@radix-ui/react-slot': '^1.2.4', // Legacy backward compat
-      '@base-ui/react': '^1.2.0', // Base UI alternative (January 2026+)
-      shadcn: '^3.8.5', // shadcn package + migrate CLI
-      'class-variance-authority': '^0.7.1',
-      clsx: '^2.1.1',
-      'tailwind-merge': '^3.4.0',
-      'tw-animate-css': '^1.4.0', // Animation library
-      // Icons - iconoir is bunkit default
-      'iconoir-react': '^7.11.0', // bunkit default
-      '@phosphor-icons/react': '^2.1.10', // shadcn default for modern styles
-      // Code quality
-      ultracite: '^6.4.2',
-      '@biomejs/biome': '^2.3.10',
-      // Testing
-      vitest: '^4.0.16',
-      '@vitest/ui': '^4.0.16',
-      // TypeScript
-      '@types/node': '^25.0.3',
-      typescript: '^5.9.3',
-    },
-  },
-
-  'enterprise-monorepo': {
-    name: 'enterprise-monorepo',
-    displayName: 'Enterprise Monorepo',
-    description: 'Multiple Next.js apps + services',
-    hint: 'Multiple Next.js apps + services - platform, app, service-identity',
-    emoji: '🏢',
-    aliases: [],
-    capabilities: {
-      database: true,
-      cssFramework: true,
-      uiLibrary: true,
-      auth: true,
-      redis: true,
-      docker: true,
-      cicd: true,
-      isMonorepo: true,
-      hasApi: true,
-      hasWeb: true,
-    },
-    workspaceStructure: {
-      apps: ['web', 'platform', 'admin', 'api', 'service-identity'],
-      packages: ['ui', 'types', 'utils', 'db', 'auth'],
-      tooling: ['typescript', 'testing'],
-    },
-    devCommand: 'bun dev',
-    rootDependencies: {},
-    rootDevDependencies: {
-      '@types/bun': 'latest',
-      typescript: 'catalog:',
-    },
-    catalogEntries: {
-      // React ecosystem
-      react: '^19.2.3',
-      'react-dom': '^19.2.3',
-      next: '^16.0.10',
-      '@types/react': '^19.2.7',
-      '@types/react-dom': '^19.2.3',
-      // API
-      hono: '^4.11.1',
       // Database
       'drizzle-orm': '^0.45.1',
       'drizzle-kit': '^0.31.8',

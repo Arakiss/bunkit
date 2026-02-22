@@ -26,7 +26,7 @@ program
     `
 Examples:
   $ bunkit init                    Create a new project interactively
-  $ bunkit create nextjs my-app   Create a Next.js web application
+  $ bunkit create nextjs my-app    Create a Next.js web application
   $ bunkit add workspace           Add a new workspace to monorepo
   $ bunkit add component --all     Browse and add shadcn/ui components
   $ bunkit migrate radix           Migrate to unified radix-ui package
@@ -44,7 +44,15 @@ program
   .option('--name <name>', 'Project name (kebab-case recommended, e.g., my-awesome-app)')
   .option(
     '--preset <preset>',
-    'Project preset: minimal | nextjs | hono-api | bun-api | bun-fullstack | nextjs-monorepo | bun-monorepo | enterprise-monorepo'
+    'Project preset: minimal | nextjs | hono-api | nextjs-monorepo | bun-monorepo'
+  )
+  .option(
+    '--enterprise',
+    'Enable enterprise features (additional apps/services, only for nextjs-monorepo)'
+  )
+  .option(
+    '--theme <theme>',
+    'Theme preset: modern-clean | bold-vibrant | minimalist | elegant | custom'
   )
   .option(
     '--database <database>',
@@ -91,21 +99,26 @@ program
     'after',
     `
 Examples:
-  $ bunkit init                                    Interactive project creation
-  $ bunkit init --name my-app --preset nextjs     Quick web app creation
-  $ bunkit init --preset nextjs-monorepo --database supabase Full-stack with Supabase
-  
-Presets:
+  $ bunkit init                                            Interactive project creation
+  $ bunkit init --name my-app --preset nextjs              Quick web app
+  $ bunkit init --preset nextjs-monorepo --enterprise      Enterprise monorepo
+  $ bunkit init --preset nextjs --theme bold-vibrant       Web app with bold theme
+
+Presets (v2.0.0):
   minimal             Single-file Bun project
-  nextjs              Next.js 16 + React 19 web application (single repo)
-  hono-api            Hono 4 + Bun.serve() API server (single repo)
-  bun-api             Bun.serve() native routing (zero dependencies, single repo)
-  bun-fullstack       Bun.serve() + HTML imports (no Next.js, single repo)
-  nextjs-monorepo     Monorepo with Next.js + Hono
-  bun-monorepo        Monorepo with Bun.serve() (no Next.js)
-  enterprise-monorepo Enterprise monorepo with multiple apps and services
-  
-Aliases (backwards compatible):
+  nextjs              Next.js 16 + React 19 web application
+  hono-api            Hono 4 + Bun.serve() API server
+  nextjs-monorepo     Next.js + Hono monorepo (--enterprise for additional apps/services)
+  bun-monorepo        Bun.serve() monorepo (no Next.js)
+
+Themes:
+  modern-clean        Radix Maia + Zinc + Iconoir (default)
+  bold-vibrant        Radix Vega + Neutral + Iconoir
+  minimalist          Radix Nova + Slate + Iconoir
+  elegant             Radix Lyra + Stone + Iconoir
+  custom              Choose individual shadcn/ui options
+
+Deprecated aliases (still work):
   web → nextjs, api → hono-api, full → nextjs-monorepo, monorepo-bun → bun-monorepo
   `
   )
@@ -126,23 +139,29 @@ program
   .alias('c')
   .argument(
     '<preset>',
-    'Project preset: minimal | nextjs | hono-api | bun-api | bun-fullstack | nextjs-monorepo | bun-monorepo | enterprise-monorepo'
+    'Project preset: minimal | nextjs | hono-api | nextjs-monorepo | bun-monorepo'
   )
   .argument('<name>', 'Project name (kebab-case recommended)')
   .option('--no-git', 'Skip Git repository initialization')
   .option('--no-install', 'Skip dependency installation after project creation')
+  .option('--enterprise', 'Enable enterprise features (only for nextjs-monorepo)')
+  .option(
+    '--theme <theme>',
+    'Theme preset: modern-clean | bold-vibrant | minimalist | elegant (default: modern-clean)'
+  )
   .description('Quick project creation with sensible defaults (non-interactive)')
   .addHelpText(
     'after',
     `
 Examples:
-  $ bunkit create nextjs my-app          Create Next.js web application
-  $ bunkit create hono-api my-api       Create Hono API server
-  $ bunkit create nextjs-monorepo my-saas Create full-stack monorepo
-  $ bunkit create minimal my-tool       Create minimal Bun project
-  
-Aliases: web → nextjs, api → hono-api, full → nextjs-monorepo
-  
+  $ bunkit create nextjs my-app                          Create Next.js web app
+  $ bunkit create hono-api my-api                       Create Hono API server
+  $ bunkit create nextjs-monorepo my-saas               Create full-stack monorepo
+  $ bunkit create nextjs-monorepo my-saas --enterprise  Enterprise monorepo
+  $ bunkit create minimal my-tool                       Create minimal Bun project
+
+Deprecated aliases: web → nextjs, api → hono-api, full → nextjs-monorepo
+
 Note: This command uses sensible defaults. Use 'bunkit init' for full customization.
   `
   )

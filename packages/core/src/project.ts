@@ -101,7 +101,7 @@ function getScriptsForPreset(preset: string): Record<string, string> {
         'debug:brk': 'bun --inspect-brk src/index.ts',
         'debug:wait': 'bun --inspect-wait src/index.ts',
       };
-    case 'web':
+    case 'nextjs':
       return {
         dev: 'next dev --turbopack',
         build: 'next build',
@@ -112,7 +112,7 @@ function getScriptsForPreset(preset: string): Record<string, string> {
         'debug:brk': 'bun --inspect-brk node_modules/.bin/next dev --turbopack',
         'debug:wait': 'bun --inspect-wait node_modules/.bin/next dev --turbopack',
       };
-    case 'api':
+    case 'hono-api':
       return {
         dev: 'bun run --hot src/index.ts',
         start: 'bun run src/index.ts',
@@ -121,7 +121,8 @@ function getScriptsForPreset(preset: string): Record<string, string> {
         'debug:brk': 'bun --inspect-brk src/index.ts',
         'debug:wait': 'bun --inspect-wait src/index.ts',
       };
-    case 'full':
+    case 'nextjs-monorepo':
+    case 'bun-monorepo':
       return {
         dev: 'bun run --filter "*" dev',
         build: 'bun run --filter "*" build',
@@ -210,6 +211,10 @@ export function createTemplateContext(config: ProjectConfig): TemplateContext {
     features: config.features || [],
     supportsTypeScript: true,
     preset: config.preset, // Pass preset to context for Ultracite configuration
+
+    // v2.0.0: Enterprise mode and theme preset
+    enterprise: config.enterprise,
+    theme: config.theme,
 
     // Pass through all configuration options
     database: config.database,

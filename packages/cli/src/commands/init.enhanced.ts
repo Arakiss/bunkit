@@ -5,9 +5,12 @@ import {
   createProject,
   createTemplateContext,
   type DatabaseType,
+  getDeprecatedAliasInfo,
+  getRemovedPresetInfo,
   installDependencies,
   type PresetType,
   type ProjectConfig,
+  resolveThemeToShadcnOptions,
   type ShadcnBase,
   type ShadcnBaseColor,
   type ShadcnIconLibrary,
@@ -17,15 +20,13 @@ import {
   type SupabaseFeature,
   type SupabasePreset,
   type TestingFramework,
+  type ThemePresetName,
   type TypeScriptStrictness,
   type UILibrary,
   validateProjectName,
 } from '@bunkit/core';
 import {
   buildApiPreset,
-  buildBunApiPreset,
-  buildBunFullstackPreset,
-  buildEnterprisePreset,
   buildFullPresetV2,
   buildMinimalPreset,
   buildMonorepoBunPreset,
@@ -72,7 +73,10 @@ interface EnhancedInitOptions {
   auth?: AuthProvider;
   redis?: boolean;
   useBunSecrets?: boolean;
-  // shadcn/ui specific options (December 2025 - new create feature)
+  // v2.0.0: Enterprise mode and theme preset
+  enterprise?: boolean;
+  theme?: ThemePresetName;
+  // shadcn/ui specific options (for --theme custom or direct CLI flags)
   shadcnStyle?: ShadcnStyle;
   shadcnBase?: ShadcnBase;
   shadcnBaseColor?: ShadcnBaseColor;
@@ -81,7 +85,6 @@ interface EnhancedInitOptions {
   shadcnMenuColor?: ShadcnMenuColor;
   shadcnRadius?: string;
   shadcnRtl?: boolean;
-
   // Supabase specific options
   supabasePreset?: SupabasePreset;
   supabaseFeatures?: SupabaseFeature[];
@@ -105,7 +108,26 @@ function getOptionValue<T>(envVar: string, option: T | undefined, defaultValue?:
 }
 
 /**
- * Enhanced init command with maximum customization
+ * Normalize preset: resolve aliases and check for removed presets
+ */
+function normalizePresetForComparison(preset: PresetType): PresetType {
+  const aliasMap: Record<string, PresetType> = {
+    web: 'nextjs',
+    api: 'hono-api',
+    full: 'nextjs-monorepo',
+    'monorepo-nextjs': 'nextjs-monorepo',
+    'monorepo-bun': 'bun-monorepo',
+  };
+  return (aliasMap[preset] || preset) as PresetType;
+}
+
+/**
+ * Enhanced init command with maximum customization (v2.0.0)
+ *
+ * New flow: ~8-10 prompts instead of ~25
+ * - 5 presets (down from 8)
+ * - Theme presets replace 7 individual shadcn prompts
+ * - Advanced config gate hides rarely-used options
  */
 export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   const isNonInteractive =
@@ -145,21 +167,23 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   }
 
   // ====================
-  // 2. PRESET
+  // 2. PRESET (5 options, down from 8)
   // ====================
   let preset = getOptionValue<PresetType>('BUNKIT_PRESET', options.preset);
 
-  // Helper function to normalize preset for comparisons
-  const normalizePresetForComparison = (p: PresetType): PresetType => {
-    const aliasMap: Record<string, PresetType> = {
-      web: 'nextjs',
-      api: 'hono-api',
-      full: 'nextjs-monorepo',
-      'monorepo-nextjs': 'nextjs-monorepo',
-      'monorepo-bun': 'bun-monorepo',
-    };
-    return (aliasMap[p] || p) as PresetType;
-  };
+  // Handle removed presets
+  if (preset) {
+    const removedInfo = getRemovedPresetInfo(preset);
+    if (removedInfo) {
+      throw new Error(`${removedInfo.message}\n\nSuggested alternative: ${removedInfo.suggestion}`);
+    }
+    // Handle deprecated aliases
+    const aliasInfo = getDeprecatedAliasInfo(preset);
+    if (aliasInfo) {
+      p.log.warn(chalk.yellow(`⚠️  ${aliasInfo.warning}`));
+      preset = aliasInfo.canonical as PresetType;
+    }
+  }
 
   if (!preset) {
     if (isNonInteractive) {
@@ -180,37 +204,22 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         {
           value: 'nextjs',
           label: '🌐 Next.js Application',
-          hint: 'Next.js 16 + React 19 + Tailwind CSS 4 - production-ready web app (single repo)',
+          hint: 'Next.js 16 + React 19 + Tailwind CSS 4 - production-ready web app',
         },
         {
           value: 'hono-api',
           label: '🚀 Hono API Server',
-          hint: 'Hono 4 + Bun.serve() - full-featured API with middleware ecosystem (single repo)',
-        },
-        {
-          value: 'bun-api',
-          label: '⚡ Bun Native API',
-          hint: 'Bun.serve() native routing - ultra-fast API with zero dependencies (single repo)',
-        },
-        {
-          value: 'bun-fullstack',
-          label: '🔥 Bun Full-Stack',
-          hint: 'Bun.serve() + HTML imports - full-stack app without Next.js (single repo)',
+          hint: 'Hono 4 + Bun.serve() - full-featured API with middleware ecosystem',
         },
         {
           value: 'nextjs-monorepo',
           label: '📦 Next.js Monorepo',
-          hint: 'Next.js + Hono + shared packages - enterprise SaaS architecture',
+          hint: 'Next.js + Hono + shared packages - SaaS architecture (--enterprise for more)',
         },
         {
           value: 'bun-monorepo',
           label: '🔥 Bun Monorepo',
           hint: 'Full-stack monorepo with Bun.serve() - no Next.js',
-        },
-        {
-          value: 'enterprise-monorepo',
-          label: '🏢 Enterprise Monorepo',
-          hint: 'Multiple Next.js apps + services - platform, app, service-identity',
         },
       ],
     })) as PresetType;
@@ -221,23 +230,42 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     }
   }
 
+  const normalizedPreset = normalizePresetForComparison(preset);
+
   // ====================
-  // 3. DATABASE (only for api/full presets)
+  // 3. ENTERPRISE MODE (only for nextjs-monorepo)
+  // ====================
+  let enterprise = getOptionValue<boolean>('BUNKIT_ENTERPRISE', options.enterprise, false);
+
+  if (enterprise === undefined && normalizedPreset === 'nextjs-monorepo') {
+    if (!isNonInteractive) {
+      enterprise = (await p.confirm({
+        message: '🏢 Enable enterprise features? (adds apps/app, service-identity, packages/db)',
+        initialValue: false,
+      })) as boolean;
+
+      if (p.isCancel(enterprise)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+    } else {
+      enterprise = false;
+    }
+  }
+
+  // ====================
+  // 4. DATABASE (for api/monorepo presets)
   // ====================
   let database: DatabaseType | undefined = getOptionValue<DatabaseType>(
     'BUNKIT_DATABASE',
     options.database
   );
 
-  const normalizedPreset = normalizePresetForComparison(preset);
   if (
     !database &&
     (normalizedPreset === 'hono-api' ||
-      normalizedPreset === 'bun-api' ||
-      normalizedPreset === 'bun-fullstack' ||
       normalizedPreset === 'nextjs-monorepo' ||
-      normalizedPreset === 'bun-monorepo' ||
-      normalizedPreset === 'enterprise-monorepo')
+      normalizedPreset === 'bun-monorepo')
   ) {
     if (!isNonInteractive) {
       database = (await p.select({
@@ -306,17 +334,15 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   }
 
   // ====================
-  // SUPABASE CONFIGURATION (if Supabase selected)
+  // 4a. SUPABASE CONFIGURATION (if Supabase selected)
   // ====================
   let supabasePreset: SupabasePreset | undefined;
   let supabaseFeatures: SupabaseFeature[] | undefined;
   let supabaseWithDrizzle: boolean | undefined;
 
   if (database === 'supabase' || database === 'supabase-drizzle') {
-    // Determine if using Drizzle based on database selection
     supabaseWithDrizzle = database === 'supabase-drizzle';
 
-    // Get preset selection
     const presetEnv = process.env.BUNKIT_SUPABASE_PRESET;
     supabasePreset = (presetEnv || options.supabasePreset) as SupabasePreset | undefined;
 
@@ -370,13 +396,13 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       if (availableFeaturesEnv) {
         availableFeatures = availableFeaturesEnv
           .split(',')
-          .map((f) => f.trim()) as SupabaseFeature[];
+          .map((feature) => feature.trim()) as SupabaseFeature[];
       } else if (options.supabaseFeatures) {
         availableFeatures = Array.isArray(options.supabaseFeatures)
           ? options.supabaseFeatures
           : (String(options.supabaseFeatures)
               .split(',')
-              .map((f) => f.trim()) as SupabaseFeature[]);
+              .map((feature) => feature.trim()) as SupabaseFeature[]);
       }
 
       if (!availableFeatures && !isNonInteractive) {
@@ -386,7 +412,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
             {
               value: 'auth',
               label: 'Authentication',
-              hint: 'User authentication and authorization (sign up, sign in, sessions)',
+              hint: 'User authentication and authorization',
             },
             {
               value: 'storage',
@@ -401,7 +427,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
             {
               value: 'edge-functions',
               label: 'Edge Functions',
-              hint: 'Serverless functions deployed at the edge for low latency',
+              hint: 'Serverless functions deployed at the edge',
             },
             {
               value: 'database',
@@ -424,618 +450,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   }
 
   // ====================
-  // 4. CODE QUALITY
-  // ====================
-  let codeQuality = getOptionValue<CodeQualityType>(
-    'BUNKIT_CODE_QUALITY',
-    options.codeQuality,
-    'ultracite' // Default to Ultracite (AI-optimized)
-  );
-
-  if (!codeQuality) {
-    if (!isNonInteractive) {
-      codeQuality = (await p.select({
-        message: '🤖 Code quality tool',
-        options: [
-          {
-            value: 'ultracite',
-            label: 'Ultracite (Recommended)',
-            hint: 'AI-optimized Biome preset - syncs rules for Cursor, Claude Code, Windsurf, Zed',
-          },
-          {
-            value: 'biome',
-            label: 'Biome',
-            hint: 'Standard Biome configuration - fast, reliable, zero-config linting and formatting',
-          },
-        ],
-      })) as CodeQualityType;
-
-      if (p.isCancel(codeQuality)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      codeQuality = 'ultracite';
-    }
-  }
-
-  // ====================
-  // 5. TYPESCRIPT STRICTNESS
-  // ====================
-  let tsStrictness = getOptionValue<TypeScriptStrictness>(
-    'BUNKIT_TS_STRICTNESS',
-    options.tsStrictness,
-    'strict' // Default to strict
-  );
-
-  if (!tsStrictness) {
-    if (!isNonInteractive) {
-      tsStrictness = (await p.select({
-        message: '🔒 TypeScript strictness level',
-        options: [
-          {
-            value: 'strict',
-            label: 'Strict (Recommended)',
-            hint: 'Maximum type safety - catches bugs early, prevents runtime errors',
-          },
-          {
-            value: 'moderate',
-            label: 'Moderate',
-            hint: 'Balanced type checking - good safety without excessive strictness',
-          },
-          {
-            value: 'loose',
-            label: 'Loose',
-            hint: 'Minimal type checking - quick prototyping, easier migration from JavaScript',
-          },
-        ],
-      })) as TypeScriptStrictness;
-
-      if (p.isCancel(tsStrictness)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      tsStrictness = 'strict';
-    }
-  }
-
-  // ====================
-  // 6. CSS FRAMEWORK (only for web/full presets)
-  // ====================
-  let cssFramework: CSSFramework | undefined = getOptionValue<CSSFramework>(
-    'BUNKIT_CSS_FRAMEWORK',
-    options.cssFramework
-  );
-
-  if (
-    !cssFramework &&
-    (normalizedPreset === 'nextjs' ||
-      normalizedPreset === 'nextjs-monorepo' ||
-      normalizedPreset === 'enterprise-monorepo')
-  ) {
-    if (!isNonInteractive) {
-      cssFramework = (await p.select({
-        message: '🎨 CSS framework',
-        options: [
-          {
-            value: 'tailwind',
-            label: 'Tailwind CSS 4 (Recommended)',
-            hint: 'Utility-first CSS framework - fast, modern, with OKLCH colors and @theme',
-          },
-          {
-            value: 'vanilla',
-            label: 'Vanilla CSS',
-            hint: 'Plain CSS files - full control, no framework dependencies',
-          },
-          {
-            value: 'css-modules',
-            label: 'CSS Modules',
-            hint: 'Scoped CSS with automatic class name generation - prevents style conflicts',
-          },
-        ],
-      })) as CSSFramework;
-
-      if (p.isCancel(cssFramework)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      cssFramework = 'tailwind';
-    }
-  }
-
-  // ====================
-  // 7. UI LIBRARY (only for web/full presets with Tailwind)
-  // ====================
-  let uiLibrary: UILibrary | undefined = getOptionValue<UILibrary>(
-    'BUNKIT_UI_LIBRARY',
-    options.uiLibrary
-  );
-
-  if (
-    !uiLibrary &&
-    (normalizedPreset === 'nextjs' ||
-      normalizedPreset === 'nextjs-monorepo' ||
-      normalizedPreset === 'enterprise-monorepo') &&
-    cssFramework === 'tailwind'
-  ) {
-    if (!isNonInteractive) {
-      uiLibrary = (await p.select({
-        message: '🧩 UI component library',
-        options: [
-          {
-            value: 'shadcn',
-            label: 'shadcn/ui (Recommended)',
-            hint: '64+ accessible components, fully customizable, production-ready',
-          },
-          {
-            value: 'none',
-            label: 'None',
-            hint: 'Skip UI library - build custom components or add later',
-          },
-        ],
-      })) as UILibrary;
-
-      if (p.isCancel(uiLibrary)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      uiLibrary = 'shadcn';
-    }
-  }
-
-  // ====================
-  // 7a. SHADCN/UI STYLE (only if shadcn/ui selected)
-  // December 2025: Updated with new visual styles from shadcn/ui "create" feature
-  // ====================
-  let shadcnStyle: ShadcnStyle | undefined = getOptionValue<ShadcnStyle>(
-    'BUNKIT_SHADCN_STYLE',
-    options.shadcnStyle
-  );
-
-  if (!shadcnStyle && uiLibrary === 'shadcn') {
-    if (!isNonInteractive) {
-      shadcnStyle = (await p.select({
-        message: '🎨 shadcn/ui visual style',
-        options: [
-          {
-            value: 'radix-maia',
-            label: 'Maia — Radix (Recommended)',
-            hint: 'Modern, clean design with soft shadows and refined aesthetics',
-          },
-          {
-            value: 'radix-vega',
-            label: 'Vega — Radix',
-            hint: 'Bold, vibrant design with stronger colors and contrast',
-          },
-          {
-            value: 'radix-nova',
-            label: 'Nova — Radix',
-            hint: 'Minimalist design with subtle accents and clean lines',
-          },
-          {
-            value: 'radix-lyra',
-            label: 'Lyra — Radix',
-            hint: 'Elegant design with refined typography and spacing',
-          },
-          {
-            value: 'radix-mira',
-            label: 'Mira — Radix',
-            hint: 'Playful design with rounded elements and soft colors',
-          },
-          {
-            value: 'base-maia',
-            label: 'Maia — Base UI',
-            hint: 'Clean design using Base UI primitives (alternative to Radix)',
-          },
-          {
-            value: 'base-vega',
-            label: 'Vega — Base UI',
-            hint: 'Bold design using Base UI primitives',
-          },
-          {
-            value: 'base-nova',
-            label: 'Nova — Base UI',
-            hint: 'Minimalist design using Base UI primitives',
-          },
-          {
-            value: 'base-lyra',
-            label: 'Lyra — Base UI',
-            hint: 'Elegant design using Base UI primitives',
-          },
-          {
-            value: 'base-mira',
-            label: 'Mira — Base UI',
-            hint: 'Playful design using Base UI primitives',
-          },
-          {
-            value: 'new-york',
-            label: 'New York (Legacy)',
-            hint: 'Classic modern aesthetic - rounded corners, subtle shadows',
-          },
-          {
-            value: 'default',
-            label: 'Default (Legacy)',
-            hint: 'Classic design - sharper edges, higher contrast',
-          },
-        ],
-      })) as ShadcnStyle;
-
-      if (p.isCancel(shadcnStyle)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      shadcnStyle = 'radix-maia'; // Modern default
-    }
-  }
-
-  // ====================
-  // 7b. SHADCN/UI BASE COLOR (only if shadcn/ui selected)
-  // ====================
-  let shadcnBaseColor: ShadcnBaseColor | undefined = getOptionValue<ShadcnBaseColor>(
-    'BUNKIT_SHADCN_BASE_COLOR',
-    options.shadcnBaseColor
-  );
-
-  if (!shadcnBaseColor && uiLibrary === 'shadcn') {
-    if (!isNonInteractive) {
-      shadcnBaseColor = (await p.select({
-        message: '🎨 shadcn/ui base color theme',
-        options: [
-          {
-            value: 'zinc',
-            label: 'Zinc (Recommended)',
-            hint: 'Neutral gray palette - versatile, modern, works with any accent color',
-          },
-          {
-            value: 'neutral',
-            label: 'Neutral',
-            hint: 'Pure neutral palette - no color cast, perfect grayscale',
-          },
-          {
-            value: 'gray',
-            label: 'Gray',
-            hint: 'Warm gray palette - slightly warmer tone than zinc',
-          },
-          {
-            value: 'slate',
-            label: 'Slate',
-            hint: 'Cool gray palette - slightly bluer tone, modern and crisp',
-          },
-          {
-            value: 'stone',
-            label: 'Stone',
-            hint: 'Warm beige-gray palette - earthy, natural, organic feel',
-          },
-        ],
-      })) as ShadcnBaseColor;
-
-      if (p.isCancel(shadcnBaseColor)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      shadcnBaseColor = 'zinc';
-    }
-  }
-
-  // ====================
-  // 7c. SHADCN/UI RADIUS (only if shadcn/ui selected)
-  // ====================
-  let shadcnRadius: string | undefined = getOptionValue<string>(
-    'BUNKIT_SHADCN_RADIUS',
-    options.shadcnRadius
-  );
-
-  if (!shadcnRadius && uiLibrary === 'shadcn') {
-    if (!isNonInteractive) {
-      const radiusInput = await p.text({
-        message: '📐 Component border radius',
-        placeholder: '0.625rem (default)',
-        initialValue: '0.625rem',
-        validate: (value) => {
-          if (!value.trim()) {
-            return 'Radius cannot be empty';
-          }
-          // Basic validation for CSS values
-          if (!/^\d+(\.\d+)?(rem|px|em|%)$/.test(value.trim())) {
-            return 'Please enter a valid CSS value (e.g., 0.5rem, 8px)';
-          }
-        },
-      });
-
-      if (p.isCancel(radiusInput)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-
-      shadcnRadius = radiusInput as string;
-    } else {
-      shadcnRadius = '0.625rem';
-    }
-  }
-
-  // ====================
-  // 7d. SHADCN/UI ICON LIBRARY (only if shadcn/ui selected)
-  // December 2025: Added icon library selection
-  // ====================
-  let shadcnIconLibrary: ShadcnIconLibrary | undefined = getOptionValue<ShadcnIconLibrary>(
-    'BUNKIT_SHADCN_ICON_LIBRARY',
-    options.shadcnIconLibrary
-  );
-
-  // Determine if using modern style (radix-* or base-*)
-  const isModernStyle = shadcnStyle?.startsWith('radix-') || shadcnStyle?.startsWith('base-');
-
-  if (!shadcnIconLibrary && uiLibrary === 'shadcn') {
-    if (!isNonInteractive) {
-      shadcnIconLibrary = (await p.select({
-        message: '🔣 Icon library',
-        options: [
-          {
-            value: 'iconoir',
-            label: 'Iconoir (Recommended)',
-            hint: 'bunkit default - 1600+ lightweight, tree-shakeable icons',
-          },
-          {
-            value: 'phosphor',
-            label: 'Phosphor Icons',
-            hint: 'Modern icon library with consistent design - shadcn/ui default for new styles',
-          },
-          {
-            value: 'lucide',
-            label: 'Lucide',
-            hint: 'Classic choice - based on Feather icons, widely used',
-          },
-        ],
-      })) as ShadcnIconLibrary;
-
-      if (p.isCancel(shadcnIconLibrary)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      // bunkit always defaults to iconoir
-      shadcnIconLibrary = 'iconoir';
-    }
-  }
-
-  // ====================
-  // 7e. SHADCN/UI BASE (component foundation - only for modern styles)
-  // December 2025: Choice between Radix UI and Base UI
-  // ====================
-  let shadcnBase: ShadcnBase | undefined = getOptionValue<ShadcnBase>(
-    'BUNKIT_SHADCN_BASE',
-    options.shadcnBase
-  );
-
-  // Auto-infer base from style name (base-* → base-ui, radix-* → radix)
-  // Skip the interactive prompt since the style already encodes the base
-  if (!shadcnBase && uiLibrary === 'shadcn') {
-    if (shadcnStyle?.startsWith('base-')) {
-      shadcnBase = 'base-ui';
-    } else {
-      shadcnBase = 'radix';
-    }
-  }
-
-  // ====================
-  // 7f. SHADCN/UI MENU ACCENT (only for modern styles)
-  // December 2025: Menu accent style selection
-  // ====================
-  let shadcnMenuAccent: ShadcnMenuAccent | undefined = getOptionValue<ShadcnMenuAccent>(
-    'BUNKIT_SHADCN_MENU_ACCENT',
-    options.shadcnMenuAccent
-  );
-
-  if (!shadcnMenuAccent && uiLibrary === 'shadcn' && isModernStyle) {
-    if (!isNonInteractive) {
-      shadcnMenuAccent = (await p.select({
-        message: '✨ Menu accent style',
-        options: [
-          {
-            value: 'subtle',
-            label: 'Subtle (Recommended)',
-            hint: 'Soft accent colors - elegant and understated',
-          },
-          {
-            value: 'bold',
-            label: 'Bold',
-            hint: 'Strong accent colors - vibrant and eye-catching',
-          },
-        ],
-      })) as ShadcnMenuAccent;
-
-      if (p.isCancel(shadcnMenuAccent)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      shadcnMenuAccent = 'subtle';
-    }
-  } else if (!shadcnMenuAccent) {
-    shadcnMenuAccent = 'subtle'; // Default for legacy styles
-  }
-
-  // ====================
-  // 7g. SHADCN/UI MENU COLOR (only for modern styles)
-  // December 2025: Menu color selection
-  // ====================
-  let shadcnMenuColor: ShadcnMenuColor | undefined = getOptionValue<ShadcnMenuColor>(
-    'BUNKIT_SHADCN_MENU_COLOR',
-    options.shadcnMenuColor
-  );
-
-  if (!shadcnMenuColor && uiLibrary === 'shadcn' && isModernStyle) {
-    if (!isNonInteractive) {
-      shadcnMenuColor = (await p.select({
-        message: '🎯 Menu color scheme',
-        options: [
-          {
-            value: 'default',
-            label: 'Default (Recommended)',
-            hint: 'Standard menu colors - balanced and consistent',
-          },
-          {
-            value: 'muted',
-            label: 'Muted',
-            hint: 'Subdued menu colors - softer and more subtle',
-          },
-        ],
-      })) as ShadcnMenuColor;
-
-      if (p.isCancel(shadcnMenuColor)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      shadcnMenuColor = 'default';
-    }
-  } else if (!shadcnMenuColor) {
-    shadcnMenuColor = 'default'; // Default for legacy styles
-  }
-
-  // ====================
-  // 7h. SHADCN/UI RTL SUPPORT (only for modern styles)
-  // February 2026: RTL support via components.json
-  // ====================
-  let shadcnRtl: boolean | undefined = getOptionValue<boolean>(
-    'BUNKIT_SHADCN_RTL',
-    options.shadcnRtl,
-    false
-  );
-
-  if (shadcnRtl === undefined && uiLibrary === 'shadcn' && isModernStyle) {
-    if (!isNonInteractive) {
-      shadcnRtl = (await p.confirm({
-        message: '🔄 Enable RTL (right-to-left) support',
-        initialValue: false,
-      })) as boolean;
-
-      if (p.isCancel(shadcnRtl)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      shadcnRtl = false;
-    }
-  }
-
-  // ====================
-  // 8. TESTING FRAMEWORK
-  // ====================
-  let testing = getOptionValue<TestingFramework>(
-    'BUNKIT_TESTING',
-    options.testing,
-    'bun-test' // Default to bun:test
-  );
-
-  if (!testing) {
-    if (!isNonInteractive) {
-      testing = (await p.select({
-        message: '🧪 Testing framework',
-        options: [
-          {
-            value: 'bun-test',
-            label: 'Bun Test (Recommended)',
-            hint: 'Built-in testing framework - fast, Jest-compatible, zero configuration',
-          },
-          {
-            value: 'vitest',
-            label: 'Vitest',
-            hint: 'Vite-powered testing framework - fast, ESM-first, popular ecosystem choice',
-          },
-          {
-            value: 'none',
-            label: 'None',
-            hint: 'Skip testing setup - add testing framework later if needed',
-          },
-        ],
-      })) as TestingFramework;
-
-      if (p.isCancel(testing)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      testing = 'bun-test';
-    }
-  }
-
-  // ====================
-  // 9. DOCKER SUPPORT
-  // ====================
-  let docker = getOptionValue<boolean>('BUNKIT_DOCKER', options.docker, false);
-
-  if (docker === undefined) {
-    if (!isNonInteractive) {
-      docker = (await p.confirm({
-        message: '🐳 Include Docker configuration',
-        initialValue: false,
-      })) as boolean;
-
-      if (p.isCancel(docker)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      docker = false;
-    }
-  }
-
-  // ====================
-  // 10. CI/CD
-  // ====================
-  let cicd = getOptionValue<boolean>('BUNKIT_CICD', options.cicd, false);
-
-  if (cicd === undefined) {
-    if (!isNonInteractive) {
-      cicd = (await p.confirm({
-        message: '⚙️  Include GitHub Actions CI/CD workflow',
-        initialValue: false,
-      })) as boolean;
-
-      if (p.isCancel(cicd)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    } else {
-      cicd = false;
-    }
-  }
-
-  // ====================
-  // 10. REDIS (only for api/full/bun-api/bun-fullstack/monorepo-bun presets)
-  // ====================
-  let redis = getOptionValue<boolean>('BUNKIT_REDIS', options.redis, false);
-
-  if (
-    !redis &&
-    (normalizedPreset === 'hono-api' ||
-      normalizedPreset === 'bun-api' ||
-      normalizedPreset === 'bun-fullstack' ||
-      normalizedPreset === 'nextjs-monorepo' ||
-      normalizedPreset === 'bun-monorepo' ||
-      normalizedPreset === 'enterprise-monorepo')
-  ) {
-    if (!isNonInteractive) {
-      redis = (await p.confirm({
-        message: '🔴 Redis cache/session store',
-        initialValue: false,
-      })) as boolean;
-
-      if (p.isCancel(redis)) {
-        p.cancel('Operation cancelled.');
-        process.exit(0);
-      }
-    }
-  }
-
-  // ====================
-  // 11. AUTHENTICATION (only for api/full/bun-api/bun-fullstack/monorepo-bun presets)
+  // 5. AUTH (for backend presets, skip if Supabase selected)
   // ====================
   let auth: AuthProvider | undefined = getOptionValue<AuthProvider>(
     'BUNKIT_AUTH',
@@ -1046,13 +461,9 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   if (
     !auth &&
     (normalizedPreset === 'hono-api' ||
-      normalizedPreset === 'bun-api' ||
-      normalizedPreset === 'bun-fullstack' ||
       normalizedPreset === 'nextjs-monorepo' ||
-      normalizedPreset === 'bun-monorepo' ||
-      normalizedPreset === 'enterprise-monorepo')
+      normalizedPreset === 'bun-monorepo')
   ) {
-    // Skip auth prompt if Supabase is selected (Supabase includes auth)
     if (
       database &&
       (database === 'supabase' || database === 'supabase-drizzle' || database === 'supabase-prisma')
@@ -1090,31 +501,312 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   }
 
   // ====================
-  // 12. BUN.SECRETS (for all presets)
+  // 6. THEME (for presets with web UI — replaces 7 individual shadcn prompts)
   // ====================
-  let useBunSecrets = getOptionValue<boolean>(
-    'BUNKIT_USE_BUN_SECRETS',
-    options.useBunSecrets,
-    false
+  let theme: ThemePresetName | undefined = getOptionValue<ThemePresetName>(
+    'BUNKIT_THEME',
+    options.theme
+  );
+  let cssFramework: CSSFramework | undefined = getOptionValue<CSSFramework>(
+    'BUNKIT_CSS_FRAMEWORK',
+    options.cssFramework
+  );
+  let uiLibrary: UILibrary | undefined = getOptionValue<UILibrary>(
+    'BUNKIT_UI_LIBRARY',
+    options.uiLibrary
   );
 
-  if (!useBunSecrets) {
-    if (!isNonInteractive) {
-      useBunSecrets = (await p.confirm({
-        message:
-          '🔑 Use Bun.secrets for environment variables (Use Bun.secrets API instead of .env files)',
-        initialValue: false,
-      })) as boolean;
+  // shadcn/ui options (populated from theme preset or custom prompts)
+  let shadcnStyle: ShadcnStyle | undefined = options.shadcnStyle;
+  let shadcnBaseColor: ShadcnBaseColor | undefined = options.shadcnBaseColor;
+  let shadcnIconLibrary: ShadcnIconLibrary | undefined = options.shadcnIconLibrary;
+  let shadcnMenuAccent: ShadcnMenuAccent | undefined = options.shadcnMenuAccent;
+  let shadcnMenuColor: ShadcnMenuColor | undefined = options.shadcnMenuColor;
+  let shadcnRadius: string | undefined = options.shadcnRadius;
+  let shadcnBase: ShadcnBase | undefined = options.shadcnBase;
+  let shadcnRtl: boolean | undefined = options.shadcnRtl;
 
-      if (p.isCancel(useBunSecrets)) {
+  const presetSupportsWeb =
+    normalizedPreset === 'nextjs' ||
+    normalizedPreset === 'nextjs-monorepo' ||
+    normalizedPreset === 'bun-monorepo';
+
+  if (presetSupportsWeb) {
+    // Default to tailwind + shadcn for web presets
+    cssFramework = cssFramework || 'tailwind';
+    uiLibrary = uiLibrary || 'shadcn';
+
+    if (!theme && uiLibrary === 'shadcn') {
+      if (!isNonInteractive) {
+        theme = (await p.select({
+          message: '🎨 Theme',
+          options: [
+            {
+              value: 'modern-clean',
+              label: 'Modern Clean (Recommended)',
+              hint: 'Radix Maia + Zinc + Iconoir - clean, professional design',
+            },
+            {
+              value: 'bold-vibrant',
+              label: 'Bold Vibrant',
+              hint: 'Radix Vega + Neutral + Iconoir - strong colors and contrast',
+            },
+            {
+              value: 'minimalist',
+              label: 'Minimalist',
+              hint: 'Radix Nova + Slate + Iconoir - subtle accents and clean lines',
+            },
+            {
+              value: 'elegant',
+              label: 'Elegant',
+              hint: 'Radix Lyra + Stone + Iconoir - refined typography and spacing',
+            },
+            {
+              value: 'custom',
+              label: 'Custom',
+              hint: 'Choose individual shadcn/ui style, color, icons, and more',
+            },
+          ],
+        })) as ThemePresetName;
+
+        if (p.isCancel(theme)) {
+          p.cancel('Operation cancelled.');
+          process.exit(0);
+        }
+      } else {
+        theme = 'modern-clean';
+      }
+    }
+
+    // Resolve theme to shadcn options
+    if (theme && theme !== 'custom') {
+      const resolved = resolveThemeToShadcnOptions(theme);
+      if (resolved) {
+        shadcnStyle = resolved.shadcnStyle;
+        shadcnBaseColor = resolved.shadcnBaseColor;
+        shadcnIconLibrary = resolved.shadcnIconLibrary;
+        shadcnMenuAccent = resolved.shadcnMenuAccent;
+        shadcnMenuColor = resolved.shadcnMenuColor;
+        shadcnRadius = resolved.shadcnRadius;
+        shadcnBase = shadcnStyle?.startsWith('base-') ? 'base-ui' : 'radix';
+      }
+    } else if (theme === 'custom' && !isNonInteractive) {
+      // Custom theme: ask individual shadcn questions
+      shadcnStyle = (await p.select({
+        message: '🎨 shadcn/ui visual style',
+        options: [
+          { value: 'radix-maia', label: 'Maia — Radix', hint: 'Modern, clean design' },
+          { value: 'radix-vega', label: 'Vega — Radix', hint: 'Bold, vibrant design' },
+          { value: 'radix-nova', label: 'Nova — Radix', hint: 'Minimalist design' },
+          { value: 'radix-lyra', label: 'Lyra — Radix', hint: 'Elegant design' },
+          { value: 'radix-mira', label: 'Mira — Radix', hint: 'Playful design' },
+          { value: 'base-maia', label: 'Maia — Base UI', hint: 'Clean, Base UI primitives' },
+          { value: 'base-vega', label: 'Vega — Base UI', hint: 'Bold, Base UI primitives' },
+          { value: 'base-nova', label: 'Nova — Base UI', hint: 'Minimalist, Base UI' },
+          { value: 'base-lyra', label: 'Lyra — Base UI', hint: 'Elegant, Base UI' },
+          { value: 'base-mira', label: 'Mira — Base UI', hint: 'Playful, Base UI' },
+          { value: 'new-york', label: 'New York (Legacy)', hint: 'Classic modern aesthetic' },
+          { value: 'default', label: 'Default (Legacy)', hint: 'Classic design' },
+        ],
+      })) as ShadcnStyle;
+
+      if (p.isCancel(shadcnStyle)) {
         p.cancel('Operation cancelled.');
         process.exit(0);
       }
+
+      shadcnBaseColor = (await p.select({
+        message: '🎨 Base color theme',
+        options: [
+          { value: 'zinc', label: 'Zinc', hint: 'Neutral gray - versatile, modern' },
+          { value: 'neutral', label: 'Neutral', hint: 'Pure neutral - no color cast' },
+          { value: 'gray', label: 'Gray', hint: 'Warm gray palette' },
+          { value: 'slate', label: 'Slate', hint: 'Cool gray - bluer tone' },
+          { value: 'stone', label: 'Stone', hint: 'Warm beige-gray - earthy' },
+        ],
+      })) as ShadcnBaseColor;
+
+      if (p.isCancel(shadcnBaseColor)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+
+      shadcnIconLibrary = (await p.select({
+        message: '🔣 Icon library',
+        options: [
+          { value: 'iconoir', label: 'Iconoir (Recommended)', hint: '1600+ tree-shakeable icons' },
+          { value: 'phosphor', label: 'Phosphor', hint: 'Modern icon library' },
+          { value: 'lucide', label: 'Lucide', hint: 'Classic choice' },
+        ],
+      })) as ShadcnIconLibrary;
+
+      if (p.isCancel(shadcnIconLibrary)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+
+      // Auto-infer base from style
+      shadcnBase = shadcnStyle?.startsWith('base-') ? 'base-ui' : 'radix';
+      shadcnMenuAccent = 'subtle';
+      shadcnMenuColor = 'default';
+      shadcnRadius = '0.625rem';
+      shadcnRtl = false;
     }
   }
 
   // ====================
-  // 13. INSTALL DEPENDENCIES
+  // 7. ADVANCED CONFIGURATION (default: No)
+  // ====================
+  let codeQuality: CodeQualityType | undefined = getOptionValue<CodeQualityType>(
+    'BUNKIT_CODE_QUALITY',
+    options.codeQuality
+  );
+  let tsStrictness: TypeScriptStrictness | undefined = getOptionValue<TypeScriptStrictness>(
+    'BUNKIT_TS_STRICTNESS',
+    options.tsStrictness
+  );
+  let testing: TestingFramework | undefined = getOptionValue<TestingFramework>(
+    'BUNKIT_TESTING',
+    options.testing
+  );
+  let docker = getOptionValue<boolean>('BUNKIT_DOCKER', options.docker);
+  let cicd = getOptionValue<boolean>('BUNKIT_CICD', options.cicd);
+  let redis = getOptionValue<boolean>('BUNKIT_REDIS', options.redis);
+  let useBunSecrets = getOptionValue<boolean>('BUNKIT_USE_BUN_SECRETS', options.useBunSecrets);
+
+  // Only show advanced prompt if none of these were set via CLI/env
+  const hasAdvancedFlags =
+    codeQuality !== undefined ||
+    tsStrictness !== undefined ||
+    testing !== undefined ||
+    docker !== undefined ||
+    cicd !== undefined ||
+    redis !== undefined ||
+    useBunSecrets !== undefined;
+
+  if (!hasAdvancedFlags && !isNonInteractive) {
+    const showAdvanced = (await p.confirm({
+      message: '⚙️  Configure advanced options? (code quality, testing, Docker, CI/CD, Redis)',
+      initialValue: false,
+    })) as boolean;
+
+    if (p.isCancel(showAdvanced)) {
+      p.cancel('Operation cancelled.');
+      process.exit(0);
+    }
+
+    if (showAdvanced) {
+      // 7a. Code quality
+      codeQuality = (await p.select({
+        message: '🤖 Code quality tool',
+        options: [
+          {
+            value: 'ultracite',
+            label: 'Ultracite (Recommended)',
+            hint: 'AI-optimized Biome preset - syncs rules for Cursor, Claude Code, Windsurf, Zed',
+          },
+          {
+            value: 'biome',
+            label: 'Biome',
+            hint: 'Standard Biome configuration - fast, reliable, zero-config',
+          },
+        ],
+      })) as CodeQualityType;
+
+      if (p.isCancel(codeQuality)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+
+      // 7b. Testing
+      testing = (await p.select({
+        message: '🧪 Testing framework',
+        options: [
+          {
+            value: 'bun-test',
+            label: 'Bun Test (Recommended)',
+            hint: 'Built-in - fast, Jest-compatible, zero config',
+          },
+          {
+            value: 'vitest',
+            label: 'Vitest',
+            hint: 'Vite-powered - ESM-first, popular ecosystem',
+          },
+          { value: 'none', label: 'None', hint: 'Skip testing setup' },
+        ],
+      })) as TestingFramework;
+
+      if (p.isCancel(testing)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+
+      // 7c. TypeScript strictness
+      tsStrictness = (await p.select({
+        message: '🔒 TypeScript strictness',
+        options: [
+          { value: 'strict', label: 'Strict (Recommended)', hint: 'Maximum type safety' },
+          { value: 'moderate', label: 'Moderate', hint: 'Balanced type checking' },
+          { value: 'loose', label: 'Loose', hint: 'Minimal - quick prototyping' },
+        ],
+      })) as TypeScriptStrictness;
+
+      if (p.isCancel(tsStrictness)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+
+      // 7d. Docker, CI/CD, Redis, Bun.secrets
+      const infraChoices = (await p.multiselect({
+        message: '🏗️  Infrastructure options (select any)',
+        options: [
+          { value: 'docker', label: 'Docker', hint: 'Dockerfile and docker-compose' },
+          {
+            value: 'cicd',
+            label: 'GitHub Actions CI/CD',
+            hint: 'Automated testing and deployment',
+          },
+          ...(normalizedPreset !== 'minimal' && normalizedPreset !== 'nextjs'
+            ? [
+                {
+                  value: 'redis' as const,
+                  label: 'Redis',
+                  hint: 'Cache and session store',
+                },
+              ]
+            : []),
+          {
+            value: 'bun-secrets',
+            label: 'Bun.secrets',
+            hint: 'Use Bun.secrets API instead of .env',
+          },
+        ],
+        required: false,
+      })) as string[];
+
+      if (p.isCancel(infraChoices)) {
+        p.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+
+      docker = infraChoices.includes('docker');
+      cicd = infraChoices.includes('cicd');
+      redis = infraChoices.includes('redis');
+      useBunSecrets = infraChoices.includes('bun-secrets');
+    }
+  }
+
+  // Apply defaults for any unset advanced options
+  codeQuality = codeQuality || 'ultracite';
+  tsStrictness = tsStrictness || 'strict';
+  testing = testing || 'bun-test';
+  docker = docker || false;
+  cicd = cicd || false;
+  redis = redis || false;
+  useBunSecrets = useBunSecrets || false;
+
+  // ====================
+  // 8. INSTALL DEPENDENCIES
   // ====================
   let shouldInstall = getOptionValue<boolean>('BUNKIT_INSTALL', options.install, true);
 
@@ -1135,7 +827,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   }
 
   // ====================
-  // 14. GIT INIT
+  // 9. GIT INIT
   // ====================
   let shouldInitGit = getOptionValue<boolean>('BUNKIT_GIT', options.git, true);
 
@@ -1156,16 +848,15 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   }
 
   // ====================
-  // SHOW CONFIGURATION SUMMARY
+  // 10. CONFIRM SUMMARY
   // ====================
   if (!isNonInteractive) {
-    // Build configuration summary with better formatting
     const configSummary = [
       '',
       `${chalk.bold.cyan('📦 Project Configuration')}`,
       `${chalk.dim('─'.repeat(40))}`,
       `${chalk.bold('Project Name:')} ${chalk.cyan(projectName)}`,
-      `${chalk.bold('Preset:')} ${chalk.cyan(preset)}`,
+      `${chalk.bold('Preset:')} ${chalk.cyan(preset)}${enterprise ? chalk.yellow(' + Enterprise') : ''}`,
       '',
       database && database !== 'none'
         ? [
@@ -1174,65 +865,26 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
             (database === 'supabase' || database === 'supabase-drizzle') && supabasePreset
               ? `  ${chalk.bold('Preset:')} ${chalk.cyan(supabasePreset)}`
               : '',
-            (database === 'supabase' || database === 'supabase-drizzle') && supabaseFeatures
-              ? `  ${chalk.bold('Features:')} ${chalk.cyan(supabaseFeatures.join(', '))}`
-              : '',
           ]
             .filter(Boolean)
             .join('\n')
         : '',
       '',
-      normalizedPreset === 'hono-api' ||
-      normalizedPreset === 'bun-api' ||
-      normalizedPreset === 'bun-fullstack' ||
-      normalizedPreset === 'nextjs-monorepo' ||
-      normalizedPreset === 'bun-monorepo' ||
-      normalizedPreset === 'enterprise-monorepo'
-        ? [
-            `${chalk.bold.yellow('🔐 Authentication & Infrastructure')}`,
-            auth && auth !== 'none'
-              ? `  ${chalk.bold('Auth:')} ${chalk.cyan(auth)}`
-              : `  ${chalk.bold('Auth:')} ${chalk.dim('None')}`,
-            redis
-              ? `  ${chalk.bold('Redis:')} ${chalk.green('✓ Enabled')}`
-              : `  ${chalk.bold('Redis:')} ${chalk.dim('Disabled')}`,
-            useBunSecrets
-              ? `  ${chalk.bold('Bun.secrets:')} ${chalk.green('✓ Enabled')}`
-              : `  ${chalk.bold('Bun.secrets:')} ${chalk.dim('Disabled')}`,
-          ]
-            .filter(Boolean)
-            .join('\n')
-        : '',
+      auth && auth !== 'none' ? `${chalk.bold('Auth:')} ${chalk.cyan(auth)}` : '',
+      '',
+      theme ? `${chalk.bold('Theme:')} ${chalk.cyan(theme)}` : '',
       '',
       `${chalk.bold.yellow('🛠️  Development Tools')}`,
       `  ${chalk.bold('Code Quality:')} ${chalk.cyan(codeQuality)}`,
       `  ${chalk.bold('TypeScript:')} ${chalk.cyan(tsStrictness)}`,
       `  ${chalk.bold('Testing:')} ${chalk.cyan(testing)}`,
       '',
-      cssFramework
+      docker || cicd || redis
         ? [
-            `${chalk.bold.yellow('🎨 Styling')}`,
-            `  ${chalk.bold('CSS Framework:')} ${chalk.cyan(cssFramework)}`,
-            uiLibrary ? `  ${chalk.bold('UI Library:')} ${chalk.cyan(uiLibrary)}` : '',
-            uiLibrary === 'shadcn' && shadcnStyle
-              ? `  ${chalk.bold('  Style:')} ${chalk.cyan(shadcnStyle)}`
-              : '',
-            uiLibrary === 'shadcn' && shadcnBaseColor
-              ? `  ${chalk.bold('  Base Color:')} ${chalk.cyan(shadcnBaseColor)}`
-              : '',
-            uiLibrary === 'shadcn' && shadcnRadius
-              ? `  ${chalk.bold('  Radius:')} ${chalk.cyan(shadcnRadius)}`
-              : '',
-          ]
-            .filter(Boolean)
-            .join('\n')
-        : '',
-      '',
-      docker || cicd
-        ? [
-            `${chalk.bold.yellow('🚀 Deployment')}`,
-            docker ? `  ${chalk.bold('Docker:')} ${chalk.green('✓ Enabled')}` : '',
-            cicd ? `  ${chalk.bold('CI/CD:')} ${chalk.green('✓ Enabled')}` : '',
+            `${chalk.bold.yellow('🚀 Infrastructure')}`,
+            docker ? `  ${chalk.bold('Docker:')} ${chalk.green('✓')}` : '',
+            cicd ? `  ${chalk.bold('CI/CD:')} ${chalk.green('✓')}` : '',
+            redis ? `  ${chalk.bold('Redis:')} ${chalk.green('✓')}` : '',
           ]
             .filter(Boolean)
             .join('\n')
@@ -1268,10 +920,10 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
   // ====================
   // CREATE PROJECT
   // ====================
-  console.log(''); // Add spacing before creation starts
+  console.log('');
 
-  const s = p.spinner();
-  s.start(`${chalk.cyan('🔨')} Creating project structure...`);
+  const spinner = p.spinner();
+  spinner.start(`${chalk.cyan('🔨')} Creating project structure...`);
 
   try {
     const config: ProjectConfig = {
@@ -1280,6 +932,8 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       path: projectName as string,
       git: shouldInitGit as boolean,
       install: shouldInstall as boolean,
+      enterprise,
+      theme,
       database,
       redis: redis as boolean,
       useBunSecrets: useBunSecrets as boolean,
@@ -1293,7 +947,6 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       cicd: cicd as boolean,
       envExample: true,
       pathAliases: true,
-      // shadcn/ui specific options (December 2025 - new create feature)
       shadcnStyle,
       shadcnBase,
       shadcnBaseColor,
@@ -1302,8 +955,6 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       shadcnMenuColor,
       shadcnRadius,
       shadcnRtl: shadcnRtl || false,
-
-      // Supabase specific options
       supabasePreset,
       supabaseFeatures,
       supabaseWithDrizzle,
@@ -1314,194 +965,113 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
     const projectPath = join(process.cwd(), config.path);
     const context = createTemplateContext(config);
 
-    s.message(`${chalk.cyan('📝')} Generating project files...`);
+    spinner.message(`${chalk.cyan('📝')} Generating project files...`);
 
-    switch (preset) {
+    // Build preset — 5 canonical presets
+    switch (normalizedPreset) {
       case 'minimal':
         await buildMinimalPreset(projectPath, context);
         break;
-      case 'web':
       case 'nextjs':
         await buildWebPreset(projectPath, context);
         break;
-      case 'api':
       case 'hono-api':
         await buildApiPreset(projectPath, context);
         break;
-      case 'bun-api':
-        await buildBunApiPreset(projectPath, context);
-        break;
-      case 'bun-fullstack':
-        await buildBunFullstackPreset(projectPath, context);
-        break;
-      case 'full':
-      case 'monorepo-nextjs':
       case 'nextjs-monorepo':
-        // Use V2 builder with clean architecture
         await buildFullPresetV2(projectPath, context);
         break;
-      case 'monorepo-bun':
       case 'bun-monorepo':
         await buildMonorepoBunPreset(projectPath, context);
         break;
-      case 'enterprise-monorepo':
-        await buildEnterprisePreset(projectPath, context);
-        break;
       default:
         throw new Error(
-          `Unknown preset: ${preset}. Valid presets are: minimal, nextjs, hono-api, bun-api, bun-fullstack, nextjs-monorepo, bun-monorepo, enterprise-monorepo`
+          `Unknown preset: ${preset}. Valid presets: minimal, nextjs, hono-api, nextjs-monorepo, bun-monorepo`
         );
     }
 
-    // Additional setup based on options
-    if (database && database !== 'none') {
-      const dbName =
-        database === 'postgres-drizzle'
-          ? 'PostgreSQL + Drizzle ORM'
-          : database === 'supabase'
-            ? 'Supabase (Client Only)'
-            : database === 'supabase-drizzle'
-              ? 'Supabase + Drizzle ORM'
-              : database === 'sqlite-drizzle'
-                ? 'SQLite + Drizzle ORM'
-                : database;
-      s.message(`${chalk.cyan('🗄️')}  Configuring ${dbName}...`);
-      // Database setup will be handled in template builders
-    }
+    spinner.stop(`${chalk.green('✅')} Project structure created successfully!`);
 
-    if (uiLibrary === 'shadcn') {
-      s.message(`${chalk.cyan('🎨')}  Setting up shadcn/ui components...`);
-    }
-
-    if (codeQuality === 'ultracite') {
-      s.message(`${chalk.cyan('🤖')}  Configuring Ultracite for AI editors...`);
-      // Ultracite setup will be handled in template builders
-    }
-
-    if (docker) {
-      s.message(`${chalk.cyan('🐳')}  Adding Docker configuration...`);
-      // Docker setup will be handled in template builders
-    }
-
-    if (cicd) {
-      s.message(`${chalk.cyan('⚙️')}  Adding GitHub Actions CI/CD workflow...`);
-      // CI/CD setup will be handled in template builders
-    }
-
-    s.stop(`${chalk.green('✅')} Project structure created successfully!`);
-
-    // Calculate additional dependencies based on configuration
-    // NOTE: For monorepo presets, dependencies are handled by workspace catalog
-    // Only install additional deps for single-repo presets
+    // Install dependencies
     const isMonorepoPreset =
-      normalizedPreset === 'nextjs-monorepo' ||
-      normalizedPreset === 'bun-monorepo' ||
-      normalizedPreset === 'enterprise-monorepo';
+      normalizedPreset === 'nextjs-monorepo' || normalizedPreset === 'bun-monorepo';
 
     if (shouldInstall && !isMonorepoPreset) {
       const additionalDeps: Record<string, string> = {};
 
-      // Database dependencies
       if (database && database !== 'none') {
         Object.assign(additionalDeps, getDatabaseDependencies(database));
       }
 
-      // Code quality dependencies
       if (codeQuality) {
         Object.assign(additionalDeps, getCodeQualityDependencies(codeQuality));
       }
 
-      // Testing framework dependencies
       if (testing === 'vitest') {
         additionalDeps.vitest = VERSIONS.vitest;
         additionalDeps['@vitest/ui'] = VERSIONS['@vitest/ui'];
       }
 
-      // UI library dependencies
       if (uiLibrary === 'shadcn') {
         additionalDeps['class-variance-authority'] = VERSIONS['class-variance-authority'];
         additionalDeps.clsx = VERSIONS.clsx;
         additionalDeps['tailwind-merge'] = VERSIONS['tailwind-merge'];
       }
 
-      // Install base dependencies + additional ones
       if (Object.keys(additionalDeps).length > 0) {
         await installDependencies(projectPath, additionalDeps);
       } else {
         await installDependencies(projectPath);
       }
     } else if (shouldInstall && isMonorepoPreset) {
-      // For monorepo, just run bun install to install from catalog
       await installDependencies(projectPath);
     }
 
-    // Install default shadcn/ui components if shadcn/ui is configured
+    // Install default shadcn/ui components
     if (
       shouldInstall &&
       uiLibrary === 'shadcn' &&
-      (normalizedPreset === 'nextjs' || normalizedPreset === 'bun-fullstack' || isMonorepoPreset)
+      (normalizedPreset === 'nextjs' || isMonorepoPreset)
     ) {
       const componentSpinner = p.spinner();
       componentSpinner.start(
         `${chalk.cyan('🧩')} Installing default shadcn/ui components (button, card)...`
       );
       try {
-        if (
-          normalizedPreset === 'nextjs-monorepo' ||
-          normalizedPreset === 'bun-monorepo' ||
-          normalizedPreset === 'enterprise-monorepo'
-        ) {
-          // For monorepos, install components in packages/ui
-          await installDefaultShadcnComponents(join(projectPath, 'packages/ui'), {
-            silent: true,
-          });
+        if (isMonorepoPreset) {
+          await installDefaultShadcnComponents(join(projectPath, 'packages/ui'), { silent: true });
         } else {
-          // For single-repo, install in project root
-          await installDefaultShadcnComponents(projectPath, {
-            silent: true,
-          });
+          await installDefaultShadcnComponents(projectPath, { silent: true });
         }
         componentSpinner.stop(`${chalk.green('✅')} Default components installed`);
       } catch (_error) {
-        // Non-critical - user can install manually
         componentSpinner.stop(`${chalk.yellow('⚠️')}  Could not install automatically`);
         p.note('Install manually: bunx shadcn@latest add button card', 'Component Installation');
       }
     }
 
     const getDevCommand = () => {
-      if (
-        normalizedPreset === 'nextjs-monorepo' ||
-        normalizedPreset === 'bun-monorepo' ||
-        normalizedPreset === 'enterprise-monorepo' ||
-        normalizedPreset === 'nextjs'
-      )
-        return 'bun dev';
+      if (isMonorepoPreset || normalizedPreset === 'nextjs') return 'bun dev';
       return 'bun run dev';
     };
 
     const getPresetEmoji = () => {
-      switch (preset) {
+      switch (normalizedPreset) {
         case 'minimal':
           return '⚡';
-        case 'web':
+        case 'nextjs':
           return '🌐';
-        case 'api':
+        case 'hono-api':
           return '🚀';
-        case 'bun-api':
-          return '⚡';
-        case 'bun-fullstack':
-          return '🔥';
-        case 'full':
-          return '📦';
-        case 'monorepo-bun':
+        case 'nextjs-monorepo':
+          return enterprise ? '🏢' : '📦';
+        case 'bun-monorepo':
           return '🔥';
         default:
           return '✨';
       }
     };
 
-    // Build comprehensive next steps with tips
     const nextStepsContent = [
       `${chalk.bold.cyan('📁 Navigate to your project')}`,
       `${chalk.cyan('cd')} ${chalk.bold(projectName)}`,
@@ -1525,20 +1095,10 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
       uiLibrary === 'shadcn'
         ? `  ${chalk.dim('•')} Add more components: ${chalk.cyan('bunkit add component --all')}`
         : '',
-      normalizedPreset === 'nextjs-monorepo' ||
-      normalizedPreset === 'bun-monorepo' ||
-      normalizedPreset === 'enterprise-monorepo'
+      isMonorepoPreset
         ? `  ${chalk.dim('•')} Add workspaces: ${chalk.cyan('bunkit add workspace')}`
         : '',
-      normalizedPreset === 'nextjs-monorepo' ||
-      normalizedPreset === 'bun-monorepo' ||
-      normalizedPreset === 'enterprise-monorepo'
-        ? `  ${chalk.dim('•')} Add packages: ${chalk.cyan('bunkit add package')}`
-        : '',
       `  ${chalk.dim('•')} Read the ${chalk.cyan('README.md')} for project-specific documentation`,
-      database === 'supabase' || database === 'supabase-drizzle'
-        ? `  ${chalk.dim('•')} Check ${chalk.cyan('SHADCN.md')} for shadcn/ui usage guide`
-        : '',
     ]
       .filter(Boolean)
       .join('\n');
@@ -1555,14 +1115,13 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         })
     );
 
-    // Show project summary
     const projectSummary = [
       `${chalk.bold.green('✨ Project created successfully!')}`,
       '',
       `${chalk.dim('Project location:')} ${chalk.cyan(join(process.cwd(), projectName))}`,
-      `${chalk.dim('Preset:')} ${chalk.cyan(preset)}`,
+      `${chalk.dim('Preset:')} ${chalk.cyan(preset)}${enterprise ? ' + Enterprise' : ''}`,
       database && database !== 'none' ? `${chalk.dim('Database:')} ${chalk.cyan(database)}` : '',
-      uiLibrary ? `${chalk.dim('UI Library:')} ${chalk.cyan(uiLibrary)}` : '',
+      theme ? `${chalk.dim('Theme:')} ${chalk.cyan(theme)}` : '',
       '',
       `${chalk.dim('Happy coding! 🎉')}`,
     ]
@@ -1579,7 +1138,7 @@ export async function enhancedInitCommand(options: EnhancedInitOptions = {}) {
         })
     );
   } catch (error) {
-    s.stop(`${chalk.red('❌')} Failed to create project`);
+    spinner.stop(`${chalk.red('❌')} Failed to create project`);
 
     const errorMessage = (error as Error).message;
     const errorBox = [

@@ -1,43 +1,38 @@
 import { z } from 'zod';
 
 /**
- * Preset types for project scaffolding
+ * Preset types for project scaffolding (v2.0.0)
  *
- * Naming convention: {framework}-{architecture}
- * - Framework: nextjs, hono-api, bun-api, bun-fullstack
- * - Architecture: (none) = single repo, monorepo = monorepo
- *
- * Presets:
+ * 5 canonical presets:
  * - minimal: Single-file Bun project - perfect for CLIs and scripts
  * - nextjs: Next.js 16 + React 19 - Production-ready web application (single repo)
  * - hono-api: Hono 4 + Bun.serve() - Full-featured API with middleware ecosystem (single repo)
- * - bun-api: Bun.serve() native routing - Ultra-fast API with zero dependencies (single repo)
- * - bun-fullstack: Bun.serve() + HTML imports - Full-stack app without Next.js (single repo)
- * - nextjs-monorepo: Monorepo with Next.js + Hono - Enterprise SaaS architecture
+ * - nextjs-monorepo: Monorepo with Next.js + Hono (use --enterprise for additional apps/services)
  * - bun-monorepo: Monorepo with Bun.serve() - Full-stack without Next.js
- * - enterprise-monorepo: Enterprise monorepo with multiple Next.js apps and services
  *
- * Aliases (for backwards compatibility):
+ * Deprecated aliases (still work, emit warnings):
  * - web → nextjs
  * - api → hono-api
  * - full → nextjs-monorepo
  * - monorepo-nextjs → nextjs-monorepo
  * - monorepo-bun → bun-monorepo
+ *
+ * Removed in v2.0.0 (hard error with migration guidance):
+ * - bun-api → use hono-api
+ * - bun-fullstack → use bun-monorepo
+ * - enterprise-monorepo → use nextjs-monorepo --enterprise
  */
 export type PresetType =
   | 'minimal'
   | 'nextjs' // Next.js single repo (primary name)
-  | 'web' // Alias for nextjs (backwards compatibility)
+  | 'web' // Deprecated alias for nextjs
   | 'hono-api' // Hono API single repo (primary name)
-  | 'api' // Alias for hono-api (backwards compatibility)
-  | 'bun-api' // Bun.serve() native API single repo
-  | 'bun-fullstack' // Bun.serve() + HTML imports single repo
+  | 'api' // Deprecated alias for hono-api
   | 'nextjs-monorepo' // Next.js + Hono monorepo (primary name)
-  | 'full' // Alias for nextjs-monorepo (backwards compatibility)
-  | 'monorepo-nextjs' // Alias for nextjs-monorepo (backwards compatibility)
+  | 'full' // Deprecated alias for nextjs-monorepo
+  | 'monorepo-nextjs' // Deprecated alias for nextjs-monorepo
   | 'bun-monorepo' // Bun.serve() monorepo (primary name)
-  | 'monorepo-bun' // Alias for bun-monorepo (backwards compatibility)
-  | 'enterprise-monorepo'; // Enterprise monorepo with multiple apps and services
+  | 'monorepo-bun'; // Deprecated alias for bun-monorepo
 
 /**
  * Feature types that can be added to projects
@@ -182,22 +177,25 @@ export const ProjectConfigSchema = z.object({
   preset: z.enum([
     'minimal',
     'nextjs',
-    'web', // Alias for nextjs
+    'web', // Deprecated alias for nextjs
     'hono-api',
-    'api', // Alias for hono-api
-    'bun-api',
-    'bun-fullstack',
+    'api', // Deprecated alias for hono-api
     'nextjs-monorepo',
-    'full', // Alias for nextjs-monorepo
-    'monorepo-nextjs', // Alias for nextjs-monorepo
+    'full', // Deprecated alias for nextjs-monorepo
+    'monorepo-nextjs', // Deprecated alias for nextjs-monorepo
     'bun-monorepo',
-    'monorepo-bun', // Alias for bun-monorepo
-    'enterprise-monorepo',
+    'monorepo-bun', // Deprecated alias for bun-monorepo
   ]),
   path: z.string(),
   features: z.array(z.string()).optional(),
   git: z.boolean().default(true),
   install: z.boolean().default(true),
+
+  // Enterprise mode (v2.0.0) — extends nextjs-monorepo with additional apps/services
+  enterprise: z.boolean().optional(),
+
+  // Theme preset (v2.0.0) — replaces 7 individual shadcn/ui prompts
+  theme: z.enum(['modern-clean', 'bold-vibrant', 'minimalist', 'elegant', 'custom']).optional(),
 
   // Database configuration
   database: z
@@ -300,6 +298,10 @@ export interface TemplateContext {
   license: string;
   features: string[];
   supportsTypeScript: boolean;
+
+  // v2.0.0: Enterprise mode and theme preset
+  enterprise?: boolean;
+  theme?: string;
 
   // Configuration options
   database?: DatabaseType;
