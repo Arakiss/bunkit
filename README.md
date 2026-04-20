@@ -1,3 +1,5 @@
+> ⚠️ **Archived** — The Bun scaffolding space is well-served by `bun create`, `create-next-app`, and maintained community templates. Keeping this repo maintained alone is not a good use of time. Kept for history.
+
 # bunkit
 
 > Production-ready Bun projects in seconds.
